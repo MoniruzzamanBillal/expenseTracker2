@@ -1,0 +1,69 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model User {
+   id            String     @id @default(uuid())
+  email String  @unique
+  name  String
+  password  String 
+  role UserRole @default(user)
+  isDeleted Boolean @default(false)
+
+    createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+}
+
+
+model Project {
+  id            String     @id @default(uuid())
+  projectName   String  @db.VarChar(100) @unique
+  location      String  @db.VarChar(100)
+  client        String  @db.VarChar(100)
+  architects    String  @db.VarChar(100)
+  website       String  @db.VarChar(100)
+  facebookLink  String? @db.VarChar(100)
+  instagramLink String? @db.VarChar(100)
+  linkedinLink  String? @db.VarChar(100)
+  xLink         String? @db.VarChar(100)
+  projectType   String  @db.VarChar(100)
+  description   String? @db.VarChar(500) @default("")
+  material      String  @db.VarChar(100)
+ isDeleted Boolean @default(false)
+
+
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
+
+model Product {
+  id        String     @id @default(uuid())
+  name      String
+  price     Float
+  imageUrl  String
+  isDeleted Boolean @default(false)
+
+
+  createdAt DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
+
+
+enum UserRole {
+  user
+  admin
+  vendor
+}
