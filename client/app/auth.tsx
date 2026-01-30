@@ -84,7 +84,7 @@ export default function AuthScreen() {
       style={{ flex: 1 }}
     >
       <ScrollView
-        contentContainerStyle={{ paddingVertical: 60 }}
+        contentContainerStyle={{ paddingVertical: 100 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"

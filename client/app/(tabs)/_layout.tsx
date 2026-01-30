@@ -1,35 +1,55 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs } from "expo-router";
+import React from "react";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useUserContext } from "@/context/user.context";
+import AuthGuard from "@/utils/AuthGuard";
+import { COLORS } from "@/utils/colors";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { logoutFunction } = useUserContext();
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+    <AuthGuard>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: COLORS.primary,
+          tabBarInactiveTintColor: COLORS.textLight,
+          headerTitleAlign: "center",
+          headerTitleStyle: {
+            color: COLORS.primary,
+          },
         }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="home" size={size} color={color} />
+            ),
+            headerRight: () => (
+              <MaterialCommunityIcons
+                name="logout"
+                style={{ marginRight: 20 }}
+                size={24}
+                color={COLORS.primary}
+                onPress={() => logoutFunction()}
+              />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="addTransaction"
+          options={{
+            title: "Add Transaction",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="plus" size={size} color={color} />
+            ),
+          }}
+        />
+      </Tabs>
+    </AuthGuard>
   );
 }

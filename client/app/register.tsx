@@ -68,73 +68,73 @@ export default function RegisterScreen() {
       style={{ flex: 1 }}
     >
       <ScrollView
-        contentContainerStyle={{ flex: 1 }}
+        contentContainerStyle={{ paddingVertical: 100 }}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
       >
-        <ScrollView style={registerStyles.mainContainer}>
-          <ScrollView style={registerStyles.wrapperContainer}>
-            {/* image  */}
-            <Image
-              source={require("@/assets/images/revenue-i1.png")}
-              style={registerStyles.imageStyle}
+        <ScrollView style={registerStyles.wrapperContainer}>
+          {/* image  */}
+          <Image
+            source={require("@/assets/images/revenue-i1.png")}
+            style={registerStyles.imageStyle}
+          />
+
+          <Text
+            style={{
+              fontWeight: "600",
+              fontSize: 30,
+              color: COLORS.text,
+              textAlign: "center",
+              paddingVertical: 10,
+            }}
+          >
+            Create Account
+          </Text>
+
+          {/* login form  */}
+          <View style={registerStyles.registerForm}>
+            <TextInput
+              placeholder="Enter Name"
+              autoCorrect={false}
+              onChangeText={setName}
+              value={name || ""}
             />
 
-            <Text
-              style={{
-                fontWeight: "600",
-                fontSize: 30,
-                color: COLORS.text,
-                textAlign: "center",
-                paddingVertical: 10,
-              }}
+            <TextInput
+              placeholder="Enter Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={setEmail}
+              value={email || ""}
+            />
+            <TextInput
+              placeholder="Enter Password"
+              secureTextEntry={true}
+              onChangeText={setPassword}
+              value={password || ""}
+            />
+            <Button
+              mode="contained"
+              onPress={handleRegistration}
+              disabled={registerMutation?.isPending}
             >
-              Create Account
-            </Text>
+              {registerMutation?.isPending ? "Registering..." : "Register"}
+            </Button>
 
-            {/* login form  */}
-            <View style={registerStyles.registerForm}>
-              <TextInput
-                placeholder="Enter Name"
-                autoCorrect={false}
-                onChangeText={setName}
-                value={name || ""}
-              />
+            <View style={{ flexDirection: "row", marginTop: 10 }}>
+              <Text>Already have any account ? </Text>
 
-              <TextInput
-                placeholder="Enter Email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                onChangeText={setEmail}
-                value={email || ""}
-              />
-              <TextInput
-                placeholder="Enter Password"
-                secureTextEntry={true}
-                onChangeText={setPassword}
-                value={password || ""}
-              />
-              <Button
-                mode="contained"
-                onPress={handleRegistration}
-                disabled={registerMutation?.isPending}
-              >
-                {registerMutation?.isPending ? "Registering..." : "Register"}
-              </Button>
-
-              <View style={{ flexDirection: "row", marginTop: 10 }}>
-                <Text>Already have any account ? </Text>
-
-                <Pressable onPress={() => router.replace("/auth")}>
-                  <Text
-                    style={{ color: "blue", textDecorationLine: "underline" }}
-                  >
-                    Log in
-                  </Text>
-                </Pressable>
-              </View>
+              <Pressable onPress={() => router.replace("/auth")}>
+                <Text
+                  style={{ color: "blue", textDecorationLine: "underline" }}
+                >
+                  Log in
+                </Text>
+              </Pressable>
             </View>
-          </ScrollView>
+          </View>
         </ScrollView>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -143,11 +143,6 @@ export default function RegisterScreen() {
 
 //
 const registerStyles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    justifyContent: "center",
-  },
-
   wrapperContainer: {
     width: "90%",
     alignSelf: "center",
