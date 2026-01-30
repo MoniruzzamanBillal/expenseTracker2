@@ -38,8 +38,7 @@ const loginFromDb = (payload) => __awaiter(void 0, void 0, void 0, function* () 
         userEmail: userData === null || userData === void 0 ? void 0 : userData.email,
     };
     const token = jsonwebtoken_1.default.sign(jwtPayload, config_1.default.jwt_secret, {
-        // expiresIn: "10d",
-        expiresIn: "10s",
+        expiresIn: "2d",
     });
     return {
         userData,

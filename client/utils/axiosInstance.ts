@@ -70,6 +70,17 @@ instance.interceptors.response.use(
       router.replace("/auth");
     }
     // !
+
+    const errorMessage = error?.response?.data?.message;
+
+    console.log(errorMessage);
+
+    Toast.show({
+      type: "error",
+      text1: errorMessage,
+      position: "top",
+    });
+
     return error;
     // return Promise.reject(error);
   },
