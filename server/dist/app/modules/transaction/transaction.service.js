@@ -15,12 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.transactionServices = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const AppError_1 = __importDefault(require("../../Error/AppError"));
+const openRouter_1 = require("../../helper/openRouter");
 const transaction_constant_1 = require("./transaction.constant");
 const transaction_model_1 = require("./transaction.model");
 // ! for adding new transaction
 const addNewTransaction = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield transaction_model_1.transactionModel.create(Object.assign(Object.assign({}, payload), { user: userId }));
     return result;
+});
+// ! for adding tranaction as array
+const addManyTransaction = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    payload.forEach((data) => __awaiter(void 0, void 0, void 0, function* () {
+        yield transaction_model_1.transactionModel.create(Object.assign(Object.assign({}, data), { user: userId }));
+    }));
 });
 // ! for getting monthly data --> legecy service function , not in use
 const getMonthlyTransactionsLegacy = (userId, month, year) => __awaiter(void 0, void 0, void 0, function* () {
@@ -167,13 +174,67 @@ const deleteTransactionData = (transactionId) => __awaiter(void 0, void 0, void 
     });
     return result;
 });
+// ! for moneyManagement
+const moneyManagement = (prompt) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const response = yield openRouter_1.openai.chat.completions.create({
+        // model: "z-ai/glm-4.5-air:free",
+        model: "arcee-ai/trinity-large-preview:free",
+        messages: [
+            {
+                role: "system",
+                content: `
+You are an AI that extracts money transactions from text.
+
+Rules:
+- A single text may contain MULTIPLE income and expense entries
+- Return an ARRAY of objects
+- Each object must represent ONE transaction
+- Return ONLY valid JSON
+- No explanation, no markdown, no extra text
+
+JSON format:
+[
+  {
+    "type": "income | expense",
+    "amount": number,
+    "title": string,
+    "description": string
+  }
+]
+
+Text:
+"${prompt}"
+`,
+            },
+            {
+                role: "user",
+                content: `
+Text:
+"${prompt}"
+`,
+            },
+        ],
+    });
+    const rawResponse = (_a = response.choices[0].message) === null || _a === void 0 ? void 0 : _a.content;
+    let parsed;
+    try {
+        parsed = JSON.parse(rawResponse);
+    }
+    catch (_b) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "AI returned invalid transaction data");
+    }
+    return parsed;
+});
 //
 exports.transactionServices = {
     addNewTransaction,
+    addManyTransaction,
     updateTransaction,
     getMonthlyTransactionsLegacy,
     deleteTransactionData,
     getDailyTransactions,
     getYearlySummary,
     getMonthlyTransactions,
+    moneyManagement,
 };

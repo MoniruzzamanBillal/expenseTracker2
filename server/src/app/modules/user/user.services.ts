@@ -25,13 +25,13 @@ const loginFromDb = async (payload: Tlogin) => {
   if (!userData) {
     throw new AppError(
       httpStatus.NOT_FOUND,
-      "User dont exist with this email !!!"
+      "User dont exist with this email !!!",
     );
   }
 
   const isPasswordMatch = await argon2.verify(
     userData?.password,
-    payload?.password
+    payload?.password,
   );
 
   if (!isPasswordMatch) {
@@ -44,7 +44,8 @@ const loginFromDb = async (payload: Tlogin) => {
   };
 
   const token = Jwt.sign(jwtPayload, config.jwt_secret as string, {
-    expiresIn: "10d",
+    // expiresIn: "10d",
+    expiresIn: "10s",
   });
 
   return {
