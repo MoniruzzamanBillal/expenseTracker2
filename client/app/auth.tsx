@@ -44,7 +44,7 @@ export default function AuthScreen() {
         payload,
       });
 
-      console.log("result = ", result);
+      // console.log("result = ", result);
 
       if (result?.success) {
         const successMessage = result?.message;
@@ -69,7 +69,7 @@ export default function AuthScreen() {
         router.replace("/");
       }
     } catch (error) {
-      console.log("error from login = ", error);
+      console.log("error = ", error);
       Toast.show({
         type: "error",
         text1: "Something went wrong!!",

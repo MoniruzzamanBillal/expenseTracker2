@@ -77,32 +77,46 @@ export default function AddTransactionScreen() {
       return;
     }
 
-    const payload = {
-      type,
-      amount: parseFloat(amount!),
-      title,
-      description,
-    };
+    try {
+      const payload = {
+        type,
+        amount: parseFloat(amount!),
+        title,
+        description,
+      };
 
-    // const result = await addNewTransaction(payload);
+      // transactions/new-transaction
 
-    // if (result?.success) {
-    //   const successMessage = result?.message;
-    //   setTitle("");
-    //   setDescription("");
-    //   setAmount(null);
-    //   setType(transactionConstants?.income);
+      const result = await addTransactionMutation.mutateAsync({
+        url: "/transactions/new-transaction",
+        payload,
+      });
 
-    //   Toast.show({
-    //     type: "success",
-    //     text1: successMessage,
-    //     position: "top",
-    //   });
+      if (result?.success) {
+        const successMessage = result?.message;
+        setTitle("");
+        setDescription("");
+        setAmount(null);
+        setType(transactionConstants?.income);
 
-    //   setTimeout(() => {
-    //     router.push("/");
-    //   }, 100);
-    // }
+        Toast.show({
+          type: "success",
+          text1: successMessage,
+          position: "top",
+        });
+
+        setTimeout(() => {
+          router.push("/");
+        }, 100);
+      }
+    } catch (error) {
+      console.log("error = ", error);
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong!!",
+        position: "top",
+      });
+    }
   };
 
   return (

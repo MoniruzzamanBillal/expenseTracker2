@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 import { getBaseUrl } from "./envConfig";
 
@@ -51,11 +52,12 @@ instance.interceptors.response.use(
 
   // ❌ Handle errors
   async function (error) {
-    const originalRequest = error.config;
+    console.log("error from 58 line = ", error?.response);
 
     // !
-    if (error?.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    if (error?.response?.status === 401) {
+      console.log("inside if !!");
+
       await AsyncStorage.removeItem("user");
       await AsyncStorage.removeItem("token");
 
@@ -64,10 +66,12 @@ instance.interceptors.response.use(
         text1: "Token expired , please login ",
         position: "top",
       });
+
+      router.replace("/auth");
     }
     // !
-
-    return Promise.reject(error);
+    return error;
+    // return Promise.reject(error);
   },
 );
 
