@@ -1,5 +1,6 @@
 import { useFetchData } from "@/hooks/useApi";
 import { TTransaction } from "@/types/Transaction.tyes";
+import { COLORS } from "@/utils/colors";
 import { useState } from "react";
 import {
   Dimensions,
@@ -47,7 +48,14 @@ export default function HomePage() {
       )}
 
       {/* Title for transactions */}
-      <Text style={{ marginTop: 8, fontSize: 22, fontWeight: "800" }}>
+      <Text
+        style={{
+          marginTop: 8,
+          fontSize: 22,
+          fontWeight: "800",
+          color: COLORS.text,
+        }}
+      >
         Transactions :
       </Text>
 

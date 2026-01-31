@@ -77,7 +77,9 @@ export default function MonthlyTransactionPage() {
           alignItems: "center",
         }}
       >
-        <Text style={{ fontSize: 15, fontWeight: 700 }}>Current Month : </Text>
+        <Text style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
+          Current Month :{" "}
+        </Text>
 
         <View
           style={{

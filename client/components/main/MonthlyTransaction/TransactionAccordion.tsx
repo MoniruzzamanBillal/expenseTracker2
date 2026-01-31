@@ -64,6 +64,7 @@ export default function TransactionAccordion({ dailyData }: TProps) {
                       "EEEE",
                     )}
                   </Text>
+                  accordionItem
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -86,7 +87,7 @@ export default function TransactionAccordion({ dailyData }: TProps) {
               {/* Collapsible Content */}
               <Collapsible collapsed={activeDate !== day?.date}>
                 <FlatList
-                  style={{ paddingHorizontal: 8 }}
+                  style={{ paddingHorizontal: 6 }}
                   data={day?.transactions}
                   keyExtractor={(item, index) => item?._id ?? index.toString()}
                   renderItem={({ item }) => (
@@ -103,7 +104,7 @@ export default function TransactionAccordion({ dailyData }: TProps) {
 
 const styles = StyleSheet.create({
   accordionItem: {
-    marginBottom: 8,
+    marginBottom: 6,
     backgroundColor: "#fff",
     borderRadius: 6,
     overflow: "hidden",
@@ -122,6 +123,7 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 15,
     fontWeight: "bold",
+    color: COLORS.text,
   },
   amounts: {
     flexDirection: "row",

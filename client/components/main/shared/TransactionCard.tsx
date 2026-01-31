@@ -3,10 +3,12 @@ import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
+import { useState } from "react";
 import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { Text } from "react-native-paper";
 import Toast from "react-native-toast-message";
+import UpdateTransactionModal from "./UpdateTransactionModal";
 
 const typeOptions = {
   income: "income",
@@ -18,7 +20,7 @@ export default function TransactionCard({
 }: {
   transactionData: TTransaction;
 }) {
-  //   const { mutateAsync: deleteTransactionData } = useDeleteTransaction();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const patchMutation = usePatch([
     ["daily-transaction"],
@@ -52,16 +54,6 @@ export default function TransactionCard({
         position: "top",
       });
     }
-
-    // const result = await deleteTransactionData(transactionData?._id!);
-    // if (result?.success) {
-    //   const successMessage = result?.message;
-    //   Toast.show({
-    //     type: "success",
-    //     text1: successMessage,
-    //     position: "top",
-    //   });
-    // }
   };
 
   // Left action for swipe right (left-to-right)
@@ -98,7 +90,7 @@ export default function TransactionCard({
       >
         <TouchableOpacity
           activeOpacity={0.6}
-          onPress={() => handleDeleteTransaction(transactionData)}
+          onPress={() => setModalOpen(true)}
         >
           <MaterialCommunityIcons
             name="book-edit-outline"
@@ -111,123 +103,139 @@ export default function TransactionCard({
   };
 
   return (
-    <Swipeable
-      renderLeftActions={renderLeftActions}
-      renderRightActions={renderRightActions}
-      overshootLeft={false}
-      overshootRight={false}
-    >
-      <View style={cardStyles.container}>
-        {/* body section  */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          {/* left title section  */}
+    <>
+      <Swipeable
+        renderLeftActions={renderLeftActions}
+        renderRightActions={renderRightActions}
+        overshootLeft={false}
+        overshootRight={false}
+      >
+        <View style={cardStyles.container}>
+          {/* body section  */}
           <View
             style={{
               flexDirection: "row",
+              justifyContent: "space-between",
               alignItems: "center",
-              width: "74%",
-              columnGap: 6,
             }}
           >
-            {/* icon section  */}
-            <View>
-              {transactionData?.type === typeOptions?.income ? (
-                <MaterialCommunityIcons
-                  name="cash-multiple"
-                  size={29}
-                  color="green"
-                />
-              ) : (
-                <MaterialCommunityIcons
-                  name="cash-minus"
-                  size={29}
-                  color="red"
-                />
-              )}
-            </View>
-
-            {/* title , description  */}
-            <View>
-              <Text style={{ fontSize: 14, fontWeight: "700" }}>
-                {transactionData?.title}
-              </Text>
-
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", marginBottom: 3 }}
-              >
-                {transactionData?.description}
-              </Text>
-            </View>
-          </View>
-
-          {/*  */}
-          {/* right money section  */}
-          <View
-            style={{
-              alignItems: "flex-end",
-              width: "24%",
-            }}
-          >
-            {/* money section  */}
+            {/* left title section  */}
             <View
               style={{
                 flexDirection: "row",
-                alignContent: "center",
-                justifyContent: "center",
-                columnGap: 1,
+                alignItems: "center",
+                width: "74%",
+                columnGap: 6,
               }}
             >
-              <Text
+              {/* icon section  */}
+              <View>
+                {transactionData?.type === typeOptions?.income ? (
+                  <MaterialCommunityIcons
+                    name="cash-multiple"
+                    size={29}
+                    color="green"
+                  />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="cash-minus"
+                    size={29}
+                    color="red"
+                  />
+                )}
+              </View>
+
+              {/* title , description  */}
+              <View>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "700",
+                    color: COLORS.text,
+                  }}
+                >
+                  {transactionData?.title}
+                </Text>
+
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: COLORS.textLight,
+                  }}
+                >
+                  {transactionData?.description}
+                </Text>
+              </View>
+            </View>
+
+            {/*  */}
+            {/* right money section  */}
+            <View
+              style={{
+                alignItems: "flex-end",
+                width: "24%",
+              }}
+            >
+              {/* money section  */}
+              <View
                 style={{
-                  fontSize: 15,
-                  fontWeight: "600",
-                  color:
-                    transactionData.type === typeOptions.income
-                      ? COLORS.income
-                      : COLORS.expense,
+                  flexDirection: "row",
+                  alignContent: "center",
+                  justifyContent: "center",
+                  columnGap: 1,
                 }}
               >
-                +৳
-              </Text>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "600",
+                    color:
+                      transactionData.type === typeOptions.income
+                        ? COLORS.income
+                        : COLORS.expense,
+                  }}
+                >
+                  +৳
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "600",
+                    color:
+                      transactionData?.type === typeOptions.income
+                        ? COLORS.income
+                        : COLORS.expense,
+                  }}
+                >
+                  {transactionData?.amount}
+                </Text>
+              </View>
+
+              {/* date section  */}
               <Text
                 style={{
-                  fontSize: 15,
-                  fontWeight: "600",
-                  color:
-                    transactionData?.type === typeOptions.income
-                      ? COLORS.income
-                      : COLORS.expense,
+                  fontSize: 11,
+                  fontWeight: "900",
+                  color: COLORS.textLight,
                 }}
               >
-                {transactionData?.amount}
+                {format(
+                  new Date(transactionData?.createdAt as string),
+                  "dd-MMM-yyy",
+                )}
               </Text>
             </View>
 
-            {/* date section  */}
-            <Text
-              style={{
-                fontSize: 11,
-                fontWeight: "900",
-                color: COLORS.textLight,
-              }}
-            >
-              {format(
-                new Date(transactionData?.createdAt as string),
-                "dd-MMM-yyy",
-              )}
-            </Text>
+            {/*  */}
           </View>
-
-          {/*  */}
         </View>
-      </View>
-    </Swipeable>
+      </Swipeable>
+
+      {modalOpen && (
+        <UpdateTransactionModal open={modalOpen} setOpen={setModalOpen} />
+      )}
+    </>
   );
 }
 
