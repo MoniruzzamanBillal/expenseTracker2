@@ -1,7 +1,5 @@
-import { useUserContext } from "@/context/user.context";
 import { useFetchData } from "@/hooks/useApi";
 import { TTransaction } from "@/types/Transaction.tyes";
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Dimensions,
@@ -18,8 +16,6 @@ import TransactionCard from "../shared/TransactionCard";
 const screenHeight = Dimensions.get("window").height;
 
 export default function HomePage() {
-  const { logoutFunction } = useUserContext();
-  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
   const {

@@ -41,6 +41,20 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
+          name="monthlyTransactions"
+          options={{
+            title: "Monthly Transaction",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="calendar"
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
           name="addTransaction"
           options={{
             title: "Add Transaction",
