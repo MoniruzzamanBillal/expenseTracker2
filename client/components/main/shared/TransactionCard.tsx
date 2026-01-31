@@ -54,9 +54,35 @@ export default function TransactionCard({
     );
   };
 
+  // Left action for swipe right (left-to-right)
+  const renderRightActions = (progress: any, dragX: any) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: "clamp",
+    });
+    return (
+      <Animated.View
+        style={[cardStyles.rightAction, { transform: [{ scale }] }]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.6}
+          onPress={() => handleDeleteTransaction(transactionData)}
+        >
+          <MaterialCommunityIcons
+            name="book-edit-outline"
+            size={30}
+            color="white"
+          />
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
   return (
     <Swipeable
       renderLeftActions={renderLeftActions}
+      renderRightActions={renderRightActions}
       overshootLeft={false}
       overshootRight={false}
     >
@@ -195,6 +221,7 @@ const cardStyles = StyleSheet.create({
     backgroundColor: "red",
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 6,
   },
 
   rightAction: {
@@ -202,5 +229,6 @@ const cardStyles = StyleSheet.create({
     backgroundColor: "green",
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 6,
   },
 });
