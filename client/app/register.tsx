@@ -3,7 +3,6 @@ import { useState } from "react";
 
 import { usePost } from "@/hooks/useApi";
 import { COLORS } from "@/utils/colors";
-import { Image } from "expo-image";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -68,18 +67,12 @@ export default function RegisterScreen() {
       style={{ flex: 1 }}
     >
       <ScrollView
-        contentContainerStyle={{ paddingVertical: 100 }}
+        contentContainerStyle={{ paddingVertical: 200 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
       >
         <ScrollView style={registerStyles.wrapperContainer}>
-          {/* image  */}
-          <Image
-            source={require("@/assets/images/revenue-i1.png")}
-            style={registerStyles.imageStyle}
-          />
-
           <Text
             style={{
               fontWeight: "600",
@@ -99,6 +92,12 @@ export default function RegisterScreen() {
               autoCorrect={false}
               onChangeText={setName}
               value={name || ""}
+              textColor={COLORS.text}
+              style={{
+                borderWidth: 0,
+                backgroundColor: "transparent",
+                padding: 0,
+              }}
             />
 
             <TextInput
@@ -108,23 +107,38 @@ export default function RegisterScreen() {
               autoCorrect={false}
               onChangeText={setEmail}
               value={email || ""}
+              textColor={COLORS.text}
+              style={{
+                borderWidth: 0,
+                backgroundColor: "transparent",
+                padding: 0,
+              }}
             />
             <TextInput
               placeholder="Enter Password"
               secureTextEntry={true}
               onChangeText={setPassword}
               value={password || ""}
+              textColor={COLORS.text}
+              style={{
+                borderWidth: 0,
+                backgroundColor: "transparent",
+                padding: 0,
+              }}
             />
             <Button
               mode="contained"
               onPress={handleRegistration}
               disabled={registerMutation?.isPending}
+              labelStyle={{ color: COLORS.text }}
             >
               {registerMutation?.isPending ? "Registering..." : "Register"}
             </Button>
 
             <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <Text>Already have any account ? </Text>
+              <Text style={{ color: COLORS.text }}>
+                Already have any account ?{" "}
+              </Text>
 
               <Pressable onPress={() => router.replace("/auth")}>
                 <Text
@@ -157,12 +171,6 @@ const registerStyles = StyleSheet.create({
     borderColor: "#d1d5db",
     borderWidth: 1,
     borderRadius: 8,
-  },
-
-  imageStyle: {
-    height: 300,
-    width: 300,
-    marginVertical: 5,
   },
 
   registerForm: {

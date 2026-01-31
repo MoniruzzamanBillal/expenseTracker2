@@ -1,7 +1,6 @@
 import { useUserContext } from "@/context/user.context";
 import { usePost } from "@/hooks/useApi";
 import { COLORS } from "@/utils/colors";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -84,18 +83,12 @@ export default function AuthScreen() {
       style={{ flex: 1 }}
     >
       <ScrollView
-        contentContainerStyle={{ paddingVertical: 100 }}
+        contentContainerStyle={{ paddingVertical: 250 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
       >
         <View style={authStyles.wrapperContainer}>
-          {/* image  */}
-          <Image
-            source={require("@/assets/images/revenue-i4.png")}
-            style={authStyles.imageStyle}
-          />
-
           <Text
             style={{
               fontWeight: "600",
@@ -117,24 +110,40 @@ export default function AuthScreen() {
               autoCorrect={false}
               onChangeText={setEmail}
               value={email || ""}
+              textColor={COLORS.text}
+              style={{
+                borderWidth: 0,
+                backgroundColor: "transparent",
+                padding: 0,
+              }}
             />
             <TextInput
               placeholder="Enter Password"
               secureTextEntry={true}
               onChangeText={setPassword}
               value={password || ""}
+              textColor={COLORS.text}
+              style={{
+                borderWidth: 0,
+                backgroundColor: "transparent",
+                padding: 0,
+              }}
             />
 
             <Button
               mode="contained"
               onPress={handleLogin}
               disabled={loginMutation?.isPending}
+              labelStyle={{ color: COLORS.text }}
             >
               {loginMutation?.isPending ? "Loggin in..." : "Login"}
             </Button>
 
             <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <Text> {"Don't Have any account ?"} </Text>
+              <Text style={{ color: COLORS.text }}>
+                {" "}
+                {"Don't Have any account ?"}{" "}
+              </Text>
 
               <Pressable onPress={() => router.replace("/register")}>
                 <Text
@@ -166,12 +175,6 @@ const authStyles = StyleSheet.create({
     borderColor: "#d1d5db",
     borderWidth: 1,
     borderRadius: 8,
-  },
-
-  imageStyle: {
-    height: 300,
-    width: 300,
-    marginVertical: 5,
   },
 
   loginForm: {

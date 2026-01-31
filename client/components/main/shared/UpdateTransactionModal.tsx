@@ -114,7 +114,23 @@ export default function UpdateTransactionModal({
         payload,
       });
 
-      console.log(result);
+      // console.log(result);
+
+      if (result?.success) {
+        const successMessage = result?.message;
+        setTitle("");
+        setDescription("");
+        setAmount(null);
+        setType(transactionConstants?.income);
+
+        Toast.show({
+          type: "success",
+          text1: successMessage,
+          position: "top",
+        });
+
+        hideModal();
+      }
     } catch (error) {
       console.log("error = ", error);
       Toast.show({
@@ -122,6 +138,7 @@ export default function UpdateTransactionModal({
         text1: "Something went wrong!!",
         position: "top",
       });
+      hideModal();
     }
   };
 
@@ -233,11 +250,12 @@ export default function UpdateTransactionModal({
                   keyboardType="numeric"
                   value={amount || ""}
                   onChangeText={handleTextChange}
+                  textColor={COLORS.text}
                   style={{
                     borderWidth: 0,
                     backgroundColor: "transparent",
                     padding: 0,
-                    fontSize: 22,
+                    fontSize: 15,
                   }}
                 />
               </View>
@@ -255,12 +273,12 @@ export default function UpdateTransactionModal({
                   value={title || ""}
                   onChangeText={setTitle}
                   underlineColorAndroid="transparent"
+                  textColor={COLORS.text}
                   style={{
                     borderWidth: 0,
                     backgroundColor: "transparent",
                     padding: 0,
-                    fontSize: 20,
-                    color: COLORS.text,
+                    fontSize: 15,
                   }}
                 />
               </View>
@@ -277,11 +295,12 @@ export default function UpdateTransactionModal({
                   placeholder="Transaction Description "
                   value={description || ""}
                   onChangeText={setDescription}
+                  textColor={COLORS.text}
                   style={{
                     borderWidth: 0,
                     backgroundColor: "transparent",
                     padding: 0,
-                    fontSize: 20,
+                    fontSize: 15,
                   }}
                 />
               </View>
@@ -290,7 +309,8 @@ export default function UpdateTransactionModal({
                 disabled={patchMutation?.isPending}
                 mode="contained"
                 onPress={handleUpdateTransaction}
-                style={{ marginTop: 20, backgroundColor: COLORS.primary }}
+                style={{ marginTop: 10, backgroundColor: COLORS.primary }}
+                labelStyle={{ color: COLORS.background, fontSize: 12 }}
               >
                 {patchMutation?.isPending
                   ? "Updating Transaction..."
@@ -299,8 +319,6 @@ export default function UpdateTransactionModal({
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-
-        <Button onPress={hideModal}>Close</Button>
       </Modal>
     </Portal>
   );
@@ -308,15 +326,14 @@ export default function UpdateTransactionModal({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+    paddingVertical: 15,
   },
   modal: {
     backgroundColor: "white",
-    padding: 20,
+    padding: 6,
     marginHorizontal: 20,
     borderRadius: 8,
-    maxHeight: "85%",
+    maxHeight: "90%",
   },
 
   pageWrapper: {
@@ -324,13 +341,13 @@ const styles = StyleSheet.create({
     margin: "auto",
 
     backgroundColor: COLORS.background,
-    padding: 14,
+    padding: 10,
     borderRadius: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowRadius: 3, // paddingHorizontal: 16,
+    elevation: 4,
   },
 
   typeButton: {
@@ -351,7 +368,7 @@ const styles = StyleSheet.create({
 
   typeButtonText: {
     color: COLORS.text,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "500",
   },
 
