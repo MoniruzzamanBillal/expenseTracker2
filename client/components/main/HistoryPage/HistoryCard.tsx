@@ -134,6 +134,7 @@ export default function HistoryCard({
             style={{
               fontSize: 14,
               fontWeight: "700",
+              color: COLORS.text,
             }}
           >
             Balance :
@@ -142,6 +143,7 @@ export default function HistoryCard({
             style={{
               fontSize: 14,
               fontWeight: "600",
+              color: COLORS.text,
             }}
           >
             ৳
@@ -150,6 +152,7 @@ export default function HistoryCard({
             style={{
               fontSize: 14,
               fontWeight: "600",
+              color: COLORS.text,
             }}
           >
             {historyData?.income - historyData?.expense}
