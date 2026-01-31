@@ -34,7 +34,7 @@ export default function AddTransactionScreen() {
 
   const addTransactionMutation = usePost([
     ["daily-transaction"],
-    ["daily-transaction"],
+    ["monthly-transaction"],
     ["monthly-transaction-legacy"],
     ["yearly-transaction"],
   ]);
@@ -297,7 +297,6 @@ const addTransactionStyles = StyleSheet.create({
   scrollContent: {
     paddingVertical: 20,
     paddingHorizontal: 16,
-
     flex: 1,
   },
 

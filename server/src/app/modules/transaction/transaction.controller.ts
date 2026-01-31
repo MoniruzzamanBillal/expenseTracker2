@@ -21,7 +21,7 @@ const addNewTransaction = catchAsync(async (req, res) => {
 // ! for adding new transaction as array data
 const addManyTransaction = catchAsync(async (req, res) => {
   const result = await transactionServices.addManyTransaction(
-    req.body?.data,
+    req.body,
     req?.user?.userId,
   );
 

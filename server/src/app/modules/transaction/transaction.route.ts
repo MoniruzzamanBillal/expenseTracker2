@@ -49,12 +49,8 @@ router.post(
   transactionControllers.addManyTransaction,
 );
 
-// ! for money management
-router.post(
-  "/manage-money",
-
-  transactionControllers.moneyManagement,
-);
+// ! for money management , giving prompt to generate cost-spendature
+router.post("/manage-money", transactionControllers.moneyManagement);
 
 // ! for updating transaction
 router.patch(

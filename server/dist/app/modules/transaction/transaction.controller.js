@@ -30,8 +30,8 @@ const addNewTransaction = (0, catchAsync_1.default)((req, res) => __awaiter(void
 }));
 // ! for adding new transaction as array data
 const addManyTransaction = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
-    const result = yield transaction_service_1.transactionServices.addManyTransaction((_a = req.body) === null || _a === void 0 ? void 0 : _a.data, (_b = req === null || req === void 0 ? void 0 : req.user) === null || _b === void 0 ? void 0 : _b.userId);
+    var _a;
+    const result = yield transaction_service_1.transactionServices.addManyTransaction(req.body, (_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.userId);
     (0, sendResponse_1.default)(res, {
         status: http_status_1.default.CREATED,
         success: true,

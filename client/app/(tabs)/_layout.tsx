@@ -63,6 +63,15 @@ export default function TabLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="smart-add"
+          options={{
+            title: "Smart Add",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="plus" size={size} color={color} />
+            ),
+          }}
+        />
 
         <Tabs.Screen
           name="history"

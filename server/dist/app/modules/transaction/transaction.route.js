@@ -22,7 +22,7 @@ router.get("/yearly-transaction", authCheck_1.default, transaction_controller_1.
 router.post("/new-transaction", authCheck_1.default, (0, validateRequest_1.default)(transaction_validation_1.transactionValidationSchemas.createTransactionSchema), transaction_controller_1.transactionControllers.addNewTransaction);
 // ! for adding many transaction
 router.post("/many-transaction", authCheck_1.default, transaction_controller_1.transactionControllers.addManyTransaction);
-// ! for money management
+// ! for money management , giving prompt to generate cost-spendature
 router.post("/manage-money", transaction_controller_1.transactionControllers.moneyManagement);
 // ! for updating transaction
 router.patch("/update-transaction/:transactionId", authCheck_1.default, (0, validateRequest_1.default)(transaction_validation_1.transactionValidationSchemas.updateTransactionSchema), transaction_controller_1.transactionControllers.updateTransaction);
