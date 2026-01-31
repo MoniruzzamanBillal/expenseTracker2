@@ -221,6 +221,7 @@ export default function AddTransactionScreen() {
               keyboardType="numeric"
               value={amount || ""}
               onChangeText={handleTextChange}
+              textColor={COLORS.text}
               style={{
                 borderWidth: 0,
                 backgroundColor: "transparent",
@@ -243,12 +244,12 @@ export default function AddTransactionScreen() {
               value={title || ""}
               onChangeText={setTitle}
               underlineColorAndroid="transparent"
+              textColor={COLORS.text}
               style={{
                 borderWidth: 0,
                 backgroundColor: "transparent",
                 padding: 0,
                 fontSize: 20,
-                color: COLORS.text,
               }}
             />
           </View>
@@ -265,6 +266,7 @@ export default function AddTransactionScreen() {
               placeholder="Transaction Description "
               value={description || ""}
               onChangeText={setDescription}
+              textColor={COLORS.text}
               style={{
                 borderWidth: 0,
                 backgroundColor: "transparent",
@@ -279,6 +281,7 @@ export default function AddTransactionScreen() {
             mode="contained"
             onPress={handleAddTransaction}
             style={{ marginTop: 20, backgroundColor: COLORS.primary }}
+            labelStyle={{ color: COLORS.background }}
           >
             {addTransactionMutation?.isPending
               ? "Saving Transaction..."
