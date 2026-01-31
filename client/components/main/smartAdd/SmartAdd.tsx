@@ -4,13 +4,15 @@ import { COLORS } from "@/utils/colors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   View,
 } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import { Button, IconButton, Text, TextInput } from "react-native-paper";
+
 import Toast from "react-native-toast-message";
 
 export default function SmartAddPage() {
@@ -116,6 +118,27 @@ export default function SmartAddPage() {
     }
   };
 
+  // const handleRemoveItem = (index: number) => {
+  //   setChatResponseData((prev) => prev.filter((_, i) => i !== index));
+  // };
+
+  const handleRemoveItem = (index: number) => {
+    Alert.alert(
+      "Remove transaction?",
+      "This item will be removed from the list",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            setChatResponseData((prev) => prev.filter((_, i) => i !== index));
+          },
+        },
+      ],
+    );
+  };
+
   //   console.log(chatResponseData);
 
   return (
@@ -187,16 +210,26 @@ export default function SmartAddPage() {
                   {item.type.toUpperCase()}
                 </Text>
 
-                <Text
-                  style={[
-                    styles.transactionAmount,
-                    item.type === "income"
-                      ? styles.incomeText
-                      : styles.expenseText,
-                  ]}
-                >
-                  ৳ {item.amount}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text
+                    style={[
+                      styles.transactionAmount,
+                      item.type === "income"
+                        ? styles.incomeText
+                        : styles.expenseText,
+                    ]}
+                  >
+                    ৳ {item.amount}
+                  </Text>
+
+                  <IconButton
+                    icon="delete-outline"
+                    size={18}
+                    iconColor="red"
+                    onPress={() => handleRemoveItem(idx)}
+                    style={{ margin: 0 }}
+                  />
+                </View>
               </View>
 
               <Text style={styles.transactionTitle}>{item.title}</Text>
