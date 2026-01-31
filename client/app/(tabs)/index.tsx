@@ -1,17 +1,5 @@
-import { ScrollView } from "react-native";
-
-import { Text } from "react-native-paper";
+import HomePage from "@/components/main/Home/HomePage";
 
 export default function HomeScreen() {
-  return (
-    <ScrollView>
-      <Text>Home page </Text>
-      <Text>Home page </Text>
-      <Text>Home page </Text>
-      <Text>Home page </Text>
-      <Text>Home page </Text>
-      <Text>Home page </Text>
-      <Text>Home page </Text>
-    </ScrollView>
-  );
+  return <HomePage />;
 }
