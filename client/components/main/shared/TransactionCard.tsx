@@ -1,3 +1,4 @@
+import { usePatch } from "@/hooks/useApi";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -5,6 +6,7 @@ import { format } from "date-fns";
 import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { Text } from "react-native-paper";
+import Toast from "react-native-toast-message";
 
 const typeOptions = {
   income: "income",
@@ -16,12 +18,41 @@ export default function TransactionCard({
 }: {
   transactionData: TTransaction;
 }) {
-  // console.log(transactionData);
-
   //   const { mutateAsync: deleteTransactionData } = useDeleteTransaction();
+
+  const patchMutation = usePatch([
+    ["daily-transaction"],
+    ["daily-transaction"],
+    ["monthly-transaction-legacy"],
+    ["yearly-transaction"],
+  ]);
 
   // ! for deleting transaction data
   const handleDeleteTransaction = async (transactionData: TTransaction) => {
+    try {
+      const result = await patchMutation.mutateAsync({
+        url: `/transactions/delete-transaction/${transactionData?._id}`,
+        payload: transactionData,
+      });
+
+      if (result?.success) {
+        const successMessage = result?.message;
+
+        Toast.show({
+          type: "success",
+          text1: successMessage,
+          position: "top",
+        });
+      }
+    } catch (error) {
+      console.log("error = ", error);
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong!!",
+        position: "top",
+      });
+    }
+
     // const result = await deleteTransactionData(transactionData?._id!);
     // if (result?.success) {
     //   const successMessage = result?.message;
