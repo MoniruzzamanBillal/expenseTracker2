@@ -63,6 +63,20 @@ export default function TabLayout() {
             ),
           }}
         />
+
+        <Tabs.Screen
+          name="history"
+          options={{
+            title: "History",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="chart-line"
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
       </Tabs>
     </AuthGuard>
   );
