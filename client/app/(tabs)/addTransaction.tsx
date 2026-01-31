@@ -14,18 +14,20 @@ import {
 import { Button, Text, TextInput } from "react-native-paper";
 import Toast from "react-native-toast-message";
 
-const transactionConstants = {
+export const transactionConstants = {
   income: "income",
   expense: "expense",
 } as const;
 
-type TransactionType = "income" | "expense";
+export type TTransactionType = "income" | "expense";
+
 export default function AddTransactionScreen() {
   const router = useRouter();
 
-  const [type, setType] = useState<TransactionType>(
+  const [type, setType] = useState<TTransactionType>(
     transactionConstants?.income,
   );
+
   const [amount, setAmount] = useState<string | null>(null);
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
@@ -54,13 +56,14 @@ export default function AddTransactionScreen() {
       return;
     }
   };
+
   // ! for adding new transaction
   const handleAddTransaction = async () => {
-    if (!title?.trim() || !description?.trim()) {
+    if (!title?.trim()) {
       Toast.show({
         type: "error",
         text1: "Missing Fields",
-        text2: "Please enter both title and description",
+        text2: "Please title ",
         position: "bottom",
       });
 
@@ -82,7 +85,7 @@ export default function AddTransactionScreen() {
         type,
         amount: parseFloat(amount!),
         title,
-        description,
+        description: description ?? " ",
       };
 
       // transactions/new-transaction

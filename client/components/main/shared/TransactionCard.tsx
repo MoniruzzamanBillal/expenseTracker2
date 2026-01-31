@@ -233,7 +233,11 @@ export default function TransactionCard({
       </Swipeable>
 
       {modalOpen && (
-        <UpdateTransactionModal open={modalOpen} setOpen={setModalOpen} />
+        <UpdateTransactionModal
+          open={modalOpen}
+          setOpen={setModalOpen}
+          initialValue={transactionData}
+        />
       )}
     </>
   );
