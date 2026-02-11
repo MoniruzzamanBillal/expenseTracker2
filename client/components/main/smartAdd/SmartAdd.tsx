@@ -118,10 +118,6 @@ export default function SmartAddPage() {
     }
   };
 
-  // const handleRemoveItem = (index: number) => {
-  //   setChatResponseData((prev) => prev.filter((_, i) => i !== index));
-  // };
-
   const handleRemoveItem = (index: number) => {
     Alert.alert(
       "Remove transaction?",

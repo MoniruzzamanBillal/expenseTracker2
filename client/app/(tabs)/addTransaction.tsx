@@ -295,9 +295,9 @@ export default function AddTransactionScreen() {
 
 const addTransactionStyles = StyleSheet.create({
   scrollContent: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    flex: 1,
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingBottom: 50,
   },
 
   pageWrapper: {

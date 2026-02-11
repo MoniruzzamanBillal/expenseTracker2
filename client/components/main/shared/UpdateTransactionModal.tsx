@@ -327,10 +327,12 @@ export default function UpdateTransactionModal({
 const styles = StyleSheet.create({
   scrollContent: {
     paddingVertical: 15,
+    flexGrow: 1,
+    justifyContent: "center",
   },
   modal: {
     backgroundColor: "white",
-    padding: 6,
+
     marginHorizontal: 20,
     borderRadius: 8,
     maxHeight: "90%",

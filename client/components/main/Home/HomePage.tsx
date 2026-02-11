@@ -51,7 +51,7 @@ export default function HomePage() {
       <Text
         style={{
           marginTop: 8,
-          fontSize: 22,
+          fontSize: 20,
           fontWeight: "800",
           color: COLORS.text,
         }}
