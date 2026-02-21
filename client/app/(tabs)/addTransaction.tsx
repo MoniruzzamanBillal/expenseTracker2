@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -81,6 +82,8 @@ export default function AddTransactionScreen() {
     }
 
     try {
+      Keyboard.dismiss();
+
       const payload = {
         type,
         amount: parseFloat(amount!),
@@ -94,6 +97,8 @@ export default function AddTransactionScreen() {
         url: "/transactions/new-transaction",
         payload,
       });
+
+      console.log(result);
 
       if (result?.success) {
         const successMessage = result?.message;

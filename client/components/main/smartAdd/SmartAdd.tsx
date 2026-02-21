@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -43,6 +44,8 @@ export default function SmartAddPage() {
 
       return;
     }
+
+    Keyboard.dismiss();
 
     try {
       const result = await addPromptMutation.mutateAsync({

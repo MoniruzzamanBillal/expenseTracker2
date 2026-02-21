@@ -4,6 +4,7 @@ import { COLORS } from "@/utils/colors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -36,6 +37,7 @@ export default function AuthScreen() {
     }
 
     try {
+      Keyboard.dismiss();
       const payload = { email, password };
 
       const result = await loginMutation.mutateAsync({

@@ -4,7 +4,7 @@ const createTransactionSchema = z.object({
   body: z.object({
     type: z.enum(["income", "expense"]),
     title: z.string().min(1, "Title is required"),
-    description: z.string().min(1, "Description is required "),
+    description: z.string().optional(),
     amount: z.number().positive("Amount must be greater than 0"),
   }),
 });
