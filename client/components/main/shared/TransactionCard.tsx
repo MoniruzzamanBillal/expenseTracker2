@@ -4,7 +4,13 @@ import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useState } from "react";
-import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Animated,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { Text } from "react-native-paper";
 import Toast from "react-native-toast-message";
@@ -28,6 +34,21 @@ export default function TransactionCard({
     ["monthly-transaction-legacy"],
     ["yearly-transaction"],
   ]);
+
+  const deleteTransaction = async (transactionData: TTransaction) => {
+    Alert.alert(
+      "Remove transaction?",
+      "This item will be removed from the list",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => await handleDeleteTransaction(transactionData),
+        },
+      ],
+    );
+  };
 
   // ! for deleting transaction data
   const handleDeleteTransaction = async (transactionData: TTransaction) => {
@@ -69,7 +90,8 @@ export default function TransactionCard({
       >
         <TouchableOpacity
           activeOpacity={0.6}
-          onPress={() => handleDeleteTransaction(transactionData)}
+          // onPress={() => handleDeleteTransaction(transactionData)}
+          onPress={() => deleteTransaction(transactionData)}
         >
           <MaterialCommunityIcons name="delete" size={30} color="white" />
         </TouchableOpacity>

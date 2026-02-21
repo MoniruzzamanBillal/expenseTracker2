@@ -131,6 +131,7 @@ export default function AddTransactionScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 80}
     >
       <ScrollView
         contentContainerStyle={addTransactionStyles.scrollContent}
