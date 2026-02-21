@@ -3,7 +3,7 @@ import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useState } from "react";
-import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { Text } from "react-native-paper";
 import TransactionCard from "../shared/TransactionCard";
@@ -64,7 +64,6 @@ export default function TransactionAccordion({ dailyData }: TProps) {
                       "EEEE",
                     )}
                   </Text>
-                  accordionItem
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -86,14 +85,20 @@ export default function TransactionAccordion({ dailyData }: TProps) {
 
               {/* Collapsible Content */}
               <Collapsible collapsed={activeDate !== day?.date}>
-                <FlatList
+                <View style={{ paddingHorizontal: 6 }}>
+                  {day?.transactions?.map((item) => (
+                    <TransactionCard key={item?._id} transactionData={item} />
+                  ))}
+                </View>
+
+                {/* <FlatList
                   style={{ paddingHorizontal: 6 }}
                   data={day?.transactions}
                   keyExtractor={(item, index) => item?._id ?? index.toString()}
                   renderItem={({ item }) => (
                     <TransactionCard transactionData={item} />
                   )}
-                />
+                /> */}
               </Collapsible>
             </View>
           );

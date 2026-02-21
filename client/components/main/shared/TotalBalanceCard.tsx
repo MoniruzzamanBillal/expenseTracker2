@@ -17,7 +17,6 @@ export default function TotalBalanceCard({ income, expense }: TPageProps) {
             fontSize: 20,
             color: COLORS.text,
             fontWeight: "700",
-            marginBottom: 1,
           }}
         >
           Total Banalce

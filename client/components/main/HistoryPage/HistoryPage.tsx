@@ -8,7 +8,7 @@ import { Text } from "react-native-paper";
 import HistoryCard from "./HistoryCard";
 import HistoryCardSkeleton from "./HistoryCardSkeleton";
 
-const startYear = 2023;
+const startYear = 2024;
 const currentYear = new Date().getFullYear();
 
 const yearsData = Array.from(
@@ -64,7 +64,7 @@ export default function HistoryPage() {
         <View
           style={{
             borderWidth: 1,
-            borderColor: "#ccc",
+            borderColor: COLORS.border,
             borderRadius: 4,
             overflow: "hidden",
             flex: 1,
@@ -73,6 +73,8 @@ export default function HistoryPage() {
           <Picker
             selectedValue={selectedYear}
             onValueChange={(value) => setSelectedYear(value)}
+            style={{ color: COLORS.primary }}
+            dropdownIconColor={COLORS.primary}
           >
             {yearsData.map((year) => (
               <Picker.Item key={year} label={String(year)} value={year} />

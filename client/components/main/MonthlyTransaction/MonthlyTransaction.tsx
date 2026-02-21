@@ -94,6 +94,7 @@ export default function MonthlyTransactionPage() {
             style={{ color: COLORS.primary }}
             selectedValue={selectedMonth}
             onValueChange={(value) => setSelectedMonth(value)}
+            dropdownIconColor={COLORS.primary}
           >
             {monthsData.map((month) => (
               <Picker.Item
