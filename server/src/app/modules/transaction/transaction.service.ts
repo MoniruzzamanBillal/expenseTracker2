@@ -132,16 +132,20 @@ const getDailyTransactions = async (userId: string) => {
   //
 };
 
-// ! for getting the yearly transaction summary
-const getYearlySummary = async (userId: string) => {
-  const currentYear = new Date().getFullYear();
+type TYearlyPayload = {
+  targetYear?: number;
+};
 
-  const start = new Date(currentYear, 0, 1);
-  const end = new Date(currentYear + 1, 0, 1);
+// ! for getting the yearly transaction summary
+const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
+  const year = Number(query?.targetYear ?? new Date().getFullYear());
+
+  const start = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(year + 1, 0, 1, 0, 0, 0, 0));
 
   const transactions = await transactionModel.find({
     user: userId,
-    createdAt: { $gte: start, $lte: end },
+    createdAt: { $gte: start, $lt: end },
     isDeleted: false,
   });
 
@@ -153,7 +157,7 @@ const getYearlySummary = async (userId: string) => {
   }
 
   for (const transaction of transactions) {
-    const month = new Date(transaction?.createdAt as Date).getMonth();
+    const month = new Date(transaction?.createdAt as Date).getUTCMonth();
 
     if (transaction.type === transactionConstants.income) {
       monthlySummary[month].income += transaction.amount;
