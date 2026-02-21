@@ -75,7 +75,7 @@ const getDailyTransactions = (0, catchAsync_1.default)((req, res) => __awaiter(v
 // ! for getting the yearly transaction summary
 const getYearlySummary = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const result = yield transaction_service_1.transactionServices.getYearlySummary((_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.userId);
+    const result = yield transaction_service_1.transactionServices.getYearlySummary((_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.userId, req === null || req === void 0 ? void 0 : req.query);
     (0, sendResponse_1.default)(res, {
         status: http_status_1.default.OK,
         success: true,

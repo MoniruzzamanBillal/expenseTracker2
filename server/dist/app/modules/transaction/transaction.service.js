@@ -95,14 +95,14 @@ const getDailyTransactions = (userId) => __awaiter(void 0, void 0, void 0, funct
     //
 });
 // ! for getting the yearly transaction summary
-const getYearlySummary = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const currentYear = new Date().getFullYear();
-    const start = new Date(currentYear, 0, 1);
-    const end = new Date(currentYear + 1, 0, 1);
+const getYearlySummary = (userId, query) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const year = Number((_a = query === null || query === void 0 ? void 0 : query.targetYear) !== null && _a !== void 0 ? _a : new Date().getFullYear());
+    const start = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(year + 1, 0, 1, 0, 0, 0, 0));
     const transactions = yield transaction_model_1.transactionModel.find({
         user: userId,
-        createdAt: { $gte: start, $lte: end },
+        createdAt: { $gte: start, $lt: end },
         isDeleted: false,
     });
     const monthlySummary = {};
@@ -110,7 +110,7 @@ const getYearlySummary = (userId) => __awaiter(void 0, void 0, void 0, function*
         monthlySummary[i] = { income: 0, expense: 0 };
     }
     for (const transaction of transactions) {
-        const month = new Date(transaction === null || transaction === void 0 ? void 0 : transaction.createdAt).getMonth();
+        const month = new Date(transaction === null || transaction === void 0 ? void 0 : transaction.createdAt).getUTCMonth();
         if (transaction.type === transaction_constant_1.transactionConstants.income) {
             monthlySummary[month].income += transaction.amount;
         }
@@ -118,7 +118,7 @@ const getYearlySummary = (userId) => __awaiter(void 0, void 0, void 0, function*
             monthlySummary[month].expense += transaction.amount;
         }
     }
-    const result = (_a = Object.entries(monthlySummary)) === null || _a === void 0 ? void 0 : _a.map(([month, data]) => ({
+    const result = (_b = Object.entries(monthlySummary)) === null || _b === void 0 ? void 0 : _b.map(([month, data]) => ({
         month: Number(month),
         income: data === null || data === void 0 ? void 0 : data.income,
         expense: data === null || data === void 0 ? void 0 : data.expense,

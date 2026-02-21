@@ -41,7 +41,7 @@ export default function MonthlyTransactionPage() {
   const {
     data: monthlyTransaction,
     isLoading,
-    error,
+
     refetch,
   } = useFetchData(
     ["monthly-transaction", String(selectedMonth)],

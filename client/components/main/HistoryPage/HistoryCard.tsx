@@ -29,7 +29,7 @@ export default function HistoryCard({
       <Text
         style={{
           fontWeight: 700,
-          fontSize: 18,
+          fontSize: 16,
           marginBottom: 2,
           color: COLORS.primary,
         }}
