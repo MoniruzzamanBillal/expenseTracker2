@@ -14,41 +14,9 @@ const addNewTransaction = async (payload: TTransaction, userId: string) => {
 
 // ! for adding tranaction as array
 const addManyTransaction = async (payload: TTransaction[], userId: string) => {
-  payload.forEach(async (data: TTransaction) => {
-    await transactionModel.create({ ...data, user: userId });
-  });
-};
+  const formattedPayload = payload?.map((data) => ({ ...data, user: userId }));
 
-// ! for getting monthly data --> legecy service function , not in use
-const getMonthlyTransactionsLegacy = async (
-  userId: string,
-  month?: number,
-  year?: number,
-) => {
-  const today = new Date();
-  year = year ?? today.getUTCFullYear();
-  month = month ?? today.getUTCMonth() + 1;
-
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0, 23, 59, 59, 999);
-
-  const transactions = await transactionModel
-    .find({
-      user: userId,
-      createdAt: { $gte: start, $lte: end },
-      isDeleted: false,
-    })
-    .sort({ createdAt: -1 });
-
-  const income = transactions
-    .filter((t) => t.type === "income")
-    .reduce((acc, curr) => acc + curr.amount, 0);
-
-  const expense = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((acc, curr) => acc + curr.amount, 0);
-
-  return { income, expense, transactions };
+  return transactionModel.insertMany(formattedPayload);
 };
 
 type TMonthlyPayload = {
@@ -243,7 +211,7 @@ const deleteTransactionData = async (transactionId: string) => {
   return result;
 };
 
-// ! for moneyManagement
+// ! for moneyManagement (prompt with ai)
 const moneyManagement = async (prompt: string) => {
   const response = await openai.chat.completions.create({
     // model: "z-ai/glm-4.5-air:free",
@@ -305,7 +273,7 @@ export const transactionServices = {
   addNewTransaction,
   addManyTransaction,
   updateTransaction,
-  getMonthlyTransactionsLegacy,
+
   deleteTransactionData,
   getDailyTransactions,
   getYearlySummary,

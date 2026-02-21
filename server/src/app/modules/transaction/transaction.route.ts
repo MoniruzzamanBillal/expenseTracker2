@@ -6,13 +6,6 @@ import { transactionValidationSchemas } from "./transaction.validation";
 
 const router = Router();
 
-// ! Get monthly transactions --> legacy route , not in use
-router.get(
-  "/monthly-transaction-legacy",
-  authCheck,
-  transactionControllers.getMonthlyTransactionsLegacy,
-);
-
 // ! Get monthly transactions
 router.get(
   "/monthly-transaction",

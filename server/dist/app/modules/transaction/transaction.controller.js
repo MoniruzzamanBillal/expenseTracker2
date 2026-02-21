@@ -50,23 +50,6 @@ const updateTransaction = (0, catchAsync_1.default)((req, res) => __awaiter(void
         data: result,
     });
 }));
-// ! Get monthly transactions (default: current month) --> legacy controller function , not in use
-const getMonthlyTransactionsLegacy = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e;
-    const month = ((_a = req.query) === null || _a === void 0 ? void 0 : _a.month)
-        ? parseInt((_b = req.query) === null || _b === void 0 ? void 0 : _b.month)
-        : undefined;
-    const year = ((_c = req.query) === null || _c === void 0 ? void 0 : _c.year)
-        ? parseInt((_d = req.query) === null || _d === void 0 ? void 0 : _d.year)
-        : undefined;
-    const result = yield transaction_service_1.transactionServices.getMonthlyTransactionsLegacy((_e = req === null || req === void 0 ? void 0 : req.user) === null || _e === void 0 ? void 0 : _e.userId, month, year);
-    (0, sendResponse_1.default)(res, {
-        status: http_status_1.default.OK,
-        success: true,
-        message: `Transactions retrived !!!`,
-        data: result,
-    });
-}));
 // ! Get monthly transactions (default: current month)
 const getMonthlyTransactions = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -126,7 +109,6 @@ const moneyManagement = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
 exports.transactionControllers = {
     addNewTransaction,
     updateTransaction,
-    getMonthlyTransactionsLegacy,
     deleteTransactionData,
     getDailyTransactions,
     getYearlySummary,

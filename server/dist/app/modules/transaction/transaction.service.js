@@ -25,31 +25,8 @@ const addNewTransaction = (payload, userId) => __awaiter(void 0, void 0, void 0,
 });
 // ! for adding tranaction as array
 const addManyTransaction = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    payload.forEach((data) => __awaiter(void 0, void 0, void 0, function* () {
-        yield transaction_model_1.transactionModel.create(Object.assign(Object.assign({}, data), { user: userId }));
-    }));
-});
-// ! for getting monthly data --> legecy service function , not in use
-const getMonthlyTransactionsLegacy = (userId, month, year) => __awaiter(void 0, void 0, void 0, function* () {
-    const today = new Date();
-    year = year !== null && year !== void 0 ? year : today.getUTCFullYear();
-    month = month !== null && month !== void 0 ? month : today.getUTCMonth() + 1;
-    const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 0, 23, 59, 59, 999);
-    const transactions = yield transaction_model_1.transactionModel
-        .find({
-        user: userId,
-        createdAt: { $gte: start, $lte: end },
-        isDeleted: false,
-    })
-        .sort({ createdAt: -1 });
-    const income = transactions
-        .filter((t) => t.type === "income")
-        .reduce((acc, curr) => acc + curr.amount, 0);
-    const expense = transactions
-        .filter((t) => t.type === "expense")
-        .reduce((acc, curr) => acc + curr.amount, 0);
-    return { income, expense, transactions };
+    const formattedPayload = payload === null || payload === void 0 ? void 0 : payload.map((data) => (Object.assign(Object.assign({}, data), { user: userId })));
+    return transaction_model_1.transactionModel.insertMany(formattedPayload);
 });
 // ! for getting monthly data
 const getMonthlyTransactions = (userId, query) => __awaiter(void 0, void 0, void 0, function* () {
@@ -174,7 +151,7 @@ const deleteTransactionData = (transactionId) => __awaiter(void 0, void 0, void 
     });
     return result;
 });
-// ! for moneyManagement
+// ! for moneyManagement (prompt with ai)
 const moneyManagement = (prompt) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const response = yield openRouter_1.openai.chat.completions.create({
@@ -231,7 +208,6 @@ exports.transactionServices = {
     addNewTransaction,
     addManyTransaction,
     updateTransaction,
-    getMonthlyTransactionsLegacy,
     deleteTransactionData,
     getDailyTransactions,
     getYearlySummary,

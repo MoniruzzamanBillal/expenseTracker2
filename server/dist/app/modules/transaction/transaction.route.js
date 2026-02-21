@@ -10,8 +10,6 @@ const validateRequest_1 = __importDefault(require("../../middleware/validateRequ
 const transaction_controller_1 = require("./transaction.controller");
 const transaction_validation_1 = require("./transaction.validation");
 const router = (0, express_1.Router)();
-// ! Get monthly transactions --> legacy route , not in use
-router.get("/monthly-transaction-legacy", authCheck_1.default, transaction_controller_1.transactionControllers.getMonthlyTransactionsLegacy);
 // ! Get monthly transactions
 router.get("/monthly-transaction", authCheck_1.default, transaction_controller_1.transactionControllers.getMonthlyTransactions);
 // ! for getting the daily transaction

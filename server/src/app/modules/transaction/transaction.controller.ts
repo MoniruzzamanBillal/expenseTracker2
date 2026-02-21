@@ -48,28 +48,6 @@ const updateTransaction = catchAsync(async (req, res) => {
   });
 });
 
-// ! Get monthly transactions (default: current month) --> legacy controller function , not in use
-const getMonthlyTransactionsLegacy = catchAsync(async (req, res) => {
-  const month = req.query?.month
-    ? parseInt(req.query?.month as string)
-    : undefined;
-  const year = req.query?.year
-    ? parseInt(req.query?.year as string)
-    : undefined;
-
-  const result = await transactionServices.getMonthlyTransactionsLegacy(
-    req?.user?.userId,
-    month,
-    year,
-  );
-  sendResponse(res, {
-    status: httpStatus.OK,
-    success: true,
-    message: `Transactions retrived !!!`,
-    data: result,
-  });
-});
-
 // ! Get monthly transactions (default: current month)
 const getMonthlyTransactions = catchAsync(async (req, res) => {
   const result = await transactionServices.getMonthlyTransactions(
@@ -138,7 +116,7 @@ const moneyManagement = catchAsync(async (req, res) => {
 export const transactionControllers = {
   addNewTransaction,
   updateTransaction,
-  getMonthlyTransactionsLegacy,
+
   deleteTransactionData,
   getDailyTransactions,
   getYearlySummary,
