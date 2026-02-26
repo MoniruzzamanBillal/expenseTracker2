@@ -3,7 +3,7 @@ import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -27,6 +27,7 @@ export default function TransactionCard({
   transactionData: TTransaction;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const swipeableRef = useRef<Swipeable>(null);
 
   const patchMutation = usePatch([
     ["daily-transaction"],
@@ -37,12 +38,12 @@ export default function TransactionCard({
 
   const deleteTransaction = async (transactionData: TTransaction) => {
     Alert.alert(
-      "Remove transaction?",
-      "This item will be removed from the list",
+      "Delete transaction?",
+      "This item will be deleted from the list",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Remove",
+          text: "Delete",
           style: "destructive",
           onPress: async () => await handleDeleteTransaction(transactionData),
         },
@@ -90,8 +91,10 @@ export default function TransactionCard({
       >
         <TouchableOpacity
           activeOpacity={0.6}
-          // onPress={() => handleDeleteTransaction(transactionData)}
-          onPress={() => deleteTransaction(transactionData)}
+          onPress={() => {
+            swipeableRef.current?.close();
+            deleteTransaction(transactionData);
+          }}
         >
           <MaterialCommunityIcons name="delete" size={30} color="white" />
         </TouchableOpacity>
@@ -106,13 +109,17 @@ export default function TransactionCard({
       outputRange: [1, 0],
       extrapolate: "clamp",
     });
+
     return (
       <Animated.View
         style={[cardStyles.rightAction, { transform: [{ scale }] }]}
       >
         <TouchableOpacity
           activeOpacity={0.6}
-          onPress={() => setModalOpen(true)}
+          onPress={() => {
+            swipeableRef.current?.close();
+            setModalOpen(true);
+          }}
         >
           <MaterialCommunityIcons
             name="book-edit-outline"
@@ -127,6 +134,7 @@ export default function TransactionCard({
   return (
     <>
       <Swipeable
+        ref={swipeableRef}
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
         overshootLeft={false}

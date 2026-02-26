@@ -3,15 +3,8 @@ import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Keyboard, StyleSheet, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Button, Text, TextInput } from "react-native-paper";
 import Toast from "react-native-toast-message";
 
@@ -60,6 +53,8 @@ export default function AddTransactionScreen() {
 
   // ! for adding new transaction
   const handleAddTransaction = async () => {
+    Keyboard.dismiss();
+
     if (!title?.trim()) {
       Toast.show({
         type: "error",
@@ -82,8 +77,6 @@ export default function AddTransactionScreen() {
     }
 
     try {
-      Keyboard.dismiss();
-
       const payload = {
         type,
         amount: parseFloat(amount!),
@@ -98,7 +91,7 @@ export default function AddTransactionScreen() {
         payload,
       });
 
-      console.log(result);
+      // console.log(result);
 
       if (result?.success) {
         const successMessage = result?.message;
@@ -128,195 +121,187 @@ export default function AddTransactionScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <KeyboardAwareScrollView
       style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 80}
+      contentContainerStyle={{
+        flexGrow: 1,
+        justifyContent: "center",
+      }}
+      bottomOffset={30}
+      extraKeyboardSpace={10}
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView
-        contentContainerStyle={addTransactionStyles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        keyboardDismissMode="on-drag"
-      >
-        <View style={addTransactionStyles.pageWrapper}>
-          {/* income , expense button view  */}
-          <View
-            style={{
-              flexDirection: "row",
-              columnGap: 10,
-              justifyContent: "center",
-            }}
+      <View style={addTransactionStyles.pageWrapper}>
+        {/* income , expense button view  */}
+        <View
+          style={{
+            flexDirection: "row",
+            columnGap: 10,
+            justifyContent: "center",
+          }}
+        >
+          {/* income button  */}
+          <TouchableOpacity
+            style={[
+              addTransactionStyles.typeButton,
+              type === transactionConstants?.income &&
+                addTransactionStyles.typeButtonActive,
+            ]}
+            onPress={() => setType(transactionConstants?.income)}
           >
-            {/* income button  */}
-            <TouchableOpacity
+            <MaterialCommunityIcons
+              name="arrow-up"
+              size={18}
+              color={
+                type === transactionConstants?.income ? COLORS.white : "green"
+              }
+            />
+            <Text
               style={[
-                addTransactionStyles.typeButton,
+                addTransactionStyles.typeButtonText,
                 type === transactionConstants?.income &&
-                  addTransactionStyles.typeButtonActive,
+                  addTransactionStyles.typeButtonTextActive,
               ]}
-              onPress={() => setType(transactionConstants?.income)}
             >
-              <MaterialCommunityIcons
-                name="arrow-up"
-                size={18}
-                color={
-                  type === transactionConstants?.income ? COLORS.white : "green"
-                }
-              />
-              <Text
-                style={[
-                  addTransactionStyles.typeButtonText,
-                  type === transactionConstants?.income &&
-                    addTransactionStyles.typeButtonTextActive,
-                ]}
-              >
-                Income{" "}
-              </Text>
-            </TouchableOpacity>
+              Income{" "}
+            </Text>
+          </TouchableOpacity>
 
-            {/* expense button  */}
-            <TouchableOpacity
+          {/* expense button  */}
+          <TouchableOpacity
+            style={[
+              addTransactionStyles.typeButton,
+              type === transactionConstants?.expense &&
+                addTransactionStyles.typeButtonActive,
+            ]}
+            onPress={() => setType(transactionConstants?.expense)}
+          >
+            <MaterialCommunityIcons
+              name="arrow-down"
+              size={18}
+              color={
+                type === transactionConstants?.expense ? COLORS.white : "red"
+              }
+            />
+            <Text
               style={[
-                addTransactionStyles.typeButton,
+                addTransactionStyles.typeButtonText,
                 type === transactionConstants?.expense &&
-                  addTransactionStyles.typeButtonActive,
+                  addTransactionStyles.typeButtonTextActive,
               ]}
-              onPress={() => setType(transactionConstants?.expense)}
             >
-              <MaterialCommunityIcons
-                name="arrow-down"
-                size={18}
-                color={
-                  type === transactionConstants?.expense ? COLORS.white : "red"
-                }
-              />
-              <Text
-                style={[
-                  addTransactionStyles.typeButtonText,
-                  type === transactionConstants?.expense &&
-                    addTransactionStyles.typeButtonTextActive,
-                ]}
-              >
-                Expense
-              </Text>
-            </TouchableOpacity>
+              Expense
+            </Text>
+          </TouchableOpacity>
 
-            {/*  */}
-          </View>
+          {/*  */}
+        </View>
 
-          {/* horizontal line  */}
-          <View
+        {/* horizontal line  */}
+        <View
+          style={{
+            height: 1,
+            width: "100%",
+            backgroundColor: COLORS.border,
+            margin: 15,
+          }}
+        />
+
+        {/* money input field  */}
+        <View
+          style={{
+            borderBottomWidth: 1,
+            borderBottomColor: COLORS.border,
+          }}
+        >
+          <TextInput
+            placeholder="+৳ 00.0"
+            keyboardType="numeric"
+            value={amount || ""}
+            onChangeText={handleTextChange}
+            textColor={COLORS.text}
             style={{
-              height: 1,
-              width: "100%",
-              backgroundColor: COLORS.border,
-              margin: 15,
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              padding: 0,
+              fontSize: 22,
             }}
           />
-
-          {/* money input field  */}
-          <View
-            style={{
-              borderBottomWidth: 1,
-              borderBottomColor: COLORS.border,
-            }}
-          >
-            <TextInput
-              placeholder="+৳ 00.0"
-              keyboardType="numeric"
-              value={amount || ""}
-              onChangeText={handleTextChange}
-              textColor={COLORS.text}
-              style={{
-                borderWidth: 0,
-                backgroundColor: "transparent",
-                padding: 0,
-                fontSize: 22,
-              }}
-            />
-          </View>
-
-          {/* title input field  */}
-          <View
-            style={{
-              width: "100%",
-              borderBottomWidth: 1,
-              borderBottomColor: COLORS.border,
-            }}
-          >
-            <TextInput
-              placeholder="Transaction Title "
-              value={title || ""}
-              onChangeText={setTitle}
-              underlineColorAndroid="transparent"
-              textColor={COLORS.text}
-              style={{
-                borderWidth: 0,
-                backgroundColor: "transparent",
-                padding: 0,
-                fontSize: 20,
-              }}
-            />
-          </View>
-
-          {/* transaction details input field  */}
-          <View
-            style={{
-              width: "100%",
-              borderBottomWidth: 1,
-              borderBottomColor: COLORS.border,
-            }}
-          >
-            <TextInput
-              placeholder="Transaction Description "
-              value={description || ""}
-              onChangeText={setDescription}
-              textColor={COLORS.text}
-              style={{
-                borderWidth: 0,
-                backgroundColor: "transparent",
-                padding: 0,
-                fontSize: 20,
-              }}
-            />
-          </View>
-
-          <Button
-            disabled={addTransactionMutation?.isPending}
-            mode="contained"
-            onPress={handleAddTransaction}
-            style={{ marginTop: 20, backgroundColor: COLORS.primary }}
-            labelStyle={{ color: COLORS.background }}
-          >
-            {addTransactionMutation?.isPending
-              ? "Saving Transaction..."
-              : " Save Transaction"}
-          </Button>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        {/* title input field  */}
+        <View
+          style={{
+            width: "100%",
+            borderBottomWidth: 1,
+            borderBottomColor: COLORS.border,
+          }}
+        >
+          <TextInput
+            placeholder="Transaction Title "
+            value={title || ""}
+            onChangeText={setTitle}
+            underlineColorAndroid="transparent"
+            textColor={COLORS.text}
+            style={{
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              padding: 0,
+              fontSize: 20,
+            }}
+          />
+        </View>
+
+        {/* transaction details input field  */}
+        <View
+          style={{
+            width: "100%",
+            borderBottomWidth: 1,
+            borderBottomColor: COLORS.border,
+          }}
+        >
+          <TextInput
+            placeholder="Transaction Description "
+            value={description || ""}
+            onChangeText={setDescription}
+            textColor={COLORS.text}
+            style={{
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              padding: 0,
+              fontSize: 20,
+            }}
+          />
+        </View>
+
+        <Button
+          disabled={addTransactionMutation?.isPending}
+          mode="contained"
+          onPress={handleAddTransaction}
+          style={{ marginTop: 20, backgroundColor: COLORS.primary }}
+          labelStyle={{ color: COLORS.background }}
+        >
+          {addTransactionMutation?.isPending
+            ? "Saving Transaction..."
+            : " Save Transaction"}
+        </Button>
+      </View>
+    </KeyboardAwareScrollView>
   );
 }
 
 const addTransactionStyles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingBottom: 50,
-  },
-
   pageWrapper: {
     width: "90%",
     margin: "auto",
 
     backgroundColor: COLORS.background,
-    padding: 14,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 6,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 5,
   },
 

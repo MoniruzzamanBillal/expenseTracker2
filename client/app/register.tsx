@@ -3,14 +3,8 @@ import { useState } from "react";
 
 import { usePost } from "@/hooks/useApi";
 import { COLORS } from "@/utils/colors";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Button, Text, TextInput } from "react-native-paper";
 import Toast from "react-native-toast-message";
 
@@ -62,96 +56,93 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <KeyboardAwareScrollView
       style={{ flex: 1 }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        justifyContent: "center",
+      }}
+      bottomOffset={30}
+      extraKeyboardSpace={10}
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView
-        contentContainerStyle={{ paddingVertical: 200 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        keyboardDismissMode="on-drag"
-      >
-        <ScrollView style={registerStyles.wrapperContainer}>
-          <Text
+      <View style={registerStyles.wrapperContainer}>
+        <Text
+          style={{
+            fontWeight: "600",
+            fontSize: 30,
+            color: COLORS.text,
+            textAlign: "center",
+            paddingVertical: 10,
+          }}
+        >
+          Create Account
+        </Text>
+
+        {/* login form  */}
+        <View style={registerStyles.registerForm}>
+          <TextInput
+            placeholder="Enter Name"
+            autoCorrect={false}
+            onChangeText={setName}
+            value={name || ""}
+            textColor={COLORS.text}
             style={{
-              fontWeight: "600",
-              fontSize: 30,
-              color: COLORS.text,
-              textAlign: "center",
-              paddingVertical: 10,
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              padding: 0,
             }}
+          />
+
+          <TextInput
+            placeholder="Enter Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={setEmail}
+            value={email || ""}
+            textColor={COLORS.text}
+            style={{
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              padding: 0,
+            }}
+          />
+          <TextInput
+            placeholder="Enter Password"
+            secureTextEntry={true}
+            onChangeText={setPassword}
+            value={password || ""}
+            textColor={COLORS.text}
+            style={{
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              padding: 0,
+            }}
+          />
+          <Button
+            mode="contained"
+            onPress={handleRegistration}
+            disabled={registerMutation?.isPending}
+            labelStyle={{ color: COLORS.text }}
           >
-            Create Account
-          </Text>
+            {registerMutation?.isPending ? "Registering..." : "Register"}
+          </Button>
 
-          {/* login form  */}
-          <View style={registerStyles.registerForm}>
-            <TextInput
-              placeholder="Enter Name"
-              autoCorrect={false}
-              onChangeText={setName}
-              value={name || ""}
-              textColor={COLORS.text}
-              style={{
-                borderWidth: 0,
-                backgroundColor: "transparent",
-                padding: 0,
-              }}
-            />
+          <View style={{ flexDirection: "row", marginTop: 10 }}>
+            <Text style={{ color: COLORS.text }}>
+              Already have any account ?{" "}
+            </Text>
 
-            <TextInput
-              placeholder="Enter Email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              onChangeText={setEmail}
-              value={email || ""}
-              textColor={COLORS.text}
-              style={{
-                borderWidth: 0,
-                backgroundColor: "transparent",
-                padding: 0,
-              }}
-            />
-            <TextInput
-              placeholder="Enter Password"
-              secureTextEntry={true}
-              onChangeText={setPassword}
-              value={password || ""}
-              textColor={COLORS.text}
-              style={{
-                borderWidth: 0,
-                backgroundColor: "transparent",
-                padding: 0,
-              }}
-            />
-            <Button
-              mode="contained"
-              onPress={handleRegistration}
-              disabled={registerMutation?.isPending}
-              labelStyle={{ color: COLORS.text }}
-            >
-              {registerMutation?.isPending ? "Registering..." : "Register"}
-            </Button>
-
-            <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <Text style={{ color: COLORS.text }}>
-                Already have any account ?{" "}
+            <Pressable onPress={() => router.replace("/auth")}>
+              <Text style={{ color: "blue", textDecorationLine: "underline" }}>
+                Log in
               </Text>
-
-              <Pressable onPress={() => router.replace("/auth")}>
-                <Text
-                  style={{ color: "blue", textDecorationLine: "underline" }}
-                >
-                  Log in
-                </Text>
-              </Pressable>
-            </View>
+            </Pressable>
           </View>
-        </ScrollView>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </View>
+      </View>
+    </KeyboardAwareScrollView>
   );
 }
 

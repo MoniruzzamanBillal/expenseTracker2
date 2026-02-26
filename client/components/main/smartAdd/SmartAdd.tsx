@@ -3,15 +3,8 @@ import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Alert,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Alert, Keyboard, ScrollView, StyleSheet, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Button, IconButton, Text, TextInput } from "react-native-paper";
 
 import Toast from "react-native-toast-message";
@@ -141,9 +134,15 @@ export default function SmartAddPage() {
   //   console.log(chatResponseData);
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <KeyboardAwareScrollView
       style={{ flex: 1 }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        justifyContent: "center",
+      }}
+      bottomOffset={30}
+      extraKeyboardSpace={10}
+      showsVerticalScrollIndicator={false}
     >
       {/* top input fields  */}
       <View style={styles.topInputContent}>
@@ -259,7 +258,7 @@ export default function SmartAddPage() {
 
         {/*  */}
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
 

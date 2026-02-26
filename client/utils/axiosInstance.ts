@@ -52,12 +52,8 @@ instance.interceptors.response.use(
 
   // ❌ Handle errors
   async function (error) {
-    console.log("error from 58 line = ", error?.response);
-
     // !
     if (error?.response?.status === 401) {
-      console.log("inside if !!");
-
       await AsyncStorage.removeItem("user");
       await AsyncStorage.removeItem("token");
 
@@ -72,8 +68,6 @@ instance.interceptors.response.use(
     // !
 
     const errorMessage = error?.response?.data?.message;
-
-    console.log(errorMessage);
 
     Toast.show({
       type: "error",

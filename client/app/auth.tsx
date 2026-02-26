@@ -3,15 +3,8 @@ import { usePost } from "@/hooks/useApi";
 import { COLORS } from "@/utils/colors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Keyboard, Pressable, StyleSheet, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Button, Text, TextInput } from "react-native-paper";
 import Toast from "react-native-toast-message";
 
@@ -80,89 +73,82 @@ export default function AuthScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <KeyboardAwareScrollView
       style={{ flex: 1 }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        justifyContent: "center",
+      }}
+      bottomOffset={30}
+      extraKeyboardSpace={10}
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          paddingBottom: 40,
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        keyboardDismissMode="on-drag"
-      >
-        <View style={authStyles.wrapperContainer}>
-          <Text
+      <View style={authStyles.wrapperContainer}>
+        <Text
+          style={{
+            fontWeight: "600",
+            fontSize: 30,
+            color: COLORS.text,
+            textAlign: "center",
+            paddingVertical: 10,
+          }}
+        >
+          Welcome Back
+        </Text>
+
+        {/* login form  */}
+        <View style={authStyles.loginForm}>
+          <TextInput
+            placeholder="Enter Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={setEmail}
+            value={email || ""}
+            textColor={COLORS.text}
             style={{
-              fontWeight: "600",
-              fontSize: 30,
-              color: COLORS.text,
-              textAlign: "center",
-              paddingVertical: 10,
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              padding: 0,
             }}
+          />
+          <TextInput
+            placeholder="Enter Password"
+            secureTextEntry={true}
+            onChangeText={setPassword}
+            value={password || ""}
+            textColor={COLORS.text}
+            style={{
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              padding: 0,
+            }}
+          />
+
+          <Button
+            mode="contained"
+            onPress={handleLogin}
+            disabled={loginMutation?.isPending}
+            labelStyle={{ color: COLORS.text }}
           >
-            Welcome Back
-          </Text>
+            {loginMutation?.isPending ? "Loggin in..." : "Login"}
+          </Button>
 
-          {/* login form  */}
-          <View style={authStyles.loginForm}>
-            <TextInput
-              placeholder="Enter Email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              onChangeText={setEmail}
-              value={email || ""}
-              textColor={COLORS.text}
-              style={{
-                borderWidth: 0,
-                backgroundColor: "transparent",
-                padding: 0,
-              }}
-            />
-            <TextInput
-              placeholder="Enter Password"
-              secureTextEntry={true}
-              onChangeText={setPassword}
-              value={password || ""}
-              textColor={COLORS.text}
-              style={{
-                borderWidth: 0,
-                backgroundColor: "transparent",
-                padding: 0,
-              }}
-            />
+          <View style={{ flexDirection: "row", marginTop: 10 }}>
+            <Text style={{ color: COLORS.text }}>
+              {" "}
+              {"Don't Have any account ?"}{" "}
+            </Text>
 
-            <Button
-              mode="contained"
-              onPress={handleLogin}
-              disabled={loginMutation?.isPending}
-              labelStyle={{ color: COLORS.text }}
-            >
-              {loginMutation?.isPending ? "Loggin in..." : "Login"}
-            </Button>
-
-            <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <Text style={{ color: COLORS.text }}>
-                {" "}
-                {"Don't Have any account ?"}{" "}
+            <Pressable onPress={() => router.replace("/register")}>
+              <Text style={{ color: "blue", textDecorationLine: "underline" }}>
+                Sign Up{" "}
               </Text>
-
-              <Pressable onPress={() => router.replace("/register")}>
-                <Text
-                  style={{ color: "blue", textDecorationLine: "underline" }}
-                >
-                  Sign Up{" "}
-                </Text>
-              </Pressable>
-            </View>
+            </Pressable>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </View>
+    </KeyboardAwareScrollView>
   );
 }
 
