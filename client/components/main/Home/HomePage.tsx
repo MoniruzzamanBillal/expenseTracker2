@@ -1,7 +1,7 @@
 import { useFetchData } from "@/hooks/useApi";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Dimensions,
   RefreshControl,
@@ -9,6 +9,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { Text } from "react-native-paper";
 import PageSkeleton from "../shared/PageSkeleton";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
@@ -18,6 +19,8 @@ const screenHeight = Dimensions.get("window").height;
 
 export default function HomePage() {
   const [refreshing, setRefreshing] = useState(false);
+
+  const openSwipeableRef = useRef<Swipeable | null>(null);
 
   const {
     data: dailyTransaction,
@@ -80,6 +83,15 @@ export default function HomePage() {
               <TransactionCard
                 key={transaction?._id}
                 transactionData={transaction}
+                onSwipeOpen={(ref) => {
+                  if (
+                    openSwipeableRef.current &&
+                    openSwipeableRef.current !== ref
+                  ) {
+                    openSwipeableRef.current.close();
+                  }
+                  openSwipeableRef.current = ref;
+                }}
               />
             ),
           )}

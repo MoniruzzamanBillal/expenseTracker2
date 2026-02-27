@@ -23,8 +23,10 @@ const typeOptions = {
 
 export default function TransactionCard({
   transactionData,
+  onSwipeOpen,
 }: {
   transactionData: TTransaction;
+  onSwipeOpen: (ref: Swipeable) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
@@ -139,6 +141,11 @@ export default function TransactionCard({
         renderRightActions={renderRightActions}
         overshootLeft={false}
         overshootRight={false}
+        onSwipeableOpen={() => {
+          if (swipeableRef.current) {
+            onSwipeOpen(swipeableRef.current);
+          }
+        }}
       >
         <View style={cardStyles.container}>
           {/* body section  */}

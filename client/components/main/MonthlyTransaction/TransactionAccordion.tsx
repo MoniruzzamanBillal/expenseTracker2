@@ -2,9 +2,10 @@ import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import Collapsible from "react-native-collapsible";
+import { Swipeable } from "react-native-gesture-handler";
 import { Text } from "react-native-paper";
 import TransactionCard from "../shared/TransactionCard";
 
@@ -20,6 +21,8 @@ type TProps = {
 };
 
 export default function TransactionAccordion({ dailyData }: TProps) {
+  const openSwipeableRef = useRef<Swipeable | null>(null);
+
   const [activeDate, setActiveDate] = useState<string | null>(null);
 
   // console.log(dailyData);
@@ -87,18 +90,21 @@ export default function TransactionAccordion({ dailyData }: TProps) {
               <Collapsible collapsed={activeDate !== day?.date}>
                 <View style={{ paddingHorizontal: 6 }}>
                   {day?.transactions?.map((item) => (
-                    <TransactionCard key={item?._id} transactionData={item} />
+                    <TransactionCard
+                      key={item?._id}
+                      transactionData={item}
+                      onSwipeOpen={(ref) => {
+                        if (
+                          openSwipeableRef.current &&
+                          openSwipeableRef.current !== ref
+                        ) {
+                          openSwipeableRef.current.close();
+                        }
+                        openSwipeableRef.current = ref;
+                      }}
+                    />
                   ))}
                 </View>
-
-                {/* <FlatList
-                  style={{ paddingHorizontal: 6 }}
-                  data={day?.transactions}
-                  keyExtractor={(item, index) => item?._id ?? index.toString()}
-                  renderItem={({ item }) => (
-                    <TransactionCard transactionData={item} />
-                  )}
-                /> */}
               </Collapsible>
             </View>
           );
