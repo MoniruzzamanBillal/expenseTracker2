@@ -219,6 +219,7 @@ const deleteTransactionData = async (transactionId: string) => {
 const moneyManagement = async (prompt: string) => {
   const response = await openai.chat.completions.create({
     // model: "z-ai/glm-4.5-air:free",
+
     model: "arcee-ai/trinity-large-preview:free",
     messages: [
       {
@@ -232,6 +233,8 @@ Rules:
 - Each object must represent ONE transaction
 - Return ONLY valid JSON
 - No explanation, no markdown, no extra text
+- If description is not appropriate , then don't give description 
+- If any word is misspelled then correct the word
 
 JSON format:
 [
@@ -242,9 +245,6 @@ JSON format:
     "description": string
   }
 ]
-
-Text:
-"${prompt}"
 `,
       },
       {
