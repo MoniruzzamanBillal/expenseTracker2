@@ -14,7 +14,11 @@ type TMonthlyData = {
   expense: number;
 };
 
-type TData = TMonthlyData[];
+type TData = {
+  totalExpense: number;
+  totalIncome: number;
+  yearSummary: TMonthlyData[];
+};
 
 const startYear = 2024;
 const currentYear = new Date().getFullYear();
@@ -37,7 +41,7 @@ export default function HistoryPage() {
     `/transactions/yearly-transaction?targetYear=${selectedYear}`,
   );
 
-  console.log("yearlyTransactions = ", yearlyTransactions);
+  // console.log("yearlyTransactions = ", yearlyTransactions);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -104,7 +108,7 @@ export default function HistoryPage() {
           ))}
 
         {yearlyTransactions?.data &&
-          yearlyTransactions?.data?.map(
+          yearlyTransactions?.data?.yearSummary?.map(
             (historyData: TTransactionHistory, ind: number) => (
               <HistoryCard key={ind} historyData={historyData} />
             ),
