@@ -1,9 +1,11 @@
+import { TransactionTypeConst } from "@/constants/TransactionType.constant";
+
 export type TTransaction = {
   _id?: string;
   title: string;
   description?: string;
   amount: number;
-  type: "income" | "expense";
+  type: keyof typeof TransactionTypeConst;
   createdAt?: string;
   updatedAt?: string;
 };

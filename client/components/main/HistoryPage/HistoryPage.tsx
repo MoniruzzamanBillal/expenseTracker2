@@ -12,7 +12,9 @@ import { Text } from "react-native-paper";
 import HistoryCard from "./HistoryCard";
 import HistoryCardSkeleton from "./HistoryCardSkeleton";
 
+import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import SummaryGrid from "./SummaryGrid";
 
 const yearChangeDirection = {
   prev: "prev",
@@ -83,7 +85,7 @@ export default function HistoryPage() {
             <MaterialCommunityIcons
               name="chevron-left"
               size={18}
-              color="#6B7280"
+              color={COLORS.text}
             />
           </TouchableOpacity>
 
@@ -97,11 +99,17 @@ export default function HistoryPage() {
             <MaterialCommunityIcons
               name="chevron-right"
               size={18}
-              color="#6B7280"
+              color={COLORS.text}
             />
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* summary grid  */}
+      <SummaryGrid
+        totalIncome={yearlyTransactions?.data?.totalIncome ?? 0}
+        totalExpense={yearlyTransactions?.data?.totalExpense ?? 0}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -132,9 +140,11 @@ export default function HistoryPage() {
 }
 
 const styles = StyleSheet.create({
+  // year select
   yearContainer: {
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: 5,
   },
   yearContainerWrapper: {
     flexDirection: "row",
@@ -143,18 +153,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: COLORS.border,
     borderRadius: 9999,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.background,
   },
   button: {
     padding: 4,
   },
   yearText: {
-    fontFamily: "System", // or your custom font for headline
+    fontFamily: "System",
     fontWeight: "bold",
     fontSize: 16,
-    color: "#1F2937", // text-on-surface equivalent
-    letterSpacing: 0.5, // tracking-wide equivalent
+    color: COLORS.text,
+    letterSpacing: 0.5,
   },
 });
