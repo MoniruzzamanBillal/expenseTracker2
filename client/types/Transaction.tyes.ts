@@ -14,4 +14,5 @@ export type TTransactionHistory = {
   expense: number;
   income: number;
   month: number;
+  transactionCount: number;
 };

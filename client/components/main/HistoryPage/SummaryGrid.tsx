@@ -81,7 +81,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: COLORS.background,
     borderColor: "#E5E7EB",
-
     justifyContent: "space-between",
   },
   cardHeader: {

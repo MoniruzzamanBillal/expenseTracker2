@@ -1,5 +1,4 @@
 import { useFetchData } from "@/hooks/useApi";
-import { TTransactionHistory } from "@/types/Transaction.tyes";
 import { useState } from "react";
 import {
   RefreshControl,
@@ -12,6 +11,7 @@ import { Text } from "react-native-paper";
 import HistoryCard from "./HistoryCard";
 import HistoryCardSkeleton from "./HistoryCardSkeleton";
 
+import { TTransactionHistory } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import MonthlyBreakdownHeader from "./MonthlyBreakdownHeader";
@@ -22,16 +22,10 @@ const yearChangeDirection = {
   next: "next",
 } as const;
 
-type TMonthlyData = {
-  month: number;
-  income: number;
-  expense: number;
-};
-
 type TData = {
   totalExpense: number;
   totalIncome: number;
-  yearSummary: TMonthlyData[];
+  yearSummary: TTransactionHistory[];
 };
 
 const startYear = 2025;
@@ -111,7 +105,7 @@ export default function HistoryPage() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 200 }}
+        contentContainerStyle={{ paddingBottom: 220 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
@@ -128,8 +122,8 @@ export default function HistoryPage() {
 
         {yearlyTransactions?.data &&
           yearlyTransactions?.data?.yearSummary?.map(
-            (historyData: TTransactionHistory, ind: number) => (
-              <HistoryCard key={ind} historyData={historyData} />
+            (historyData: TTransactionHistory) => (
+              <HistoryCard key={historyData?.month} historyData={historyData} />
             ),
           )}
       </ScrollView>

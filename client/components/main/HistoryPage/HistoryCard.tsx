@@ -20,10 +20,8 @@ const monthNames = [
 
 export default function HistoryCard({
   historyData,
-  transactionCount = 0,
 }: {
   historyData: TTransactionHistory;
-  transactionCount?: number;
 }) {
   const balance = historyData?.income - historyData?.expense;
 
@@ -36,7 +34,7 @@ export default function HistoryCard({
         </Text>
         <View style={historyCardStyle.transactionBadge}>
           <Text style={historyCardStyle.badgeText}>
-            {transactionCount} TRANSACTIONS
+            {historyData?.transactionCount} TRANSACTIONS
           </Text>
         </View>
       </View>
@@ -124,13 +122,15 @@ const historyCardStyle = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   badgeText: {
     fontSize: 8,
-    fontWeight: "800",
+    fontWeight: "bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    color: COLORS.textLight || "#6B7280",
+    color: COLORS.textLight,
   },
   statsContainer: {
     flexDirection: "row",
