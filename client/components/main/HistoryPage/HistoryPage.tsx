@@ -1,12 +1,23 @@
 import { useFetchData } from "@/hooks/useApi";
 import { TTransactionHistory } from "@/types/Transaction.tyes";
-import { COLORS } from "@/utils/colors";
-import { Picker } from "@react-native-picker/picker";
 import { useState } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Text } from "react-native-paper";
 import HistoryCard from "./HistoryCard";
 import HistoryCardSkeleton from "./HistoryCardSkeleton";
+
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+
+const yearChangeDirection = {
+  prev: "prev",
+  next: "next",
+} as const;
 
 type TMonthlyData = {
   month: number;
@@ -49,47 +60,49 @@ export default function HistoryPage() {
     setRefreshing(false);
   };
 
+  const handleYearChange = (direction: keyof typeof yearChangeDirection) => {
+    if (direction === yearChangeDirection.prev && selectedYear > startYear) {
+      setSelectedYear(selectedYear - 1);
+    }
+
+    if (direction === yearChangeDirection.next && selectedYear < currentYear) {
+      setSelectedYear(selectedYear + 1);
+    }
+  };
+
   return (
     <View style={{ width: "92%", alignSelf: "center", marginTop: 10 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 15,
-            fontWeight: "700",
-            marginRight: 8,
-            color: COLORS.text,
-          }}
-        >
-          Select Year:
-        </Text>
-
-        <View
-          style={{
-            borderWidth: 1,
-            borderColor: COLORS.border,
-            borderRadius: 4,
-            overflow: "hidden",
-            flex: 1,
-          }}
-        >
-          <Picker
-            selectedValue={selectedYear}
-            onValueChange={(value) => setSelectedYear(value)}
-            style={{ color: COLORS.primary }}
-            dropdownIconColor={COLORS.primary}
+      {/* year select  */}
+      <View style={styles.yearContainer}>
+        <View style={styles.yearContainerWrapper}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleYearChange(yearChangeDirection.prev)}
+            disabled={selectedYear === startYear}
           >
-            {yearsData.map((year) => (
-              <Picker.Item key={year} label={String(year)} value={year} />
-            ))}
-          </Picker>
+            <MaterialCommunityIcons
+              name="chevron-left"
+              size={18}
+              color="#6B7280"
+            />
+          </TouchableOpacity>
+
+          <Text style={styles.yearText}> {selectedYear} </Text>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleYearChange(yearChangeDirection.next)}
+            disabled={selectedYear === currentYear}
+          >
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={18}
+              color="#6B7280"
+            />
+          </TouchableOpacity>
         </View>
       </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 75 }}
@@ -117,3 +130,31 @@ export default function HistoryPage() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  yearContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  yearContainerWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 9999,
+    backgroundColor: "#FFFFFF",
+  },
+  button: {
+    padding: 4,
+  },
+  yearText: {
+    fontFamily: "System", // or your custom font for headline
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#1F2937", // text-on-surface equivalent
+    letterSpacing: 0.5, // tracking-wide equivalent
+  },
+});
