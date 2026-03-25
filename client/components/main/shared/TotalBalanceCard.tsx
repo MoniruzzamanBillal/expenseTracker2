@@ -1,4 +1,5 @@
 import { COLORS } from "@/utils/colors";
+import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 
@@ -8,147 +9,117 @@ type TPageProps = {
 };
 
 export default function TotalBalanceCard({ income, expense }: TPageProps) {
+  const totalBalance = income - expense;
+
   return (
-    <View style={cardStyles.container}>
-      {/* header , total balance section  */}
-      <View style={{ marginBottom: 5, alignSelf: "center" }}>
-        <Text
-          style={{
-            fontSize: 20,
-            color: COLORS.text,
-            fontWeight: "700",
-          }}
-        >
-          Total Banalce
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            alignContent: "center",
-            columnGap: 2,
-          }}
-        >
-          <Text style={[cardStyles.title, { fontSize: 24 }]}>৳</Text>
-          <Text style={[cardStyles.title, { fontSize: 24 }]}>
-            {income - expense}
+    <LinearGradient
+      colors={[COLORS.textLight, COLORS.primary]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={cardStyles.container}
+    >
+      {/* Content */}
+      <View style={cardStyles.contentContainer}>
+        {/* Left Section */}
+        <View>
+          <Text style={cardStyles.totalBalanceLabel}>Total Balance</Text>
+          <Text style={cardStyles.totalBalanceAmount}>
+            ৳{" "}
+            {totalBalance.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </Text>
         </View>
-      </View>
-      {/*  */}
 
-      {/* income expense section  */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          columnGap: 20,
-        }}
-      >
-        {/* income view  */}
-        <View>
-          <Text
-            style={{
-              fontSize: 15,
-              color: COLORS.income,
-              fontWeight: "600",
-              textAlign: "center",
-              marginBottom: 1,
-            }}
-          >
-            Income
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              alignContent: "center",
-              columnGap: 3,
-            }}
-          >
-            <Text
-              style={{ fontSize: 16, fontWeight: "bold", color: COLORS.income }}
-            >
-              +৳
+        {/* Right Section - Income/Expense Cards */}
+        <View style={cardStyles.rightSection}>
+          {/* Income Card */}
+          <View style={cardStyles.statCard}>
+            <Text style={cardStyles.statLabel}>Income</Text>
+            <Text style={[cardStyles.statAmount, cardStyles.incomeAmount]}>
+              +৳ {income.toLocaleString("en-IN")}
             </Text>
-            <Text
-              style={{ fontSize: 16, fontWeight: "600", color: COLORS.income }}
-            >
-              {income}
+          </View>
+
+          {/* Expense Card */}
+          <View style={cardStyles.statCard}>
+            <Text style={cardStyles.statLabel}>Expense</Text>
+            <Text style={[cardStyles.statAmount, cardStyles.expenseAmount]}>
+              -৳ {expense.toLocaleString("en-IN")}
             </Text>
           </View>
         </View>
-
-        {/* horizontal line  */}
-        <View
-          style={{
-            height: "100%",
-            width: 1,
-            backgroundColor: COLORS.border,
-          }}
-        />
-
-        {/* expense view  */}
-        <View>
-          <Text
-            style={{
-              fontSize: 15,
-              color: COLORS.expense,
-              fontWeight: "600",
-              textAlign: "center",
-              marginBottom: 1,
-            }}
-          >
-            Expense
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              alignContent: "center",
-              columnGap: 3,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "bold",
-                color: COLORS.expense,
-              }}
-            >
-              +৳
-            </Text>
-            <Text
-              style={{ fontSize: 16, fontWeight: "600", color: COLORS.expense }}
-            >
-              {expense}
-            </Text>
-          </View>
-        </View>
-
-        {/*  */}
       </View>
-
-      {/*  */}
-    </View>
+    </LinearGradient>
   );
 }
 
 const cardStyles = StyleSheet.create({
   container: {
-    marginTop: 9,
-    width: "70%",
-    alignSelf: "center",
-    backgroundColor: COLORS.background,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
+    marginVertical: 16,
+    borderRadius: 20,
+    overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  title: {
+
+  contentContainer: {
+    padding: 20,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+    gap: 3,
+  },
+
+  totalBalanceLabel: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  totalBalanceAmount: {
+    color: "#FFFFFF",
+    fontSize: 40,
     fontWeight: "bold",
-    color: COLORS.text,
+    letterSpacing: -0.5,
+    marginBottom: 10,
+  },
+
+  rightSection: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  statCard: {
+    backgroundColor: "rgba(208, 189, 189, 0.1)",
+    borderRadius: 16,
+    padding: 10,
+    minWidth: "45%",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  statLabel: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  statAmount: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  incomeAmount: {
+    color: "#4CAF50",
+  },
+  expenseAmount: {
+    color: "#F44336",
   },
 });

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     backgroundColor: COLORS.background,
-    borderColor: "#E5E7EB",
+    borderColor: COLORS.border,
     justifyContent: "space-between",
   },
   cardHeader: {

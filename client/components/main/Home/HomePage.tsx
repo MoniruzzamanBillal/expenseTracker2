@@ -37,7 +37,7 @@ export default function HomePage() {
     `/transactions/daily-transaction`,
   );
 
-  // console.log("dailyTransaction =", dailyTransaction);
+  // console.log("dailyTransaction =", dailyTransaction?.data);
 
   const handleRefresh = async () => {
     setRefreshing(true);

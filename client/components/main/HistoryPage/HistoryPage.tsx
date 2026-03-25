@@ -44,7 +44,7 @@ export default function HistoryPage() {
     `/transactions/yearly-transaction?targetYear=${selectedYear}`,
   );
 
-  console.log("yearlyTransactions = ", yearlyTransactions);
+  // console.log("yearlyTransactions = ", yearlyTransactions);
 
   const handleRefresh = async () => {
     setRefreshing(true);
