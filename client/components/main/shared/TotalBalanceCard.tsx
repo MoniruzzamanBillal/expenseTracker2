@@ -13,7 +13,7 @@ export default function TotalBalanceCard({ income, expense }: TPageProps) {
 
   return (
     <LinearGradient
-      colors={[COLORS.textLight, COLORS.primary]}
+      colors={[COLORS.primary, "#b07c60"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={cardStyles.container}
@@ -57,7 +57,7 @@ export default function TotalBalanceCard({ income, expense }: TPageProps) {
 
 const cardStyles = StyleSheet.create({
   container: {
-    marginVertical: 16,
+    marginVertical: 12,
     borderRadius: 20,
     overflow: "hidden",
     shadowColor: "#000",
@@ -86,7 +86,7 @@ const cardStyles = StyleSheet.create({
   },
   totalBalanceAmount: {
     color: "#FFFFFF",
-    fontSize: 40,
+    fontSize: 35,
     fontWeight: "bold",
     letterSpacing: -0.5,
     marginBottom: 10,

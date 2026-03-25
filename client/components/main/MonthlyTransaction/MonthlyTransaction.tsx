@@ -4,16 +4,22 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { Text } from "react-native-paper";
 
 import { useFetchData } from "@/hooks/useApi";
 import { COLORS } from "@/utils/colors";
-import { Picker } from "@react-native-picker/picker";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import PageSkeleton from "../shared/PageSkeleton";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
 import TransactionAccordion from "./TransactionAccordion";
+
+const monthChangeDirection = {
+  prev: "prev",
+  next: "next",
+} as const;
 
 type Transaction = {
   _id: string;
@@ -43,20 +49,23 @@ type TData = {
 
 const screenHeight = Dimensions.get("window").height;
 
-const monthsData = [
-  { label: "January", value: 1 },
-  { label: "February", value: 2 },
-  { label: "March", value: 3 },
-  { label: "April", value: 4 },
-  { label: "May", value: 5 },
-  { label: "June", value: 6 },
-  { label: "July", value: 7 },
-  { label: "August", value: 8 },
-  { label: "September", value: 9 },
-  { label: "October", value: 10 },
-  { label: "November", value: 11 },
-  { label: "December", value: 12 },
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
+
+const startMonth = 1;
+const endMonth = 12;
 
 export default function MonthlyTransactionPage() {
   const [refreshing, setRefreshing] = useState(false);
@@ -79,6 +88,20 @@ export default function MonthlyTransactionPage() {
     setRefreshing(false);
   };
 
+  const handleMonthChange = (direction: keyof typeof monthChangeDirection) => {
+    if (direction === monthChangeDirection.prev && selectedMonth > startMonth) {
+      setSelectedMonth(selectedMonth - 1);
+    }
+
+    if (direction === monthChangeDirection.next && selectedMonth < endMonth) {
+      setSelectedMonth(selectedMonth + 1);
+    }
+  };
+
+  const goToCurrentMonth = () => {
+    setSelectedMonth(currentMonth);
+  };
+
   if (isLoading) {
     return <PageSkeleton />;
   }
@@ -93,43 +116,59 @@ export default function MonthlyTransactionPage() {
         />
       )}
 
-      {/* month select input  */}
-
-      <View
-        style={{
-          marginTop: 8,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
-          Current Month :{" "}
-        </Text>
-
-        <View
-          style={{
-            borderWidth: 1,
-            borderColor: COLORS.border,
-            borderRadius: 4,
-            overflow: "hidden",
-            flex: 1,
-          }}
-        >
-          <Picker
-            style={{ color: COLORS.primary }}
-            selectedValue={selectedMonth}
-            onValueChange={(value) => setSelectedMonth(value)}
-            dropdownIconColor={COLORS.primary}
-          >
-            {monthsData.map((month) => (
-              <Picker.Item
-                key={month?.value}
-                label={month?.label}
-                value={month?.value}
+      {/* Month Selector with Current Month Button */}
+      <View style={styles.monthSelectorContainer}>
+        <View style={styles.monthContainer}>
+          <View style={styles.monthContainerWrapper}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleMonthChange(monthChangeDirection.prev)}
+              disabled={selectedMonth === startMonth}
+            >
+              <MaterialCommunityIcons
+                name="chevron-left"
+                size={18}
+                color={
+                  selectedMonth === startMonth ? COLORS.textLight : COLORS.text
+                }
               />
-            ))}
-          </Picker>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={goToCurrentMonth}>
+              <Text style={styles.monthText}>
+                {monthNames[selectedMonth - 1]}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleMonthChange(monthChangeDirection.next)}
+              disabled={selectedMonth === endMonth}
+            >
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={18}
+                color={
+                  selectedMonth === endMonth ? COLORS.textLight : COLORS.text
+                }
+              />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {selectedMonth !== currentMonth && (
+          <TouchableOpacity
+            style={styles.currentMonthButton}
+            onPress={goToCurrentMonth}
+          >
+            <MaterialCommunityIcons
+              name="calendar-today"
+              size={12}
+              color={COLORS.primary}
+            />
+            <Text style={styles.currentMonthText}>Current Month</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Scrollable Transactions */}
@@ -167,5 +206,65 @@ const PageStyles = StyleSheet.create({
     marginTop: 8,
     flex: 1,
     maxHeight: screenHeight * 0.7,
+  },
+});
+
+const styles = StyleSheet.create({
+  monthSelectorContainer: {
+    marginVertical: 6,
+  },
+  monthContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  monthContainerWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border || "#E5E7EB",
+    borderRadius: 9999,
+    backgroundColor: COLORS.background || "#FFFFFF",
+  },
+  button: {
+    padding: 4,
+  },
+  monthText: {
+    fontFamily: "System",
+    fontWeight: "bold",
+    fontSize: 16,
+    color: COLORS.text || "#1F2937",
+    letterSpacing: 0.5,
+  },
+  currentMonthButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignSelf: "center",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 20,
+  },
+  currentMonthText: {
+    fontSize: 10,
+    fontWeight: "500",
+    color: COLORS.primary,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+  },
+  emptyStateText: {
+    fontWeight: "600",
+    fontSize: 18,
+    color: COLORS.textLight || "#6B7280",
+    textAlign: "center",
   },
 });
