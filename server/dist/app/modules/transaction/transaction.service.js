@@ -110,21 +110,24 @@ const getYearlySummary = (userId, query) => __awaiter(void 0, void 0, void 0, fu
     const totalExpense = (_c = transactions === null || transactions === void 0 ? void 0 : transactions.filter((t) => (t === null || t === void 0 ? void 0 : t.type) === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.expense))) === null || _c === void 0 ? void 0 : _c.reduce((acc, cur) => acc + (cur === null || cur === void 0 ? void 0 : cur.amount), 0);
     const monthlySummary = {};
     for (let i = 0; i < 12; i++) {
-        monthlySummary[i] = { income: 0, expense: 0 };
+        monthlySummary[i] = { income: 0, expense: 0, transactionCount: 0 };
     }
     for (const transaction of transactions) {
         const month = new Date(transaction === null || transaction === void 0 ? void 0 : transaction.createdAt).getUTCMonth();
         if (transaction.type === transaction_constant_1.transactionConstants.income) {
             monthlySummary[month].income += transaction.amount;
+            monthlySummary[month].transactionCount++;
         }
         else if (transaction.type === transaction_constant_1.transactionConstants.expense) {
             monthlySummary[month].expense += transaction.amount;
+            monthlySummary[month].transactionCount++;
         }
     }
     const result = (_d = Object.entries(monthlySummary)) === null || _d === void 0 ? void 0 : _d.map(([month, data]) => ({
         month: Number(month),
         income: data === null || data === void 0 ? void 0 : data.income,
         expense: data === null || data === void 0 ? void 0 : data.expense,
+        transactionCount: data === null || data === void 0 ? void 0 : data.transactionCount,
     }));
     return {
         totalIncome,

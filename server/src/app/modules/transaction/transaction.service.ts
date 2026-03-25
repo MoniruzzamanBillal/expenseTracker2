@@ -157,11 +157,13 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
     ?.filter((t) => t?.type === transactionConstants?.expense)
     ?.reduce((acc, cur) => acc + cur?.amount, 0);
 
-  const monthlySummary: Record<number, { income: number; expense: number }> =
-    {};
+  const monthlySummary: Record<
+    number,
+    { income: number; expense: number; transactionCount: number }
+  > = {};
 
   for (let i = 0; i < 12; i++) {
-    monthlySummary[i] = { income: 0, expense: 0 };
+    monthlySummary[i] = { income: 0, expense: 0, transactionCount: 0 };
   }
 
   for (const transaction of transactions) {
@@ -169,8 +171,10 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
 
     if (transaction.type === transactionConstants.income) {
       monthlySummary[month].income += transaction.amount;
+      monthlySummary[month].transactionCount++;
     } else if (transaction.type === transactionConstants.expense) {
       monthlySummary[month].expense += transaction.amount;
+      monthlySummary[month].transactionCount++;
     }
   }
 
@@ -178,6 +182,7 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
     month: Number(month),
     income: data?.income,
     expense: data?.expense,
+    transactionCount: data?.transactionCount,
   }));
 
   return {

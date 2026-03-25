@@ -20,146 +20,73 @@ const monthNames = [
 
 export default function HistoryCard({
   historyData,
+  transactionCount = 0,
 }: {
   historyData: TTransactionHistory;
+  transactionCount?: number;
 }) {
-  //   console.log(historyData);
+  const balance = historyData?.income - historyData?.expense;
+
   return (
     <View style={historyCardStyle.container}>
-      <Text
-        style={{
-          fontWeight: 700,
-          fontSize: 16,
-          marginBottom: 2,
-          color: COLORS.primary,
-        }}
-      >
-        {monthNames[historyData?.month]}
-      </Text>
+      {/* Header Section */}
+      <View style={historyCardStyle.header}>
+        <Text style={historyCardStyle.monthText}>
+          {monthNames[historyData?.month]}
+        </Text>
+        <View style={historyCardStyle.transactionBadge}>
+          <Text style={historyCardStyle.badgeText}>
+            {transactionCount} TRANSACTIONS
+          </Text>
+        </View>
+      </View>
 
-      {/* money section  */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          columnGap: 6,
-        }}
-      >
-        {/* income section  */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignContent: "center",
-            justifyContent: "center",
-            columnGap: 1,
-          }}
-        >
+      {/* Stats Section */}
+      <View style={historyCardStyle.statsContainer}>
+        {/* Income Section */}
+        <View style={historyCardStyle.statItem}>
+          <Text style={historyCardStyle.statLabel}>Inc</Text>
           <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "700",
-              color: COLORS.income,
-            }}
+            style={[
+              historyCardStyle.statValue,
+              { color: COLORS.income || "#4CAF50" },
+            ]}
           >
-            Inc :
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: COLORS.income,
-            }}
-          >
-            ৳
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: COLORS.income,
-            }}
-          >
-            {historyData?.income}
+            ৳{historyData?.income?.toLocaleString()}
           </Text>
         </View>
 
-        {/* expense section  */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignContent: "center",
-            justifyContent: "center",
-            columnGap: 1,
-          }}
-        >
+        {/* Divider */}
+        <View style={historyCardStyle.divider} />
+
+        {/* Expense Section */}
+        <View style={historyCardStyle.statItem}>
+          <Text style={historyCardStyle.statLabel}>Exp</Text>
           <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "700",
-              color: COLORS.expense,
-            }}
+            style={[
+              historyCardStyle.statValue,
+              { color: COLORS.expense || "#F44336" },
+            ]}
           >
-            Exp :
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: COLORS.expense,
-            }}
-          >
-            ৳
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: COLORS.expense,
-            }}
-          >
-            {historyData?.expense}
+            ৳{historyData?.expense?.toLocaleString()}
           </Text>
         </View>
 
-        {/* total balance section  */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignContent: "center",
-            justifyContent: "center",
-            columnGap: 1,
-          }}
-        >
+        {/* Divider */}
+        <View style={historyCardStyle.divider} />
+
+        {/* Balance Section */}
+        <View style={[historyCardStyle.statItem, historyCardStyle.balanceItem]}>
+          <Text style={historyCardStyle.statLabel}>Balance</Text>
           <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "700",
-              color: COLORS.text,
-            }}
+            style={[
+              historyCardStyle.statValue,
+              { color: COLORS.text || "#1F2937" },
+            ]}
           >
-            Balance :
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: COLORS.text,
-            }}
-          >
-            ৳
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: COLORS.text,
-            }}
-          >
-            {historyData?.income - historyData?.expense}
+            ৳{balance?.toLocaleString()}
           </Text>
         </View>
-
-        {/*  */}
       </View>
     </View>
   );
@@ -170,14 +97,69 @@ const historyCardStyle = StyleSheet.create({
     width: "98%",
     margin: "auto",
     marginVertical: 6,
-    flexDirection: "column",
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background || "#FFFFFF",
     padding: 8,
-    borderRadius: 5,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border || "#E5E7EB",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 1,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  monthText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.primary,
+  },
+  transactionBadge: {
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  badgeText: {
+    fontSize: 8,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    color: COLORS.textLight || "#6B7280",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  statItem: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  balanceItem: {
+    alignItems: "flex-end",
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    color: COLORS.textLight || "#6B7280",
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  divider: {
+    width: 1,
+    height: 32,
+    backgroundColor: COLORS.border || "#E5E7EB",
+    marginHorizontal: 8,
   },
 });

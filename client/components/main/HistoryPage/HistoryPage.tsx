@@ -14,6 +14,7 @@ import HistoryCardSkeleton from "./HistoryCardSkeleton";
 
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MonthlyBreakdownHeader from "./MonthlyBreakdownHeader";
 import SummaryGrid from "./SummaryGrid";
 
 const yearChangeDirection = {
@@ -33,13 +34,8 @@ type TData = {
   yearSummary: TMonthlyData[];
 };
 
-const startYear = 2024;
+const startYear = 2025;
 const currentYear = new Date().getFullYear();
-
-const yearsData = Array.from(
-  { length: currentYear - startYear + 1 },
-  (_, i) => startYear + i,
-);
 
 export default function HistoryPage() {
   const [refreshing, setRefreshing] = useState(false);
@@ -54,7 +50,7 @@ export default function HistoryPage() {
     `/transactions/yearly-transaction?targetYear=${selectedYear}`,
   );
 
-  // console.log("yearlyTransactions = ", yearlyTransactions);
+  console.log("yearlyTransactions = ", yearlyTransactions);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -111,9 +107,11 @@ export default function HistoryPage() {
         totalExpense={yearlyTransactions?.data?.totalExpense ?? 0}
       />
 
+      <MonthlyBreakdownHeader year={selectedYear ?? 0} />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 75 }}
+        contentContainerStyle={{ paddingBottom: 200 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
