@@ -86,17 +86,17 @@ const getDailyTransactions = (userId) => __awaiter(void 0, void 0, void 0, funct
     })
         .sort({ createdAt: -1 });
     const income = transactions
-        .filter((t) => t.type === "income")
+        .filter((t) => t.type === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.income))
         .reduce((acc, curr) => acc + curr.amount, 0);
     const expense = transactions
-        .filter((t) => t.type === "expense")
+        .filter((t) => t.type === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.expense))
         .reduce((acc, curr) => acc + curr.amount, 0);
     return { income, expense, transactions };
     //
 });
 // ! for getting the yearly transaction summary
 const getYearlySummary = (userId, query) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c, _d;
     const year = Number((_a = query === null || query === void 0 ? void 0 : query.targetYear) !== null && _a !== void 0 ? _a : new Date().getFullYear());
     const start = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(year + 1, 0, 1, 0, 0, 0, 0));
@@ -105,6 +105,9 @@ const getYearlySummary = (userId, query) => __awaiter(void 0, void 0, void 0, fu
         createdAt: { $gte: start, $lt: end },
         isDeleted: false,
     });
+    const totalIncome = (_b = transactions
+        .filter((t) => (t === null || t === void 0 ? void 0 : t.type) === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.income))) === null || _b === void 0 ? void 0 : _b.reduce((acc, cur) => acc + (cur === null || cur === void 0 ? void 0 : cur.amount), 0);
+    const totalExpense = (_c = transactions === null || transactions === void 0 ? void 0 : transactions.filter((t) => (t === null || t === void 0 ? void 0 : t.type) === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.expense))) === null || _c === void 0 ? void 0 : _c.reduce((acc, cur) => acc + (cur === null || cur === void 0 ? void 0 : cur.amount), 0);
     const monthlySummary = {};
     for (let i = 0; i < 12; i++) {
         monthlySummary[i] = { income: 0, expense: 0 };
@@ -118,12 +121,16 @@ const getYearlySummary = (userId, query) => __awaiter(void 0, void 0, void 0, fu
             monthlySummary[month].expense += transaction.amount;
         }
     }
-    const result = (_b = Object.entries(monthlySummary)) === null || _b === void 0 ? void 0 : _b.map(([month, data]) => ({
+    const result = (_d = Object.entries(monthlySummary)) === null || _d === void 0 ? void 0 : _d.map(([month, data]) => ({
         month: Number(month),
         income: data === null || data === void 0 ? void 0 : data.income,
         expense: data === null || data === void 0 ? void 0 : data.expense,
     }));
-    return result;
+    return {
+        totalIncome,
+        totalExpense,
+        yearSummary: result,
+    };
 });
 // ! for updating transaction
 const updateTransaction = (transactionId, payload) => __awaiter(void 0, void 0, void 0, function* () {

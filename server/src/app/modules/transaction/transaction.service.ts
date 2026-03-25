@@ -120,11 +120,11 @@ const getDailyTransactions = async (userId: string) => {
     .sort({ createdAt: -1 });
 
   const income = transactions
-    .filter((t) => t.type === "income")
+    .filter((t) => t.type === transactionConstants?.income)
     .reduce((acc, curr) => acc + curr.amount, 0);
 
   const expense = transactions
-    .filter((t) => t.type === "expense")
+    .filter((t) => t.type === transactionConstants?.expense)
     .reduce((acc, curr) => acc + curr.amount, 0);
 
   return { income, expense, transactions };
@@ -149,6 +149,14 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
     isDeleted: false,
   });
 
+  const totalIncome = transactions
+    .filter((t) => t?.type === transactionConstants?.income)
+    ?.reduce((acc, cur) => acc + cur?.amount, 0);
+
+  const totalExpense = transactions
+    ?.filter((t) => t?.type === transactionConstants?.expense)
+    ?.reduce((acc, cur) => acc + cur?.amount, 0);
+
   const monthlySummary: Record<number, { income: number; expense: number }> =
     {};
 
@@ -172,7 +180,11 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
     expense: data?.expense,
   }));
 
-  return result;
+  return {
+    totalIncome,
+    totalExpense,
+    yearSummary: result,
+  };
 };
 
 // ! for updating transaction
