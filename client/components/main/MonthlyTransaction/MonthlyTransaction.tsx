@@ -15,6 +15,32 @@ import PageSkeleton from "../shared/PageSkeleton";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
 import TransactionAccordion from "./TransactionAccordion";
 
+type Transaction = {
+  _id: string;
+  user: string;
+  type: "income" | "expense";
+  title: string;
+  description: string;
+  amount: number;
+  createdAt: string;
+  updatedAt: string;
+  isDeleted: boolean;
+  __v: number;
+};
+
+type TDailyData = {
+  date: string;
+  expense: number;
+  income: number;
+  transactions: Transaction[];
+};
+
+type TData = {
+  expense: number;
+  income: number;
+  transactionData: TDailyData[];
+};
+
 const screenHeight = Dimensions.get("window").height;
 
 const monthsData = [
@@ -41,9 +67,8 @@ export default function MonthlyTransactionPage() {
   const {
     data: monthlyTransaction,
     isLoading,
-
     refetch,
-  } = useFetchData(
+  } = useFetchData<TData>(
     ["monthly-transaction", String(selectedMonth)],
     `/transactions/monthly-transaction?targetMonth=${selectedMonth}`,
   );

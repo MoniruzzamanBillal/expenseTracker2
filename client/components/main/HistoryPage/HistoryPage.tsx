@@ -8,6 +8,14 @@ import { Text } from "react-native-paper";
 import HistoryCard from "./HistoryCard";
 import HistoryCardSkeleton from "./HistoryCardSkeleton";
 
+type TMonthlyData = {
+  month: number;
+  income: number;
+  expense: number;
+};
+
+type TData = TMonthlyData[];
+
 const startYear = 2024;
 const currentYear = new Date().getFullYear();
 
@@ -20,20 +28,16 @@ export default function HistoryPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
-  // const {
-  //   data: yearlyTransactions,
-  //   isLoading,
-  //   refetch,
-  // } = useFetchData(["yearly-transaction"], `/transactions/yearly-transaction`);
-
   const {
     data: yearlyTransactions,
     isLoading,
     refetch,
-  } = useFetchData(
+  } = useFetchData<TData>(
     ["yearly-transaction", String(selectedYear)],
     `/transactions/yearly-transaction?targetYear=${selectedYear}`,
   );
+
+  console.log("yearlyTransactions = ", yearlyTransactions);
 
   const handleRefresh = async () => {
     setRefreshing(true);

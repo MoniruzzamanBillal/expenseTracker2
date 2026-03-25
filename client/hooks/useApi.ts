@@ -6,12 +6,22 @@ import {
   UseQueryOptions,
 } from "@tanstack/react-query";
 
-type TFetchOptions = Omit<UseQueryOptions<any, Error>, "queryKey" | "queryFn">;
+export type TgenericResponse<TData> = {
+  data: TData;
+  statusCode: number;
+  success: boolean;
+  message: string;
+};
 
-export const useFetchData = (
+type TFetchOptions<TData> = Omit<
+  UseQueryOptions<TgenericResponse<TData>, Error>,
+  "queryKey" | "queryFn"
+>;
+
+export const useFetchData = <TData>(
   key: string[],
   endPoint: string,
-  options?: TFetchOptions,
+  options?: TFetchOptions<TData>,
 ) => {
   return useQuery({
     queryKey: key,

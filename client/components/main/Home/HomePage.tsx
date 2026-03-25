@@ -15,6 +15,12 @@ import PageSkeleton from "../shared/PageSkeleton";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
 import TransactionCard from "../shared/TransactionCard";
 
+type TData = {
+  expense: number;
+  income: number;
+  transactions: TTransaction[];
+};
+
 const screenHeight = Dimensions.get("window").height;
 
 export default function HomePage() {
@@ -26,9 +32,12 @@ export default function HomePage() {
     data: dailyTransaction,
     isLoading,
     refetch,
-  } = useFetchData(["daily-transaction"], `/transactions/daily-transaction`);
+  } = useFetchData<TData>(
+    ["daily-transaction"],
+    `/transactions/daily-transaction`,
+  );
 
-  //   console.log(dailyTransaction?.data);
+  // console.log("dailyTransaction =", dailyTransaction);
 
   const handleRefresh = async () => {
     setRefreshing(true);
