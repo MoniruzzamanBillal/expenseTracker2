@@ -163,42 +163,134 @@ const deleteTransactionData = (transactionId) => __awaiter(void 0, void 0, void 
 });
 // ! for moneyManagement (prompt with ai)
 const moneyManagement = (prompt) => __awaiter(void 0, void 0, void 0, function* () {
+    //   const response = await openai.chat.completions.create({
+    //     // model: "z-ai/glm-4.5-air:free",
     var _a;
+    //     model: "arcee-ai/trinity-large-preview:free",
+    //     messages: [
+    //       {
+    //         role: "system",
+    //         content: `
+    // You are an AI that extracts money transactions from text.
+    // Rules:
+    // - A single text may contain MULTIPLE income and expense entries
+    // - Return an ARRAY of objects
+    // - Each object must represent ONE transaction
+    // - Return ONLY valid JSON
+    // - No explanation, no markdown, no extra text
+    // - If description is not appropriate , then don't give description
+    // - If any word is misspelled then correct the word
+    // JSON format:
+    // [
+    //   {
+    //     "type": "income | expense",
+    //     "amount": number,
+    //     "title": string,
+    //     "description": string
+    //   }
+    // ]
+    // `,
+    //       },
+    //       {
+    //         role: "user",
+    //         content: `
+    // Text:
+    // "${prompt}"
+    // `,
+    //       },
+    //     ],
+    //   });
     const response = yield openRouter_1.openai.chat.completions.create({
-        // model: "z-ai/glm-4.5-air:free",
         model: "arcee-ai/trinity-large-preview:free",
         messages: [
             {
                 role: "system",
                 content: `
-You are an AI that extracts money transactions from text.
+You are a specialized financial transaction extraction AI. Your ONLY task is to extract income and expense transactions from user text with high accuracy.
 
-Rules:
-- A single text may contain MULTIPLE income and expense entries
-- Return an ARRAY of objects
-- Each object must represent ONE transaction
-- Return ONLY valid JSON
-- No explanation, no markdown, no extra text
-- If description is not appropriate , then don't give description 
-- If any word is misspelled then correct the word
+## EXTRACTION RULES:
 
-JSON format:
-[
-  {
-    "type": "income | expense",
-    "amount": number,
-    "title": string,
-    "description": string
-  }
+### 1. Transaction Types
+- **income**: Money received (salary, gift, refund, cashback, investment returns)
+- **expense**: Money spent (bills, shopping, food, transportation, entertainment)
+
+### 2. Amount Detection
+- Extract numeric 
+- Handle written numbers (e.g., "five hundred" → 500)
+- Handle decimal values (e.g., "150.50", "1,200")
+- If multiple amounts in one sentence, create separate transactions
+
+### 3. Title Generation
+- Create concise, descriptive titles (max 5-6 words)
+
+### 4. Description
+- Extract context from the text
+- Include important details like:
+  - Vendor/store name
+  - Purpose of transaction
+  - Date/time if mentioned
+  - Location if relevant
+- Omit description if none provided or if it's generic
+- Keep descriptions concise (max 10-15 words)
+
+### 5. Multiple Transactions
+- Identify ALL transactions in the text
+- Example: "Bought coffee for 200 and lunch for 350" → 2 expense transactions
+- Example: "Received salary 50,000 and paid rent 15,000" → 1 income, 1 expense
+
+
+### 6. Edge Cases
+- Correct misspelled words (e.g., "resataurant" → "restaurant")
+- If type unclear, use best judgment based on context
+
+### 7. Data Quality
+- Remove any duplicate transactions
+- Ensure title is not empty
+- Type must be exactly "income" or "expense"
+
+## OUTPUT FORMAT:
+Return ONLY a valid JSON array with NO additional text, explanation, or markdown:
+
+  JSON format:
+  [
+    {
+      "type": "income | expense",
+      "amount": number,
+      "title": string,
+      "description": string
+    }
+  ]
+
+## EXAMPLES:
+
+Input: "Spent 250 on coffee and 450 on lunch today"
+Output: [
+  {"type": "expense", "amount": 250, "title": "Coffee", "description": "Coffee purchase"},
+  {"type": "expense", "amount": 450, "title": "Lunch", "description": "Lunch expense"}
 ]
+
+Input: "Received salary 45,000 and paid 12,000 for rent"
+Output: [
+  {"type": "income", "amount": 45000, "title": "Salary", "description": "Monthly salary"},
+  {"type": "expense", "amount": 12000, "title": "Rent", "description": "Monthly rent payment"}
+]
+
+
+Input: "Paid 500 for mobile recharge"
+Output: [
+  {"type": "expense", "amount": 500, "title": "Mobile Recharge", "description": "Mobile recharge"}
+]
+
+## IMPORTANT:
+- ALWAYS return valid JSON
+- NEVER include explanatory text outside JSON
+- If no transactions found, return empty array []
+- Ensure all required fields are present
 `,
             },
             {
                 role: "user",
-                content: `
-Text:
-"${prompt}"
-`,
+                content: `Text: "${prompt}"`,
             },
         ],
     });
