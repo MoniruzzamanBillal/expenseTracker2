@@ -175,7 +175,7 @@ export default function MonthlyTransactionPage() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}
+        contentContainerStyle={{ paddingBottom: 20, marginTop: 8 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
@@ -211,7 +211,7 @@ const PageStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   monthSelectorContainer: {
-    marginVertical: 6,
+    marginVertical: 4,
   },
   monthContainer: {
     justifyContent: "center",
@@ -243,11 +243,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    marginTop: 4,
+    marginTop: 5,
     paddingVertical: 6,
     paddingHorizontal: 12,
     alignSelf: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: 20,
   },
   currentMonthText: {

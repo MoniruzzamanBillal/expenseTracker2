@@ -20,19 +20,13 @@ export default function TotalBalanceCard({ income, expense }: TPageProps) {
     >
       {/* Content */}
       <View style={cardStyles.contentContainer}>
-        {/* Left Section */}
+        {/* total balance  */}
         <View>
           <Text style={cardStyles.totalBalanceLabel}>Total Balance</Text>
-          <Text style={cardStyles.totalBalanceAmount}>
-            ৳{" "}
-            {totalBalance.toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </Text>
+          <Text style={cardStyles.totalBalanceAmount}>৳ {totalBalance}</Text>
         </View>
 
-        {/* Right Section - Income/Expense Cards */}
+        {/*  Income/Expense Cards */}
         <View style={cardStyles.rightSection}>
           {/* Income Card */}
           <View style={cardStyles.statCard}>
@@ -57,7 +51,7 @@ export default function TotalBalanceCard({ income, expense }: TPageProps) {
 
 const cardStyles = StyleSheet.create({
   container: {
-    marginVertical: 12,
+    marginVertical: 10,
     borderRadius: 20,
     overflow: "hidden",
     shadowColor: "#000",
@@ -68,28 +62,25 @@ const cardStyles = StyleSheet.create({
   },
 
   contentContainer: {
-    padding: 20,
+    padding: 16,
     flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    flexWrap: "wrap",
-    gap: 3,
   },
 
   totalBalanceLabel: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
     letterSpacing: 1,
     textTransform: "uppercase",
-    marginBottom: 2,
   },
   totalBalanceAmount: {
     color: "#FFFFFF",
-    fontSize: 35,
+    fontSize: 30,
     fontWeight: "bold",
     letterSpacing: -0.5,
-    marginBottom: 10,
+    marginBottom: 8,
   },
 
   rightSection: {
@@ -97,29 +88,35 @@ const cardStyles = StyleSheet.create({
     gap: 16,
   },
   statCard: {
-    backgroundColor: "rgba(208, 189, 189, 0.1)",
+    backgroundColor: "rgba(219, 206, 206, 0.1)",
     borderRadius: 16,
-    padding: 10,
+    padding: 8,
     minWidth: "45%",
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   statLabel: {
     color: "#FFFFFF",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 2,
   },
   statAmount: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
   },
   incomeAmount: {
-    color: "#4CAF50",
+    color: "#E8F5E9",
+    textShadowColor: "rgba(76, 175, 80, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   expenseAmount: {
-    color: "#F44336",
+    color: "#ffcbcb",
+    textShadowColor: "rgba(195, 83, 75, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
