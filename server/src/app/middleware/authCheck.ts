@@ -11,8 +11,8 @@ const authCheck = catchAsync(async (req, res, next) => {
     return next(
       new AppError(
         httpStatus.UNAUTHORIZED,
-        "Authorization header missing or malformed"
-      )
+        "Authorization header missing or malformed",
+      ),
     );
   }
 
@@ -23,7 +23,10 @@ const authCheck = catchAsync(async (req, res, next) => {
     decoded = Jwt.verify(token, config.jwt_secret as string) as JwtPayload;
   } catch (error) {
     return next(
-      new AppError(httpStatus.UNAUTHORIZED, "Invalid or expired token")
+      new AppError(
+        httpStatus.UNAUTHORIZED,
+        "Token expired , Please login to continue",
+      ),
     );
   }
 

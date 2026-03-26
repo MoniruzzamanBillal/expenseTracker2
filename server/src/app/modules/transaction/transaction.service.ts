@@ -275,7 +275,10 @@ const moneyManagement = async (prompt: string) => {
   //   });
 
   const response = await openai.chat.completions.create({
-    model: "arcee-ai/trinity-large-preview:free",
+    // model: "z-ai/glm-4.5-air:free",
+    // model: "arcee-ai/trinity-large-preview:free",
+    model: "nvidia/nemotron-3-nano-30b-a3b:free",
+
     messages: [
       {
         role: "system",
@@ -285,7 +288,7 @@ You are a specialized financial transaction extraction AI. Your ONLY task is to 
 ## EXTRACTION RULES:
 
 ### 1. Transaction Types
-- **income**: Money received (salary, gift, refund, cashback, investment returns)
+- **income**: Money received (salary, gift, refund, cashnvidia/nemotron-3-nano-30b-a3b:freeback, investment returns)
 - **expense**: Money spent (bills, shopping, food, transportation, entertainment)
 
 ### 2. Amount Detection
@@ -293,7 +296,7 @@ You are a specialized financial transaction extraction AI. Your ONLY task is to 
 - Handle written numbers (e.g., "five hundred" → 500)
 - Handle decimal values (e.g., "150.50", "1,200")
 - If multiple amounts in one sentence, create separate transactions
-
+nvidia/nemotron-3-nano-30b-a3b:free
 ### 3. Title Generation
 - Create concise, descriptive titles (max 5-6 words)
 
@@ -367,6 +370,7 @@ Output: [
         content: `Text: "${prompt}"`,
       },
     ],
+    temperature: 0.7,
   });
 
   const rawResponse = response.choices[0].message?.content;
