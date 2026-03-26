@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { Text } from "react-native-paper";
-import PageSkeleton from "../shared/PageSkeleton";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
 import TransactionCard from "../shared/TransactionCard";
+import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
 
 type TData = {
   expense: number;
@@ -45,25 +45,19 @@ export default function HomePage() {
     setRefreshing(false);
   };
 
-  if (isLoading) {
-    return <PageSkeleton />;
-  }
-
   return (
     <View style={homePageStyles.mainContainer}>
       {/* Total balance card */}
-      {dailyTransaction && (
-        <TotalBalanceCard
-          income={dailyTransaction?.data?.income}
-          expense={dailyTransaction?.data?.expense}
-        />
-      )}
+      <TotalBalanceCard
+        income={dailyTransaction?.data?.income ?? 0}
+        expense={dailyTransaction?.data?.expense ?? 0}
+      />
 
       {/* Title for transactions */}
       <Text
         style={{
-          marginTop: 8,
-          fontSize: 20,
+          marginTop: 6,
+          fontSize: 19,
           fontWeight: "800",
           color: COLORS.text,
         }}
@@ -80,6 +74,7 @@ export default function HomePage() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
+        {isLoading && <TransactionCardSkeleton />}
         {!dailyTransaction?.data?.transactions?.length && (
           <Text style={{ fontWeight: "600", fontSize: 24, color: "red" }}>
             No transactions yet !!!

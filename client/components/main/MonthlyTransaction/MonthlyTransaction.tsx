@@ -12,8 +12,8 @@ import { Text } from "react-native-paper";
 import { useFetchData } from "@/hooks/useApi";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import PageSkeleton from "../shared/PageSkeleton";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
+import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
 import TransactionAccordion from "./TransactionAccordion";
 
 const monthChangeDirection = {
@@ -78,7 +78,7 @@ export default function MonthlyTransactionPage() {
     isLoading,
     refetch,
   } = useFetchData<TData>(
-    ["monthly-transaction", String(selectedMonth)],
+    [`monthly-transaction-${selectedMonth}`, String(selectedMonth)],
     `/transactions/monthly-transaction?targetMonth=${selectedMonth}`,
   );
 
@@ -102,19 +102,13 @@ export default function MonthlyTransactionPage() {
     setSelectedMonth(currentMonth);
   };
 
-  if (isLoading) {
-    return <PageSkeleton />;
-  }
-
   return (
     <View style={PageStyles.mainContainer}>
       {/* Total balance card */}
-      {monthlyTransaction?.data && (
-        <TotalBalanceCard
-          income={monthlyTransaction?.data?.income}
-          expense={monthlyTransaction?.data?.expense}
-        />
-      )}
+      <TotalBalanceCard
+        income={monthlyTransaction?.data?.income ?? 0}
+        expense={monthlyTransaction?.data?.expense ?? 0}
+      />
 
       {/* Month Selector with Current Month Button */}
       <View style={styles.monthSelectorContainer}>
@@ -180,6 +174,7 @@ export default function MonthlyTransactionPage() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
+        {isLoading && <TransactionCardSkeleton />}
         {!monthlyTransaction?.data?.transactionData?.length && (
           <Text style={{ fontWeight: "600", fontSize: 24, color: "red" }}>
             No transactions yet !!!
@@ -221,8 +216,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: COLORS.border || "#E5E7EB",
     borderRadius: 9999,

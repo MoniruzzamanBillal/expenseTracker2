@@ -8,12 +8,15 @@ type TPageProps = {
   expense: number;
 };
 
-export default function TotalBalanceCard({ income, expense }: TPageProps) {
+export default function TotalBalanceCard({
+  income = 0,
+  expense = 0,
+}: TPageProps) {
   const totalBalance = income - expense;
 
   return (
     <LinearGradient
-      colors={[COLORS.primary, "#b07c60"]}
+      colors={["#f7dfd2", "#ebccbc"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={cardStyles.container}
@@ -58,7 +61,10 @@ const cardStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
+
     elevation: 3,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
 
   contentContainer: {
@@ -69,14 +75,14 @@ const cardStyles = StyleSheet.create({
   },
 
   totalBalanceLabel: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "800",
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "900",
     letterSpacing: 1,
     textTransform: "uppercase",
   },
   totalBalanceAmount: {
-    color: "#FFFFFF",
+    color: COLORS.primary,
     fontSize: 30,
     fontWeight: "bold",
     letterSpacing: -0.5,
@@ -88,15 +94,15 @@ const cardStyles = StyleSheet.create({
     gap: 16,
   },
   statCard: {
-    backgroundColor: "rgba(219, 206, 206, 0.1)",
-    borderRadius: 16,
+    backgroundColor: COLORS.background,
+    borderRadius: 10,
     padding: 8,
     minWidth: "45%",
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   statLabel: {
-    color: "#FFFFFF",
+    color: COLORS.text,
     fontSize: 10,
     fontWeight: "bold",
     textTransform: "uppercase",
@@ -108,13 +114,13 @@ const cardStyles = StyleSheet.create({
     fontWeight: "bold",
   },
   incomeAmount: {
-    color: "#E8F5E9",
+    color: COLORS.income,
     textShadowColor: "rgba(76, 175, 80, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   expenseAmount: {
-    color: "#ffcbcb",
+    color: COLORS.expense,
     textShadowColor: "rgba(195, 83, 75, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
