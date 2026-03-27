@@ -175,7 +175,7 @@ export default function MonthlyTransactionPage() {
         }
       >
         {isLoading && <TransactionCardSkeleton />}
-        {!monthlyTransaction?.data?.transactionData?.length && (
+        {!isLoading && !monthlyTransaction?.data?.transactionData?.length && (
           <Text style={{ fontWeight: "600", fontSize: 24, color: "red" }}>
             No transactions yet !!!
           </Text>
@@ -206,7 +206,7 @@ const PageStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   monthSelectorContainer: {
-    marginVertical: 4,
+    marginVertical: 3,
   },
   monthContainer: {
     justifyContent: "center",
@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderWidth: 1,
     borderColor: COLORS.border || "#E5E7EB",
     borderRadius: 9999,
@@ -229,9 +229,8 @@ const styles = StyleSheet.create({
   monthText: {
     fontFamily: "System",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 15,
     color: COLORS.text || "#1F2937",
-    letterSpacing: 0.5,
   },
   currentMonthButton: {
     flexDirection: "row",

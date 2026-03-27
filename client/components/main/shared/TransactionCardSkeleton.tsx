@@ -30,7 +30,6 @@ export default function TransactionCardSkeleton() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    paddingTop: 2,
   },
   wrapper: {
     width: "98%",
@@ -38,7 +37,7 @@ const styles = StyleSheet.create({
   },
 
   transactionList: {
-    marginTop: 18,
+    marginTop: 6,
   },
   transactionCard: {
     backgroundColor: COLORS.background,
@@ -46,7 +45,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     padding: 12,
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 10,
     overflow: "hidden",
   },
   skeleton: {

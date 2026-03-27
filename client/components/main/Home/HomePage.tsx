@@ -75,7 +75,7 @@ export default function HomePage() {
         }
       >
         {isLoading && <TransactionCardSkeleton />}
-        {!dailyTransaction?.data?.transactions?.length && (
+        {!isLoading && !dailyTransaction?.data?.transactions?.length && (
           <Text style={{ fontWeight: "600", fontSize: 24, color: "red" }}>
             No transactions yet !!!
           </Text>
