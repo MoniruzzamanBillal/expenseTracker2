@@ -8,10 +8,7 @@ type TPageProps = {
   expense: number;
 };
 
-export default function TotalBalanceCard({
-  income = 0,
-  expense = 0,
-}: TPageProps) {
+export default function TotalBalanceCard({ income, expense }: TPageProps) {
   const totalBalance = income - expense;
 
   return (

@@ -14,8 +14,8 @@ import HistoryCardSkeleton from "./HistoryCardSkeleton";
 import { TTransactionHistory } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import TotalBalanceCard from "../shared/TotalBalanceCard";
 import MonthlyBreakdownHeader from "./MonthlyBreakdownHeader";
-import SummaryGrid from "./SummaryGrid";
 
 const yearChangeDirection = {
   prev: "prev",
@@ -95,17 +95,21 @@ export default function HistoryPage() {
         </View>
       </View>
 
-      {/* summary grid  */}
-      <SummaryGrid
+      {/* <SummaryGrid
         totalIncome={yearlyTransactions?.data?.totalIncome ?? 0}
         totalExpense={yearlyTransactions?.data?.totalExpense ?? 0}
+      /> */}
+
+      <TotalBalanceCard
+        income={yearlyTransactions?.data?.totalIncome ?? 0}
+        expense={yearlyTransactions?.data?.totalExpense ?? 0}
       />
 
       <MonthlyBreakdownHeader year={selectedYear ?? 0} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 220 }}
+        contentContainerStyle={{ paddingBottom: 270 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
@@ -136,26 +140,25 @@ const styles = StyleSheet.create({
   yearContainer: {
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 5,
   },
   yearContainerWrapper: {
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 9999,
     backgroundColor: COLORS.background,
   },
   button: {
-    padding: 4,
+    padding: 3,
   },
   yearText: {
     fontFamily: "System",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 15,
     color: COLORS.text,
     letterSpacing: 0.5,
   },
