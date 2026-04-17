@@ -163,43 +163,7 @@ const deleteTransactionData = (transactionId) => __awaiter(void 0, void 0, void 
 });
 // ! for moneyManagement (prompt with ai)
 const moneyManagement = (prompt) => __awaiter(void 0, void 0, void 0, function* () {
-    //   const response = await openai.chat.completions.create({
-    //     // model: "z-ai/glm-4.5-air:free",
     var _a;
-    //     model: "arcee-ai/trinity-large-preview:free",
-    //     messages: [
-    //       {
-    //         role: "system",
-    //         content: `
-    // You are an AI that extracts money transactions from text.
-    // Rules:
-    // - A single text may contain MULTIPLE income and expense entries
-    // - Return an ARRAY of objects
-    // - Each object must represent ONE transaction
-    // - Return ONLY valid JSON
-    // - No explanation, no markdown, no extra text
-    // - If description is not appropriate , then don't give description
-    // - If any word is misspelled then correct the word
-    // JSON format:
-    // [
-    //   {
-    //     "type": "income | expense",
-    //     "amount": number,
-    //     "title": string,
-    //     "description": string
-    //   }
-    // ]
-    // `,
-    //       },
-    //       {
-    //         role: "user",
-    //         content: `
-    // Text:
-    // "${prompt}"
-    // `,
-    //       },
-    //     ],
-    //   });
     const response = yield openRouter_1.openai.chat.completions.create({
         // model: "z-ai/glm-4.5-air:free",
         // model: "arcee-ai/trinity-large-preview:free",
@@ -307,6 +271,11 @@ Output: [
     }
     return parsed;
 });
+// ! get weekly summary
+const getWeeklySummary = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(userId);
+    return "weekly summary data retrived !!!!";
+});
 //
 exports.transactionServices = {
     addNewTransaction,
@@ -317,4 +286,5 @@ exports.transactionServices = {
     getYearlySummary,
     getMonthlyTransactions,
     moneyManagement,
+    getWeeklySummary,
 };

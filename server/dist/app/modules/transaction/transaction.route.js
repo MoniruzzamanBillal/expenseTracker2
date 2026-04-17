@@ -16,6 +16,8 @@ router.get("/monthly-transaction", authCheck_1.default, transaction_controller_1
 router.get("/daily-transaction", authCheck_1.default, transaction_controller_1.transactionControllers.getDailyTransactions);
 // ! for getting the yearly transaction
 router.get("/yearly-transaction", authCheck_1.default, transaction_controller_1.transactionControllers.getYearlySummary);
+// ! for getting the yearly transaction
+router.get("/weekly-transaction", authCheck_1.default, transaction_controller_1.transactionControllers.getWeeklySummary);
 // ! for adding new transaction
 router.post("/new-transaction", authCheck_1.default, (0, validateRequest_1.default)(transaction_validation_1.transactionValidationSchemas.createTransactionSchema), transaction_controller_1.transactionControllers.addNewTransaction);
 // ! for adding many transaction

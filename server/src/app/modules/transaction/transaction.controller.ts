@@ -89,6 +89,17 @@ const getYearlySummary = catchAsync(async (req, res) => {
   });
 });
 
+// ! for getting the weekly transaction summary
+const getWeeklySummary = catchAsync(async (req, res) => {
+  const result = await transactionServices.getWeeklySummary(req?.user?.userId);
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: `Weekly Transactions retrived !!!`,
+    data: result,
+  });
+});
+
 // ! for deletig transaction data
 const deleteTransactionData = catchAsync(async (req, res) => {
   const result = await transactionServices.deleteTransactionData(
@@ -126,4 +137,5 @@ export const transactionControllers = {
   getMonthlyTransactions,
   moneyManagement,
   addManyTransaction,
+  getWeeklySummary,
 };
