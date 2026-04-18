@@ -350,8 +350,98 @@ Output: [
 
 // ! get weekly summary
 const getWeeklySummary = async (userId: string) => {
-  console.log(userId);
-  return "weekly summary data retrived !!!!";
+  const targetDate = new Date();
+
+  const current = new Date(
+    Date.UTC(
+      targetDate.getUTCFullYear(),
+      targetDate.getUTCMonth(),
+      targetDate.getUTCDate(),
+    ),
+  );
+
+  const day = current.getUTCDay();
+
+  // find Friday as week start
+  const diffToFriday = day >= 5 ? day - 5 : day + 2;
+
+  const start = new Date(current);
+  start.setUTCDate(current.getUTCDate() - diffToFriday);
+  start.setUTCHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setUTCDate(start.getUTCDate() + 7);
+
+  const transactions = await transactionModel.find({
+    user: userId,
+    createdAt: { $gte: start, $lt: end },
+    isDeleted: false,
+  });
+
+  const totalIncome = transactions
+    .filter((t) => t.type === transactionConstants.income)
+    .reduce((acc, cur) => acc + cur.amount, 0);
+
+  const totalExpense = transactions
+    .filter((t) => t.type === transactionConstants.expense)
+    .reduce((acc, cur) => acc + cur.amount, 0);
+
+  const dailySummary: Record<
+    number,
+    { income: number; expense: number; transactionCount: number }
+  > = {};
+
+  for (let i = 0; i < 7; i++) {
+    dailySummary[i] = {
+      income: 0,
+      expense: 0,
+      transactionCount: 0,
+    };
+  }
+
+  for (const transaction of transactions) {
+    const txDate = new Date(transaction.createdAt as Date);
+
+    const diff = Math.floor(
+      (txDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    if (diff >= 0 && diff < 7) {
+      if (transaction.type === transactionConstants.income) {
+        dailySummary[diff].income += transaction.amount;
+      } else if (transaction.type === transactionConstants.expense) {
+        dailySummary[diff].expense += transaction.amount;
+      }
+
+      dailySummary[diff].transactionCount++;
+    }
+  }
+
+  const dayNames = [
+    "Friday",
+    "Saturday",
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+  ];
+
+  const result = Object.entries(dailySummary).map(([index, data]) => ({
+    dayIndex: Number(index),
+    dayName: dayNames[Number(index)],
+    income: data.income,
+    expense: data.expense,
+    transactionCount: data.transactionCount,
+  }));
+
+  return {
+    weekStart: start,
+    weekEnd: new Date(end.getTime() - 1),
+    totalIncome,
+    totalExpense,
+    weekSummary: result,
+  };
 };
 
 //

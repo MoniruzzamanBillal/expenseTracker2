@@ -25,6 +25,8 @@ app.use(express_1.default.json());
 app.use((0, cors_1.default)({
     origin: [
         "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:3001",
         "https://devmats.vercel.app",
         "https://dev-mats.vercel.app",
         "http://localhost:8081",
