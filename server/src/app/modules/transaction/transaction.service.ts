@@ -427,13 +427,25 @@ const getWeeklySummary = async (userId: string) => {
     "Thursday",
   ];
 
-  const result = Object.entries(dailySummary).map(([index, data]) => ({
-    dayIndex: Number(index),
-    dayName: dayNames[Number(index)],
-    income: data.income,
-    expense: data.expense,
-    transactionCount: data.transactionCount,
-  }));
+  const result = Object.entries(dailySummary).map(([index, data]) => {
+    const dayIndex = Number(index);
+
+    const currentDate = new Date(start);
+    currentDate.setUTCDate(start.getUTCDate() + dayIndex);
+
+    return {
+      dayIndex,
+      dayName: dayNames[dayIndex],
+
+      month: currentDate.getUTCMonth() + 1,
+      date: currentDate.getUTCDate(),
+      year: currentDate.getUTCFullYear(),
+
+      income: data.income,
+      expense: data.expense,
+      transactionCount: data.transactionCount,
+    };
+  });
 
   return {
     weekStart: start,
