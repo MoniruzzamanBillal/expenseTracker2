@@ -386,73 +386,55 @@ const getWeeklySummary = async (userId: string) => {
     .filter((t) => t.type === transactionConstants.expense)
     .reduce((acc, cur) => acc + cur.amount, 0);
 
-  const dailySummary: Record<
-    number,
-    { income: number; expense: number; transactionCount: number }
-  > = {};
-
-  for (let i = 0; i < 7; i++) {
-    dailySummary[i] = {
-      income: 0,
-      expense: 0,
-      transactionCount: 0,
+  const dailyData: {
+    [date: string]: {
+      income: number;
+      expense: number;
+      transactions: TTransaction[];
     };
-  }
+  } = {};
 
-  for (const transaction of transactions) {
-    const txDate = new Date(transaction.createdAt as Date);
+  transactions.forEach((tran) => {
+    const txDate = new Date(tran.createdAt as Date);
 
-    const diff = Math.floor(
-      (txDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const year = txDate.getUTCFullYear();
+    const month = txDate.getUTCMonth() + 1;
+    const day = txDate.getUTCDate();
 
-    if (diff >= 0 && diff < 7) {
-      if (transaction.type === transactionConstants.income) {
-        dailySummary[diff].income += transaction.amount;
-      } else if (transaction.type === transactionConstants.expense) {
-        dailySummary[diff].expense += transaction.amount;
-      }
+    const dateString = `${year}-${month
+      .toString()
+      .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
 
-      dailySummary[diff].transactionCount++;
+    if (!dailyData[dateString]) {
+      dailyData[dateString] = {
+        income: 0,
+        expense: 0,
+        transactions: [],
+      };
     }
-  }
 
-  const dayNames = [
-    "Friday",
-    "Saturday",
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-  ];
+    dailyData[dateString].transactions.push(tran);
 
-  const result = Object.entries(dailySummary).map(([index, data]) => {
-    const dayIndex = Number(index);
-
-    const currentDate = new Date(start);
-    currentDate.setUTCDate(start.getUTCDate() + dayIndex);
-
-    return {
-      dayIndex,
-      dayName: dayNames[dayIndex],
-
-      month: currentDate.getUTCMonth() + 1,
-      date: currentDate.getUTCDate(),
-      year: currentDate.getUTCFullYear(),
-
-      income: data.income,
-      expense: data.expense,
-      transactionCount: data.transactionCount,
-    };
+    if (tran.type === transactionConstants.income) {
+      dailyData[dateString].income += tran.amount;
+    } else if (tran.type === transactionConstants.expense) {
+      dailyData[dateString].expense += tran.amount;
+    }
   });
+
+  const transactionData = Object.entries(dailyData).map(([date, value]) => ({
+    date,
+    income: value.income,
+    expense: value.expense,
+    transactions: value.transactions,
+  }));
 
   return {
     weekStart: start,
-    weekEnd: new Date(end.getTime() - 1),
-    totalIncome,
-    totalExpense,
-    weekSummary: result,
+    weekEnd: end,
+    income: totalIncome,
+    expense: totalExpense,
+    transactionData,
   };
 };
 
