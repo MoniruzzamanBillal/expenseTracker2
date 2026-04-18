@@ -74,6 +74,20 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
+          name="weeklyTransactions"
+          options={{
+            title: "Weekly Transaction",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="calendar-week"
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
           name="history"
           options={{
             title: "History",

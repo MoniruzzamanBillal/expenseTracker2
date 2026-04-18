@@ -8,6 +8,8 @@ export type TTransaction = {
   type: keyof typeof TransactionTypeConst;
   createdAt?: string;
   updatedAt?: string;
+
+  user?: string;
 };
 
 export type TTransactionHistory = {

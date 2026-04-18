@@ -10,6 +10,7 @@ import {
 import { Text } from "react-native-paper";
 
 import { useFetchData } from "@/hooks/useApi";
+import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
@@ -21,24 +22,24 @@ const monthChangeDirection = {
   next: "next",
 } as const;
 
-type Transaction = {
-  _id: string;
-  user: string;
-  type: "income" | "expense";
-  title: string;
-  description: string;
-  amount: number;
-  createdAt: string;
-  updatedAt: string;
-  isDeleted: boolean;
-  __v: number;
-};
+// type Transaction = {
+//   _id: string;
+//   user: string;
+//   type: "income" | "expense";
+//   title: string;
+//   description: string;
+//   amount: number;
+//   createdAt: string;
+//   updatedAt: string;
+//   isDeleted: boolean;
+//   __v: number;
+// };
 
 type TDailyData = {
   date: string;
   expense: number;
   income: number;
-  transactions: Transaction[];
+  transactions: TTransaction[];
 };
 
 type TData = {
