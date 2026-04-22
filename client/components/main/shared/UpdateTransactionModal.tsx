@@ -1,7 +1,3 @@
-import {
-  transactionConstants,
-  TTransactionType,
-} from "@/app/(tabs)/addTransaction";
 import { usePatch } from "@/hooks/useApi";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
@@ -11,6 +7,10 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Button, Modal, Portal, Text, TextInput } from "react-native-paper";
 import Toast from "react-native-toast-message";
+import {
+  transactionConstants,
+  TTransactionType,
+} from "../AddTransaction/AddTransactionPage";
 
 type TPageProps = {
   open: boolean;
@@ -39,8 +39,8 @@ export default function UpdateTransactionModal({
 
   const patchMutation = usePatch([
     ["daily-transaction"],
-    ["daily-transaction"],
-    ["monthly-transaction-legacy"],
+    ["monthly-transaction"],
+    ["weekly-transaction"],
     ["yearly-transaction"],
   ]);
 
