@@ -20,7 +20,7 @@ export default function SmartAddPage() {
   const addTransactionMutation = usePost([
     ["daily-transaction"],
     ["monthly-transaction"],
-    ["monthly-transaction-legacy"],
+    ["weekly-transaction"],
     ["yearly-transaction"],
   ]);
 

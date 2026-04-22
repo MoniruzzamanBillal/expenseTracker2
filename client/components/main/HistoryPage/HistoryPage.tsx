@@ -95,11 +95,6 @@ export default function HistoryPage() {
         </View>
       </View>
 
-      {/* <SummaryGrid
-        totalIncome={yearlyTransactions?.data?.totalIncome ?? 0}
-        totalExpense={yearlyTransactions?.data?.totalExpense ?? 0}
-      /> */}
-
       <TotalBalanceCard
         income={yearlyTransactions?.data?.totalIncome ?? 0}
         expense={yearlyTransactions?.data?.totalExpense ?? 0}

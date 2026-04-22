@@ -29,7 +29,7 @@ export default function AddTransactionPage() {
   const addTransactionMutation = usePost([
     ["daily-transaction"],
     ["monthly-transaction"],
-    ["monthly-transaction-legacy"],
+    ["weekly-transaction"],
     ["yearly-transaction"],
   ]);
 

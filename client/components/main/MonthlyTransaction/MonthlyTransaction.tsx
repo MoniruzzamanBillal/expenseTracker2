@@ -22,19 +22,6 @@ const monthChangeDirection = {
   next: "next",
 } as const;
 
-// type Transaction = {
-//   _id: string;
-//   user: string;
-//   type: "income" | "expense";
-//   title: string;
-//   description: string;
-//   amount: number;
-//   createdAt: string;
-//   updatedAt: string;
-//   isDeleted: boolean;
-//   __v: number;
-// };
-
 type TDailyData = {
   date: string;
   expense: number;
@@ -79,7 +66,11 @@ export default function MonthlyTransactionPage() {
     isLoading,
     refetch,
   } = useFetchData<TData>(
-    [`monthly-transaction-${selectedMonth}`, String(selectedMonth)],
+    [
+      "monthly-transaction",
+      `monthly-transaction-${selectedMonth}`,
+      String(selectedMonth),
+    ],
     `/transactions/monthly-transaction?targetMonth=${selectedMonth}`,
   );
 

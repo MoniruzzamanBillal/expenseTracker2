@@ -74,7 +74,7 @@ export default function TransactionAccordion({ dailyData }: TProps) {
                     <Text style={styles.income}>+৳{day?.income}</Text>
                     <Text style={styles.expense}>-৳{day?.expense}</Text>
                     <Text style={styles.balance}>
-                      B:{day?.income - day?.expense || 0}
+                      B:{(day?.income - day?.expense).toFixed(2) || 0}
                     </Text>
                   </View>
                   <MaterialCommunityIcons

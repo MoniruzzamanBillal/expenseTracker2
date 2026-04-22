@@ -294,57 +294,42 @@ const getWeeklySummary = (userId) => __awaiter(void 0, void 0, void 0, function*
     const totalExpense = transactions
         .filter((t) => t.type === transaction_constant_1.transactionConstants.expense)
         .reduce((acc, cur) => acc + cur.amount, 0);
-    const dailySummary = {};
-    for (let i = 0; i < 7; i++) {
-        dailySummary[i] = {
-            income: 0,
-            expense: 0,
-            transactionCount: 0,
-        };
-    }
-    for (const transaction of transactions) {
-        const txDate = new Date(transaction.createdAt);
-        const diff = Math.floor((txDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-        if (diff >= 0 && diff < 7) {
-            if (transaction.type === transaction_constant_1.transactionConstants.income) {
-                dailySummary[diff].income += transaction.amount;
-            }
-            else if (transaction.type === transaction_constant_1.transactionConstants.expense) {
-                dailySummary[diff].expense += transaction.amount;
-            }
-            dailySummary[diff].transactionCount++;
+    const dailyData = {};
+    transactions.forEach((tran) => {
+        const txDate = new Date(tran.createdAt);
+        const year = txDate.getUTCFullYear();
+        const month = txDate.getUTCMonth() + 1;
+        const day = txDate.getUTCDate();
+        const dateString = `${year}-${month
+            .toString()
+            .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+        if (!dailyData[dateString]) {
+            dailyData[dateString] = {
+                income: 0,
+                expense: 0,
+                transactions: [],
+            };
         }
-    }
-    const dayNames = [
-        "Friday",
-        "Saturday",
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-    ];
-    const result = Object.entries(dailySummary).map(([index, data]) => {
-        const dayIndex = Number(index);
-        const currentDate = new Date(start);
-        currentDate.setUTCDate(start.getUTCDate() + dayIndex);
-        return {
-            dayIndex,
-            dayName: dayNames[dayIndex],
-            month: currentDate.getUTCMonth() + 1,
-            date: currentDate.getUTCDate(),
-            year: currentDate.getUTCFullYear(),
-            income: data.income,
-            expense: data.expense,
-            transactionCount: data.transactionCount,
-        };
+        dailyData[dateString].transactions.push(tran);
+        if (tran.type === transaction_constant_1.transactionConstants.income) {
+            dailyData[dateString].income += tran.amount;
+        }
+        else if (tran.type === transaction_constant_1.transactionConstants.expense) {
+            dailyData[dateString].expense += tran.amount;
+        }
     });
+    const transactionData = Object.entries(dailyData).map(([date, value]) => ({
+        date,
+        income: value.income,
+        expense: value.expense,
+        transactions: value.transactions,
+    }));
     return {
         weekStart: start,
-        weekEnd: new Date(end.getTime() - 1),
-        totalIncome,
-        totalExpense,
-        weekSummary: result,
+        weekEnd: end,
+        income: totalIncome,
+        expense: totalExpense,
+        transactionData,
     };
 });
 //

@@ -34,7 +34,7 @@ export default function TransactionCard({
   const patchMutation = usePatch([
     ["daily-transaction"],
     ["monthly-transaction"],
-    ["monthly-transaction-legacy"],
+    ["weekly-transaction"],
     ["yearly-transaction"],
   ]);
 

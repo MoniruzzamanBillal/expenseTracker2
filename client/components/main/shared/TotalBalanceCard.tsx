@@ -8,8 +8,13 @@ type TPageProps = {
   expense: number;
 };
 
-export default function TotalBalanceCard({ income, expense }: TPageProps) {
-  const totalBalance = income - expense;
+export default function TotalBalanceCard({
+  income = 0,
+  expense = 0,
+}: TPageProps) {
+  const totalBalance = (income - expense).toFixed(2);
+
+  // console.log(totalBalance);
 
   return (
     <LinearGradient
