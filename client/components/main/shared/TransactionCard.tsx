@@ -161,7 +161,7 @@ export default function TransactionCard({
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                width: "74%",
+                width: "70%",
                 columnGap: 6,
               }}
             >
@@ -196,7 +196,7 @@ export default function TransactionCard({
 
                 <Text
                   style={{
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: "600",
                     color: COLORS.textLight,
                   }}

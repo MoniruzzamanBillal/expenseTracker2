@@ -79,7 +79,9 @@ export default function HistoryCard({
           <Text
             style={[
               historyCardStyle.statValue,
-              { color: COLORS.text || "#1F2937" },
+              {
+                color: balance < 0 ? "red" : COLORS.text || "#1F2937",
+              },
             ]}
           >
             ৳{balance?.toLocaleString()}
