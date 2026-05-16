@@ -73,7 +73,25 @@ export default function TransactionAccordion({ dailyData }: TProps) {
                   <View style={styles.amounts}>
                     <Text style={styles.income}>+৳{day?.income}</Text>
                     <Text style={styles.expense}>-৳{day?.expense}</Text>
-                    <Text
+                    <Text style={styles.balance}>
+                      <Text
+                        style={{ color: COLORS.primary, fontWeight: "bold" }}
+                      >
+                        B:
+                      </Text>
+                      <Text
+                        style={{
+                          fontWeight: "bold",
+                          color:
+                            day?.income - day?.expense < 0
+                              ? "red"
+                              : COLORS.primary,
+                        }}
+                      >
+                        {(day?.income - day?.expense).toFixed(2) || 0}
+                      </Text>
+                    </Text>
+                    {/* <Text
                       style={[
                         styles.balance,
                         {
@@ -85,7 +103,7 @@ export default function TransactionAccordion({ dailyData }: TProps) {
                       ]}
                     >
                       B:{(day?.income - day?.expense).toFixed(2) || 0}
-                    </Text>
+                    </Text> */}
                   </View>
                   <MaterialCommunityIcons
                     name={isActive ? "chevron-up" : "chevron-down"}

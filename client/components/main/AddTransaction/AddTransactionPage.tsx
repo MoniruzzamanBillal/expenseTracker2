@@ -44,7 +44,7 @@ export default function AddTransactionPage() {
         type: "error",
         text1: "Invalid Amount",
         text2: "Only numeric values are allowed (e.g. 100 or 50.25)",
-        position: "bottom",
+        // position: "bottom",
       });
       setAmount("");
       return;
@@ -59,8 +59,8 @@ export default function AddTransactionPage() {
       Toast.show({
         type: "error",
         text1: "Missing Fields",
-        text2: "Please title ",
-        position: "bottom",
+        text2: "Please enter title!!!",
+        // position: "bottom",
       });
 
       return;
@@ -70,7 +70,7 @@ export default function AddTransactionPage() {
         type: "error",
         text1: "Missing Field",
         text2: "Please enter valid amount",
-        position: "bottom",
+        // position: "bottom",
       });
 
       return;
