@@ -41,20 +41,6 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
-          name="monthlyTransactions"
-          options={{
-            title: "Monthly Transaction",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons
-                name="calendar"
-                size={size}
-                color={color}
-              />
-            ),
-          }}
-        />
-
-        <Tabs.Screen
           name="addTransaction"
           options={{
             title: "Add Transaction",
@@ -69,6 +55,20 @@ export default function TabLayout() {
             title: "Smart Add",
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="plus" size={size} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="monthlyTransactions"
+          options={{
+            title: "Monthly Transaction",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="calendar"
+                size={size}
+                color={color}
+              />
             ),
           }}
         />
