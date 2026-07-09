@@ -6,6 +6,7 @@ import { Text } from "react-native-paper";
 import TransactionAccordion from "../MonthlyTransaction/TransactionAccordion";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
+import WeeklyAverageCard from "./WeeklyAverageCard";
 
 type TDailyData = {
   date: string;
@@ -40,6 +41,15 @@ export default function WeeklyTransactionsPage() {
     setRefreshing(false);
   };
 
+  const daysWithExpense =
+    weeklyTransaction?.data?.transactionData?.filter((d) => d.expense > 0)
+      .length ?? 0;
+
+  const averageExpense =
+    daysWithExpense > 0
+      ? (weeklyTransaction?.data?.expense ?? 0) / daysWithExpense
+      : 0;
+
   return (
     <View style={{ width: "92%", alignSelf: "center", marginTop: 10 }}>
       {/* Total balance card */}
@@ -48,11 +58,14 @@ export default function WeeklyTransactionsPage() {
         expense={weeklyTransaction?.data?.expense ?? 0}
       />
 
+      {/* Weekly average expense card */}
+      <WeeklyAverageCard averageExpense={averageExpense} />
+
       {/* Scrollable Transactions */}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20, marginTop: 8 }}
+        contentContainerStyle={{ paddingBottom: 80, marginTop: 8 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }

@@ -104,7 +104,7 @@ export default function HistoryPage() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 270 }}
+        contentContainerStyle={{ paddingBottom: 280 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
