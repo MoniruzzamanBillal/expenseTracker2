@@ -161,7 +161,7 @@ export default function MonthlyTransactionPage() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80, marginTop: 8 }}
+        contentContainerStyle={{ paddingBottom: 100, marginTop: 8 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }

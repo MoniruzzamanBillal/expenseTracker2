@@ -51,7 +51,7 @@ export default function WeeklyTransactionsPage() {
       : 0;
 
   return (
-    <View style={{ width: "92%", alignSelf: "center", marginTop: 10 }}>
+    <View style={{ width: "92%", alignSelf: "center", marginTop: 10, flex: 1 }}>
       {/* Total balance card */}
       <TotalBalanceCard
         income={weeklyTransaction?.data?.income ?? 0}
@@ -65,7 +65,7 @@ export default function WeeklyTransactionsPage() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80, marginTop: 8 }}
+        contentContainerStyle={{ paddingBottom: 100, marginTop: 8 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
