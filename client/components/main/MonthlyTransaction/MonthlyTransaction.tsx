@@ -13,8 +13,10 @@ import { useFetchData } from "@/hooks/useApi";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { getDaysInMonth } from "date-fns";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
+import MonthlyAverageCard from "./MonthlyAverageCard";
 import TransactionAccordion from "./TransactionAccordion";
 
 const monthChangeDirection = {
@@ -94,6 +96,18 @@ export default function MonthlyTransactionPage() {
     setSelectedMonth(currentMonth);
   };
 
+  const currentYear = new Date().getFullYear();
+
+  const daysInSelectedMonth =
+    selectedMonth === currentMonth
+      ? new Date().getDate()
+      : getDaysInMonth(new Date(currentYear, selectedMonth - 1));
+
+  const averageExpense =
+    daysInSelectedMonth > 0
+      ? (monthlyTransaction?.data?.expense ?? 0) / daysInSelectedMonth
+      : 0;
+
   return (
     <View style={PageStyles.mainContainer}>
       {/* Total balance card */}
@@ -101,6 +115,9 @@ export default function MonthlyTransactionPage() {
         income={monthlyTransaction?.data?.income ?? 0}
         expense={monthlyTransaction?.data?.expense ?? 0}
       />
+
+      {/* Monthly average expense card */}
+      <MonthlyAverageCard averageExpense={averageExpense} />
 
       {/* Month Selector with Current Month Button */}
       <View style={styles.monthSelectorContainer}>

@@ -57,7 +57,7 @@ export default function TotalBalanceCard({
 const cardStyles = StyleSheet.create({
   container: {
     marginVertical: 10,
-    borderRadius: 20,
+    borderRadius: 10,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -78,14 +78,14 @@ const cardStyles = StyleSheet.create({
 
   totalBalanceLabel: {
     color: COLORS.primary,
-    fontSize: 14,
-    fontWeight: "900",
+    fontSize: 13,
+    fontWeight: "800",
     letterSpacing: 1,
     textTransform: "uppercase",
   },
   totalBalanceAmount: {
     color: COLORS.primary,
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: "bold",
     letterSpacing: -0.5,
     marginBottom: 8,
@@ -109,10 +109,10 @@ const cardStyles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   statAmount: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "bold",
   },
   incomeAmount: {

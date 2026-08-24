@@ -4,13 +4,13 @@
 
 ## Current state
 
-Core screens are built and working: home, add-transaction, history, monthly, weekly, smart-add (AI-assisted entry), auth/register. There is no active multi-phase build plan — this is a maintained, already-shipped personal project, not greenfield work. The `specs/` scaffolding below exists for the *next* piece of nontrivial work, not a backlog of already-completed phases.
+Core screens are built and working: home, add-transaction, history, monthly, weekly, smart-add (AI-assisted entry), auth/register. There is no active multi-phase build plan — this is a maintained, already-shipped personal project, not greenfield work. The `specs/` scaffolding below exists for the _next_ piece of nontrivial work, not a backlog of already-completed phases.
 
 ## Spec status
 
-| Spec | Status |
-|---|---|
-| — none yet — see `specs/00-build-plan.md` — | n/a |
+| Spec                                                                          | Status                                          |
+| ----------------------------------------------------------------------------- | ----------------------------------------------- |
+| [01-monthly-daily-average-expense](specs/01-monthly-daily-average-expense.md) | Completed — implemented, not yet manually verified against live data in a running app |
 
 ## Known Gaps
 
