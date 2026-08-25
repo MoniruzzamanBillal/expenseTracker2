@@ -13,6 +13,7 @@ Core screens are built and working: home, add-transaction, history, monthly, wee
 | [01-monthly-daily-average-expense](specs/01-monthly-daily-average-expense.md) | Completed — implemented, not yet manually verified against live data in a running app |
 | [02-offline-transaction-support](specs/02-offline-transaction-support.md)     | Completed — implemented (Home-only pending display, see spec's scope-deviation note), not yet manually verified against a running app with airplane mode |
 | [03-pending-transaction-date-visibility](specs/03-pending-transaction-date-visibility.md) | Completed — implemented, not yet manually verified against a running app |
+| [04-edit-delete-pending-transaction](specs/04-edit-delete-pending-transaction.md)         | Completed — implemented, not yet manually verified against a running app |
 
 ## Known Gaps
 

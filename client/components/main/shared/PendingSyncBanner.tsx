@@ -1,4 +1,7 @@
-import { usePendingTransactions, useSyncPendingTransactions } from "@/hooks/usePendingTransactions";
+import {
+  usePendingTransactions,
+  useSyncPendingTransactions,
+} from "@/hooks/usePendingTransactions";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
@@ -21,8 +24,7 @@ export default function PendingSyncBanner() {
           color={COLORS.primary}
         />
         <Text style={styles.text}>
-          {pendingCount} transaction{pendingCount === 1 ? "" : "s"} pending
-          sync
+          {pendingCount} transaction{pendingCount === 1 ? "" : "s"} pending sync
         </Text>
       </View>
 
@@ -32,7 +34,11 @@ export default function PendingSyncBanner() {
         disabled={isSyncing}
         onPress={syncAll}
         style={{ backgroundColor: COLORS.primary }}
-        labelStyle={{ fontSize: 12 }}
+        labelStyle={{
+          fontSize: 12,
+          fontWeight: "400",
+          color: COLORS.white,
+        }}
       >
         {isSyncing ? "Syncing..." : "Sync now"}
       </Button>
@@ -48,10 +54,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    marginTop: 8,
+    borderRadius: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
   },
   textRow: {
     flexDirection: "row",

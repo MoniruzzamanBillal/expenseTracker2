@@ -89,11 +89,28 @@ const updateStatus = async (
   await writeQueue(updated);
 };
 
+// Editing is the user's way of fixing whatever was wrong, so a corrected item
+// goes back to "pending" (clearing any stale error) rather than staying
+// flagged "failed" from before the edit.
+const updatePayload = async (
+  localId: string,
+  payload: TPendingTransactionPayload,
+): Promise<void> => {
+  const queue = await readQueue();
+  const updated = queue.map((item) =>
+    item.localId === localId
+      ? { ...item, payload, status: "pending" as const, error: undefined }
+      : item,
+  );
+  await writeQueue(updated);
+};
+
 export const transactionQueue = {
   getAll: readQueue,
   enqueue,
   remove,
   updateStatus,
+  updatePayload,
 };
 
 export const createBatchId = generateId;

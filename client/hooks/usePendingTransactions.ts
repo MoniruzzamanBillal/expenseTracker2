@@ -5,6 +5,7 @@ import Toast from "react-native-toast-message";
 import { apiPost } from "@/utils/api";
 import {
   TEnqueueInput,
+  TPendingTransactionPayload,
   transactionQueue,
 } from "@/utils/transactionQueue";
 
@@ -31,6 +32,24 @@ export const useEnqueuePendingTransactions = () => {
     const enqueued = await transactionQueue.enqueue(items);
     await queryClient.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
     return enqueued;
+  };
+};
+
+export const useUpdatePendingTransaction = () => {
+  const queryClient = useQueryClient();
+
+  return async (localId: string, payload: TPendingTransactionPayload) => {
+    await transactionQueue.updatePayload(localId, payload);
+    await queryClient.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
+  };
+};
+
+export const useRemovePendingTransaction = () => {
+  const queryClient = useQueryClient();
+
+  return async (localId: string) => {
+    await transactionQueue.remove(localId);
+    await queryClient.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
   };
 };
 
