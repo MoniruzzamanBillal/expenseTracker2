@@ -67,7 +67,13 @@ instance.interceptors.response.use(
     }
     // !
 
-    const errorMessage = error?.response?.data?.message;
+    // error.response is undefined for a no-response failure (offline/timeout/
+    // unreachable) — fall back to Axios's own message instead of showing a
+    // blank toast (known-issues.md#FETCH-7).
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Something went wrong. Please try again.";
 
     Toast.show({
       type: "error",

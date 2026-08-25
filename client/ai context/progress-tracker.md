@@ -14,6 +14,7 @@ Core screens are built and working: home, add-transaction, history, monthly, wee
 | [02-offline-transaction-support](specs/02-offline-transaction-support.md)     | Completed — implemented (Home-only pending display, see spec's scope-deviation note), not yet manually verified against a running app with airplane mode |
 | [03-pending-transaction-date-visibility](specs/03-pending-transaction-date-visibility.md) | Completed — implemented, not yet manually verified against a running app |
 | [04-edit-delete-pending-transaction](specs/04-edit-delete-pending-transaction.md)         | Completed — implemented, not yet manually verified against a running app |
+| [05-fix-blank-error-toast-on-network-failure](specs/05-fix-blank-error-toast-on-network-failure.md) | Completed — implemented, not yet manually verified against a running app |
 
 ## Known Gaps
 
@@ -22,6 +23,7 @@ Core screens are built and working: home, add-transaction, history, monthly, wee
 - [ ] AUTH-2 — 401 handling doesn't sync in-memory session state
 - [ ] TYPE-1 — three independent copies of the transaction-type enum
 - [ ] TYPE-2 — client/server `TTransaction` shape drift
+- [x] FETCH-7 — error toast shows blank text on a no-response (offline/timeout) failure — fixed via spec 05
 - [ ] (see `known-issues.md` for the full ranked list — Low items omitted here)
 
 ## Next Up (prioritized, with why-now)
