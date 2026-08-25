@@ -24,9 +24,11 @@ const typeOptions = {
 export default function TransactionCard({
   transactionData,
   onSwipeOpen,
+  pending = false,
 }: {
   transactionData: TTransaction;
-  onSwipeOpen: (ref: Swipeable) => void;
+  onSwipeOpen?: (ref: Swipeable) => void;
+  pending?: boolean;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
@@ -37,6 +39,74 @@ export default function TransactionCard({
     ["weekly-transaction"],
     ["yearly-transaction"],
   ]);
+
+  // Pending (not-yet-synced, offline-queued) items have no server _id and can't be
+  // edited/deleted yet — render a plain, dimmed card with no swipe actions instead
+  // of the normal Swipeable/modal-editable card below. All hooks above this point
+  // must still run unconditionally regardless of `pending` (rules-of-hooks).
+  if (pending) {
+    return (
+      <View style={[cardStyles.container, cardStyles.pendingContainer]}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              width: "70%",
+              columnGap: 6,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={26}
+              color={COLORS.textLight}
+            />
+
+            <View>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: COLORS.textLight,
+                }}
+              >
+                {transactionData?.title}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "600",
+                  color: COLORS.textLight,
+                }}
+              >
+                Pending sync ·{" "}
+                {format(new Date(transactionData?.createdAt as string), "d MMM")}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ alignItems: "flex-end", width: "24%" }}>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "600",
+                color: COLORS.textLight,
+              }}
+            >
+              {transactionData?.type === typeOptions?.income ? "+" : "-"}৳
+              {transactionData?.amount}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   const deleteTransaction = async (transactionData: TTransaction) => {
     Alert.alert(
@@ -143,7 +213,7 @@ export default function TransactionCard({
         overshootRight={false}
         onSwipeableOpen={() => {
           if (swipeableRef.current) {
-            onSwipeOpen(swipeableRef.current);
+            onSwipeOpen?.(swipeableRef.current);
           }
         }}
       >
@@ -294,6 +364,11 @@ const cardStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 1,
     elevation: 1,
+  },
+
+  pendingContainer: {
+    opacity: 0.65,
+    borderStyle: "dashed",
   },
 
   leftAction: {
