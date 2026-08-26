@@ -27,7 +27,7 @@ router.get(
   transactionControllers.getYearlySummary,
 );
 
-// ! for getting the yearly transaction
+// ! for getting the weekly transaction
 router.get(
   "/weekly-transaction",
   authCheck,

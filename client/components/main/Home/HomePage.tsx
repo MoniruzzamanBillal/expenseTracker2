@@ -1,4 +1,5 @@
 import { useFetchData } from "@/hooks/useApi";
+import { usePendingTransactions } from "@/hooks/usePendingTransactions";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { useRef, useState } from "react";
@@ -11,6 +12,7 @@ import {
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { Text } from "react-native-paper";
+import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
 import TransactionCard from "../shared/TransactionCard";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
@@ -37,6 +39,21 @@ export default function HomePage() {
     `/transactions/daily-transaction`,
   );
 
+  const { data: pendingTransactions } = usePendingTransactions();
+
+  // Not-yet-synced items shaped like TTransaction so they can render through
+  // the same TransactionCard (with pending=true) as normal transactions.
+  const pendingAsTransactions: TTransaction[] = (pendingTransactions ?? []).map(
+    (item) => ({
+      _id: item.localId,
+      title: item.payload.title,
+      description: item.payload.description,
+      amount: item.payload.amount,
+      type: item.payload.type,
+      createdAt: item.createdAt,
+    }),
+  );
+
   // console.log("dailyTransaction =", dailyTransaction?.data);
 
   const handleRefresh = async () => {
@@ -52,6 +69,8 @@ export default function HomePage() {
         income={dailyTransaction?.data?.income ?? 0}
         expense={dailyTransaction?.data?.expense ?? 0}
       />
+
+      <PendingSyncBanner />
 
       {/* Title for transactions */}
       <Text
@@ -75,11 +94,34 @@ export default function HomePage() {
         }
       >
         {isLoading && <TransactionCardSkeleton />}
-        {!isLoading && !dailyTransaction?.data?.transactions?.length && (
-          <Text style={{ fontWeight: "600", fontSize: 24, color: "red" }}>
-            No transactions yet !!!
+        {!isLoading &&
+          !dailyTransaction?.data?.transactions?.length &&
+          !pendingAsTransactions.length && (
+            <Text style={{ fontWeight: "600", fontSize: 24, color: "red" }}>
+              No transactions yet !!!
+            </Text>
+          )}
+
+        {pendingAsTransactions.length > 0 && (
+          <Text
+            style={{
+              marginBottom: 4,
+              fontSize: 13,
+              fontWeight: "700",
+              color: COLORS.textLight,
+            }}
+          >
+            Pending Sync
           </Text>
         )}
+
+        {pendingAsTransactions.map((transaction) => (
+          <TransactionCard
+            key={transaction?._id}
+            transactionData={transaction}
+            pending
+          />
+        ))}
 
         {dailyTransaction?.data?.transactions &&
           dailyTransaction?.data?.transactions?.map(

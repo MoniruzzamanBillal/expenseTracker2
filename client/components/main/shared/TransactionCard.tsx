@@ -1,4 +1,5 @@
 import { usePatch } from "@/hooks/useApi";
+import { useRemovePendingTransaction } from "@/hooks/usePendingTransactions";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -12,8 +13,9 @@ import {
   View,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
-import { Text } from "react-native-paper";
+import { IconButton, Text } from "react-native-paper";
 import Toast from "react-native-toast-message";
+import PendingTransactionEditModal from "./PendingTransactionEditModal";
 import UpdateTransactionModal from "./UpdateTransactionModal";
 
 const typeOptions = {
@@ -24,9 +26,11 @@ const typeOptions = {
 export default function TransactionCard({
   transactionData,
   onSwipeOpen,
+  pending = false,
 }: {
   transactionData: TTransaction;
-  onSwipeOpen: (ref: Swipeable) => void;
+  onSwipeOpen?: (ref: Swipeable) => void;
+  pending?: boolean;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
@@ -37,6 +41,139 @@ export default function TransactionCard({
     ["weekly-transaction"],
     ["yearly-transaction"],
   ]);
+
+  const removePendingTransaction = useRemovePendingTransaction();
+
+  // Pending (not-yet-synced, offline-queued) items have no server _id and are
+  // edited/deleted purely locally (transactionQueue) — render a plain, dimmed
+  // card with icon actions instead of the normal Swipeable/modal-editable card
+  // below. All hooks above this point must still run unconditionally
+  // regardless of `pending` (rules-of-hooks).
+  if (pending) {
+    const handleDeletePending = () => {
+      Alert.alert(
+        "Delete transaction?",
+        "This item will be deleted from the list",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () =>
+              await removePendingTransaction(transactionData?._id as string),
+          },
+        ],
+      );
+    };
+
+    return (
+      <>
+        <View style={[cardStyles.container, cardStyles.pendingContainer]}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                width: "60%",
+                columnGap: 6,
+              }}
+            >
+              <MaterialCommunityIcons
+                name="clock-outline"
+                size={20}
+                color={COLORS.textLight}
+              />
+
+              <View>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "700",
+                    color: COLORS.textLight,
+                  }}
+                >
+                  {transactionData?.title}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "600",
+                    color: COLORS.textLight,
+                  }}
+                >
+                  {transactionData?.description}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: "600",
+                    color: COLORS.textLight,
+                  }}
+                >
+                  Pending sync ·{" "}
+                  {format(
+                    new Date(transactionData?.createdAt as string),
+                    "d MMM",
+                  )}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ alignItems: "flex-end", width: "34%" }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconButton
+                  icon="pencil-outline"
+                  mode="contained"
+                  size={12}
+                  containerColor="green"
+                  iconColor="white"
+                  onPress={() => setModalOpen(true)}
+                  style={cardStyles.pendingActionButton}
+                />
+                <IconButton
+                  icon="delete-outline"
+                  mode="contained"
+                  size={12}
+                  containerColor="red"
+                  iconColor="white"
+                  onPress={handleDeletePending}
+                  style={cardStyles.pendingActionButton}
+                />
+              </View>
+
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color:
+                    transactionData?.type === typeOptions?.income
+                      ? COLORS.income
+                      : COLORS.expense,
+                }}
+              >
+                {transactionData?.type === typeOptions?.income ? "+" : "-"}৳
+                {transactionData?.amount}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {modalOpen && (
+          <PendingTransactionEditModal
+            open={modalOpen}
+            setOpen={setModalOpen}
+            initialValue={transactionData}
+          />
+        )}
+      </>
+    );
+  }
 
   const deleteTransaction = async (transactionData: TTransaction) => {
     Alert.alert(
@@ -143,7 +280,7 @@ export default function TransactionCard({
         overshootRight={false}
         onSwipeableOpen={() => {
           if (swipeableRef.current) {
-            onSwipeOpen(swipeableRef.current);
+            onSwipeOpen?.(swipeableRef.current);
           }
         }}
       >
@@ -282,18 +419,28 @@ export default function TransactionCard({
 
 const cardStyles = StyleSheet.create({
   container: {
-    marginVertical: 5,
+    marginVertical: 4,
     flexDirection: "column",
     backgroundColor: COLORS.background,
-    padding: 7,
+    padding: 6,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 6,
+    borderRadius: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
     elevation: 1,
+  },
+
+  pendingContainer: {
+    opacity: 0.65,
+    borderStyle: "dashed",
+  },
+
+  pendingActionButton: {
+    margin: 0,
+    marginLeft: 3,
   },
 
   leftAction: {

@@ -1,4 +1,5 @@
 import { usePost } from "@/hooks/useApi";
+import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -32,6 +33,8 @@ export default function AddTransactionPage() {
     ["weekly-transaction"],
     ["yearly-transaction"],
   ]);
+
+  const enqueuePendingTransactions = useEnqueuePendingTransactions();
 
   // * for handling the number input
   const handleTextChange = (text: string) => {
@@ -103,6 +106,27 @@ export default function AddTransactionPage() {
         Toast.show({
           type: "success",
           text1: successMessage,
+          position: "top",
+        });
+
+        setTimeout(() => {
+          router.push("/");
+        }, 100);
+      } else {
+        // The save didn't reach the server (offline or a server-side failure —
+        // both resolve here rather than throwing, see known-issues.md#FETCH-1).
+        // Queue it locally instead of losing it.
+        await enqueuePendingTransactions([{ payload, origin: "manual" }]);
+
+        setTitle("");
+        setDescription("");
+        setAmount(null);
+        setType(transactionConstants?.income);
+
+        Toast.show({
+          type: "success",
+          text1: "Saved locally",
+          text2: "It will sync when you're back online",
           position: "top",
         });
 

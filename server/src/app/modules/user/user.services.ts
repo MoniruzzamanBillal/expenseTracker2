@@ -44,7 +44,7 @@ const loginFromDb = async (payload: Tlogin) => {
   };
 
   const token = Jwt.sign(jwtPayload, config.jwt_secret as string, {
-    expiresIn: "10d",
+    expiresIn: "15d",
   });
 
   return {

@@ -1,5 +1,7 @@
 import { usePost } from "@/hooks/useApi";
+import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { TTransaction } from "@/types/Transaction.tyes";
+import { createBatchId } from "@/utils/transactionQueue";
 import { COLORS } from "@/utils/colors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -23,6 +25,8 @@ export default function SmartAddPage() {
     ["weekly-transaction"],
     ["yearly-transaction"],
   ]);
+
+  const enqueuePendingTransactions = useEnqueuePendingTransactions();
 
   //   ! for giving prompt
   const handleAddPrompt = async () => {
@@ -97,6 +101,39 @@ export default function SmartAddPage() {
         Toast.show({
           type: "success",
           text1: successMessage,
+          position: "top",
+        });
+
+        setTimeout(() => {
+          router.push("/");
+        }, 100);
+      } else {
+        // Didn't reach the server (offline or a server-side failure — both
+        // resolve here rather than throwing, see known-issues.md#FETCH-1).
+        // Queue every item individually, sharing one batchId for display
+        // grouping only — sync still syncs each one separately (spec 02).
+        const batchId = createBatchId();
+
+        await enqueuePendingTransactions(
+          chatResponseData.map((item: TTransaction) => ({
+            payload: {
+              type: item.type,
+              amount: item.amount,
+              title: item.title,
+              description: item.description ?? " ",
+            },
+            origin: "smart-add" as const,
+            batchId,
+          })),
+        );
+
+        setChatResponseData([]);
+        setPrompt(null);
+
+        Toast.show({
+          type: "success",
+          text1: "Saved locally",
+          text2: "It will sync when you're back online",
           position: "top",
         });
 

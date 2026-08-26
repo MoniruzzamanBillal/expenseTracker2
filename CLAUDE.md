@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-ExpenseTracker is a full-stack mobile expense-tracking app with two independent projects (no root `package.json`/workspace — each has its own dependencies and must be worked on from within its own directory):
+ExpenseTracker is a full-stack mobile expense-tracking app with two **fully independent** projects — there is no root `package.json`, no workspace, and no root-level lint/build/test command. Each has its own dependencies and must be worked on from within its own directory; there is no root-level script that operates on both at once.
 
 - `client/` — Expo (React Native) app using file-based routing (`expo-router`).
 - `server/` — Express + Mongoose REST API, deployed to Vercel as a serverless function.
@@ -25,44 +25,44 @@ ExpenseTracker is a full-stack mobile expense-tracking app with two independent 
 - `yarn lint` — `expo lint`.
 - `yarn reset-project` — Expo's scaffolding reset script (moves current `app/` to `app-example/` and creates a blank one); do not run this unless explicitly asked.
 
-There is no root-level lint/build/test command — always `cd` into `client` or `server` first.
+## Source of truth
 
-## Architecture
+Each side has its own `ai context/` folder (note the literal space in the folder name — quote the path in shell commands) with a written source of truth: what the code actually does today, numbered invariants, conventions, a ranked known-issues backlog, workflow rules, and spec/progress-tracker scaffolding for future work. **Read the relevant one before making architectural decisions — don't restate its content here, and don't let this file and those docs drift apart.**
 
-### Server (`server/src`)
+### Source of truth — Server (`server/ai context/`)
 
-Standard route → controller → service → model layering, organized by feature module under `src/app/modules/<feature>/`:
+Read in this order:
+1. `project-overview.md` — what the API does, module map, domain model
+2. `architecture.md` — request lifecycle, auth model, AI parsing subsystem, numbered invariants
+3. `code-standards.md` — naming/validation/error-handling conventions, what not to silently normalize
+4. `known-issues.md` — ranked bug backlog (~35 findings)
+5. `ai-workflow-rules.md` — scoping rules, protected files, verify-before-moving-on checklist
+6. `progress-tracker.md` — current state, known gaps, next up
+7. `specs/00-build-plan.md` — how to scope new work
 
-- `<feature>.route.ts` — Express router; wires `authCheck` and `validateRequest` middleware before controllers.
-- `<feature>.controller.ts` — thin handlers wrapped in `catchAsync` (util/catchAsync.ts), calling into services and replying via `sendResponse` (util/sendResponse.ts) with a consistent `{ success, message, data, token? }` shape.
-- `<feature>.service.ts` — business logic and all Mongoose queries.
-- `<feature>.model.ts` / `<feature>.interface.ts` / `<feature>.validation.ts` (Zod) / `<feature>.constant.ts`.
+### Source of truth — Client (`client/ai context/`)
 
-Currently two modules: `transaction` and `user`. `src/app/router/index.ts` mounts each module's router under a path prefix (`/api/transactions`, `/api/auth` — see `src/app/app.ts`'s `app.use("/api", MainRouter)`).
+Read in this order:
+1. `project-overview.md` — what the app does, screen list, tech stack
+2. `architecture.md` — provider stack, data-fetching pipeline, auth flow, numbered invariants
+3. `code-standards.md` — component organization, which hooks are actually used, styling
+4. `known-issues.md` — ranked bug backlog (~18 findings)
+5. `ai-workflow-rules.md` — scoping rules, protected files, verify-before-moving-on checklist
+6. `progress-tracker.md` — current state, known gaps, next up
+7. `specs/00-build-plan.md` — how to scope new work
 
-Cross-cutting pieces:
-- `middleware/authCheck.ts` — verifies the `Authorization: Bearer <jwt>` header and attaches the decoded payload to `req.user` (`{ userId, userEmail }`). Most transaction routes require it; note `POST /transactions/manage-money` (AI parsing endpoint) is intentionally **not** behind `authCheck`.
-- `middleware/validateRequest.ts` — runs a Zod schema against `{ body: req.body }`.
-- `middleware/globalErrorHandler.ts` — central error formatter. Recognizes `ZodError`, Mongoose `ValidationError`/`CastError`, duplicate-key errors (`code === 11000`), and the custom `AppError` (`Error/AppError.ts`, carries an HTTP `status`). Anything else falls through as a generic 500.
-- `builder/Queryuilder.ts` (`Queryuilder` class — note the intentional/typo'd name) — a chainable Mongoose query helper (search/filter/sort/pagination/field-selection) available for list endpoints, though the transaction service currently builds most date-range queries by hand rather than using it.
-- `helper/openRouter.ts` — an `openai` SDK client pointed at OpenRouter's API (`baseURL: https://openrouter.ai/api/v1`), used by `transactionServices.moneyManagement` to turn a natural-language prompt into structured `{ type, amount, title, description }` transaction objects via a large system prompt. The model id is hardcoded in `transaction.service.ts`.
-- `config/index.ts` loads `.env` (via `dotenv`) and exposes `port`, `database_url`, `jwt_secret`, `openRouterApiKey`.
+## Highest-severity gotchas (full detail in the docs above)
 
-Transaction date-range logic (monthly/daily/yearly/weekly summaries) is all computed in `transaction.service.ts` using UTC dates — the "week" is defined as Friday–Thursday (see `getWeeklySummary`'s Friday-anchored offset), not the ISO Monday-start week. Soft-delete is used throughout (`isDeleted` flag; queries filter `isDeleted: false`, delete endpoints just flip the flag).
+**Server:**
+- IDOR — transaction update/delete has no ownership check; any authenticated user can edit/delete another user's transactions (`server/ai context/known-issues.md#AUTH-1`).
+- `POST /transactions/manage-money` (the AI-parsing endpoint) has no auth at all — a live, unauthenticated cost/abuse vector against your own OpenRouter key (`#AUTH-2`).
+- Password hashes are returned to the client on both register and login — no field is stripped before the response goes out (`#AUTH-3`).
 
-Server TS has no `@/*` path alias — imports are relative. `dist/` is committed build output; don't hand-edit it.
+**Client:**
+- The axios response interceptor never rejects on HTTP errors (`return error`, not `Promise.reject(error)`) — every downstream `onError`/`catch` around a mutation is dead code; the interceptor's own Toast is the only real error surface today (`client/ai context/known-issues.md#FETCH-1`).
+- On a 401, `AsyncStorage` is cleared but `UserProvider`'s in-memory state isn't — the UI can look "still logged in" until reload or manual logout (`#AUTH-2`).
+- Three independent copies of the income/expense enum exist across the codebase, with two different casings of the constant name — import the enum only from `constants/TransactionType.constant.ts` in new code (`#TYPE-1`).
 
-### Client (`client/`)
+## Known issues
 
-Expo Router file-based routing under `app/`. `@/*` resolves to the `client/` root (see `tsconfig.json`).
-
-- `app/_layout.tsx` — root provider stack (order matters): `SafeAreaProvider` → `KeyboardProvider` → `QueryClientProvider` (TanStack Query) → `GestureHandlerRootView` → `PaperProvider` (react-native-paper) → `UserProvider` (`context/user.context.tsx`) → `<Slot />` + `<Toast />`.
-- `app/(tabs)/` — the authenticated tab group; `(tabs)/_layout.tsx` wraps all tabs in `utils/AuthGuard.tsx`, which redirects to `/auth` when there's no user and back to `/` when an authenticated user hits an auth page.
-- `app/auth.tsx`, `app/register.tsx` — login/register screens outside the tab group.
-- `context/user.context.tsx` — `UserProvider`/`useUserContext` hold `user`/`token` in state, persisted to `AsyncStorage` (keys `"user"`, `"token"`); `logoutFunction` clears both.
-- `utils/axiosInstance.ts` — shared Axios instance: request interceptor attaches the stored JWT as `Authorization: Bearer <token>` and sets the right `Content-Type` for `FormData` vs JSON; response interceptor unwraps to `{ data, meta }`, shows errors via `react-native-toast-message`, and on a 401 clears storage and redirects to `/auth`.
-- `utils/api.ts` — thin `apiGet/apiPost/apiPut/apiPatch/apiDelete` wrappers over `axiosInstance`.
-- `hooks/useApi.ts` — TanStack Query wrappers (`useFetchData`, `usePost`, `useUpdateData`, `usePatch`, `useDeleteData`) that layer query-key invalidation onto the `utils/api.ts` functions. Prefer these over calling `axiosInstance`/`utils/api.ts` directly from components.
-- `utils/envConfig.ts` — `getBaseUrl()` returns a **hardcoded** production URL (`https://exp2server.vercel.app/api`); the localhost alternative is left commented out. Swap this manually when developing against a local server.
-- `components/main/` — feature/page-specific components grouped by screen (`Home`, `AddTransaction`, `MonthlyTransaction`, `HistoryPage`, `weeklyTransactionsPage`, `smartAdd`, `shared`), separate from the generic/presentational `components/` (themed-text, themed-view, parallax-scroll-view, ui/) at the top level.
-- `constants/TransactionType.constant.ts` and `types/Transaction.tyes.ts` (filename typo, not a mistake to "fix" reflexively — check for other references first) define the shared transaction shape/enum used across screens; keep them in sync with the server's `transaction.constant.ts`/`transaction.interface.ts` (income/expense enum, field names) since there's no shared/generated types package between client and server.
+The full ranked backlogs live in `server/ai context/known-issues.md` and `client/ai context/known-issues.md`, grouped by module with severity tags. Notably absent from the inline list above but still worth knowing: server error responses leak a raw stack trace unconditionally in every environment (`server/ai context/known-issues.md#ERR-1`), and the AI system prompt sent to OpenRouter is currently textually corrupted, degrading extraction quality (`server/ai context/known-issues.md#AI-1`). Don't fix items from these lists as a side effect of unrelated work — flag them and update `progress-tracker.md` if you do.
