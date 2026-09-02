@@ -1,22 +1,49 @@
 import httpStatus from "http-status";
 import AppError from "../../Error/AppError";
 import { openai } from "../../helper/openRouter";
+import { prisma } from "../../lib/prisma";
+import { generateObjectId } from "../../util/generateObjectId";
 import { transactionConstants } from "./transaction.constant";
 import { TTransaction } from "./transaction.interface";
-import { transactionModel } from "./transaction.model";
+
+const toApiShape = <T extends { id: string; amount: unknown }>(t: T) => ({
+  ...t,
+  _id: t.id,
+  amount: Number(t.amount),
+});
 
 // ! for adding new transaction
 const addNewTransaction = async (payload: TTransaction, userId: string) => {
-  const result = await transactionModel.create({ ...payload, user: userId });
+  const result = await prisma.transaction.create({
+    data: {
+      id: generateObjectId(),
+      userId,
+      type: payload.type,
+      title: payload.title,
+      description: payload.description,
+      amount: payload.amount,
+    },
+  });
 
-  return result;
+  return toApiShape(result);
 };
 
 // ! for adding tranaction as array
 const addManyTransaction = async (payload: TTransaction[], userId: string) => {
-  const formattedPayload = payload?.map((data) => ({ ...data, user: userId }));
+  const formattedPayload = payload?.map((data) => ({
+    id: generateObjectId(),
+    userId,
+    type: data.type,
+    title: data.title,
+    description: data.description,
+    amount: data.amount,
+  }));
 
-  return transactionModel.insertMany(formattedPayload);
+  const result = await prisma.transaction.createMany({
+    data: formattedPayload,
+  });
+
+  return result;
 };
 
 type TMonthlyPayload = {
@@ -35,13 +62,16 @@ const getMonthlyTransactions = async (
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 0, 23, 59, 59, 999);
 
-  const transactions = await transactionModel
-    .find({
-      user: userId,
-      createdAt: { $gte: start, $lte: end },
+  const transactionsRaw = await prisma.transaction.findMany({
+    where: {
+      userId,
+      createdAt: { gte: start, lte: end },
       isDeleted: false,
-    })
-    .sort({ createdAt: -1 });
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const transactions = transactionsRaw.map(toApiShape);
 
   const income = transactions
     .filter((t) => t?.type === transactionConstants?.income)
@@ -60,7 +90,7 @@ const getMonthlyTransactions = async (
   } = {};
 
   transactions?.forEach((tran) => {
-    const day = tran?.createdAt?.getUTCDate() as number;
+    const day = (tran?.createdAt as Date)?.getUTCDate() as number;
 
     const dateString = `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
 
@@ -68,7 +98,7 @@ const getMonthlyTransactions = async (
       dailyDate[dateString] = { income: 0, expense: 0, transactions: [] };
     }
 
-    dailyDate[dateString].transactions.push(tran);
+    dailyDate[dateString].transactions.push(tran as unknown as TTransaction);
 
     if (tran?.type === transactionConstants.income) {
       dailyDate[dateString].income += tran?.amount;
@@ -111,13 +141,16 @@ const getDailyTransactions = async (userId: string) => {
     999,
   );
 
-  const transactions = await transactionModel
-    .find({
-      user: userId,
-      createdAt: { $gte: start, $lte: end },
+  const transactionsRaw = await prisma.transaction.findMany({
+    where: {
+      userId,
+      createdAt: { gte: start, lte: end },
       isDeleted: false,
-    })
-    .sort({ createdAt: -1 });
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const transactions = transactionsRaw.map(toApiShape);
 
   const income = transactions
     .filter((t) => t.type === transactionConstants?.income)
@@ -143,11 +176,15 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
   const start = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
   const end = new Date(Date.UTC(year + 1, 0, 1, 0, 0, 0, 0));
 
-  const transactions = await transactionModel.find({
-    user: userId,
-    createdAt: { $gte: start, $lt: end },
-    isDeleted: false,
+  const transactionsRaw = await prisma.transaction.findMany({
+    where: {
+      userId,
+      createdAt: { gte: start, lt: end },
+      isDeleted: false,
+    },
   });
+
+  const transactions = transactionsRaw.map(toApiShape);
 
   const totalIncome = transactions
     .filter((t) => t?.type === transactionConstants?.income)
@@ -195,41 +232,44 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
 // ! for updating transaction
 const updateTransaction = async (
   transactionId: string,
+  userId: string,
   payload: Partial<TTransaction>,
 ) => {
-  const transactionData = await transactionModel.findOne({
-    _id: transactionId,
-    isDeleted: false,
+  const transactionData = await prisma.transaction.findFirst({
+    where: { id: transactionId, userId, isDeleted: false },
   });
 
   if (!transactionData) {
     throw new AppError(httpStatus.BAD_REQUEST, "Invalid transaction id !!!");
   }
 
-  return await transactionModel.findByIdAndUpdate(transactionId, payload, {
-    new: true,
+  const result = await prisma.transaction.update({
+    where: { id: transactionId },
+    data: payload,
   });
+
+  return toApiShape(result);
 };
 
 // ! for deletig transaction data
-const deleteTransactionData = async (transactionId: string) => {
-  const transactionData = await transactionModel.findById(transactionId);
+const deleteTransactionData = async (
+  transactionId: string,
+  userId: string,
+) => {
+  const transactionData = await prisma.transaction.findFirst({
+    where: { id: transactionId, userId, isDeleted: false },
+  });
 
   if (!transactionData) {
     throw new AppError(httpStatus.BAD_REQUEST, "Invalid transaction id !!!");
   }
 
-  const result = await transactionModel.findByIdAndUpdate(
-    transactionId,
-    {
-      isDeleted: true,
-    },
-    {
-      new: true,
-    },
-  );
+  const result = await prisma.transaction.update({
+    where: { id: transactionId },
+    data: { isDeleted: true },
+  });
 
-  return result;
+  return toApiShape(result);
 };
 
 // ! for moneyManagement (prompt with ai)
@@ -252,7 +292,7 @@ You are a specialized financial transaction extraction AI. Your ONLY task is to 
 - **expense**: Money spent (bills, shopping, food, transportation, entertainment)
 
 ### 2. Amount Detection
-- Extract numeric 
+- Extract numeric
 - Handle written numbers (e.g., "five hundred" → 500)
 - Handle decimal values (e.g., "150.50", "1,200")
 - If multiple amounts in one sentence, create separate transactions
@@ -372,11 +412,15 @@ const getWeeklySummary = async (userId: string) => {
   const end = new Date(start);
   end.setUTCDate(start.getUTCDate() + 7);
 
-  const transactions = await transactionModel.find({
-    user: userId,
-    createdAt: { $gte: start, $lt: end },
-    isDeleted: false,
+  const transactionsRaw = await prisma.transaction.findMany({
+    where: {
+      userId,
+      createdAt: { gte: start, lt: end },
+      isDeleted: false,
+    },
   });
+
+  const transactions = transactionsRaw.map(toApiShape);
 
   const totalIncome = transactions
     .filter((t) => t.type === transactionConstants.income)
@@ -413,7 +457,7 @@ const getWeeklySummary = async (userId: string) => {
       };
     }
 
-    dailyData[dateString].transactions.push(tran);
+    dailyData[dateString].transactions.push(tran as unknown as TTransaction);
 
     if (tran.type === transactionConstants.income) {
       dailyData[dateString].income += tran.amount;

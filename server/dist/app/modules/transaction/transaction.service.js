@@ -16,17 +16,38 @@ exports.transactionServices = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const AppError_1 = __importDefault(require("../../Error/AppError"));
 const openRouter_1 = require("../../helper/openRouter");
+const prisma_1 = require("../../lib/prisma");
+const generateObjectId_1 = require("../../util/generateObjectId");
 const transaction_constant_1 = require("./transaction.constant");
-const transaction_model_1 = require("./transaction.model");
+const toApiShape = (t) => (Object.assign(Object.assign({}, t), { _id: t.id, amount: Number(t.amount) }));
 // ! for adding new transaction
 const addNewTransaction = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield transaction_model_1.transactionModel.create(Object.assign(Object.assign({}, payload), { user: userId }));
-    return result;
+    const result = yield prisma_1.prisma.transaction.create({
+        data: {
+            id: (0, generateObjectId_1.generateObjectId)(),
+            userId,
+            type: payload.type,
+            title: payload.title,
+            description: payload.description,
+            amount: payload.amount,
+        },
+    });
+    return toApiShape(result);
 });
 // ! for adding tranaction as array
 const addManyTransaction = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    const formattedPayload = payload === null || payload === void 0 ? void 0 : payload.map((data) => (Object.assign(Object.assign({}, data), { user: userId })));
-    return transaction_model_1.transactionModel.insertMany(formattedPayload);
+    const formattedPayload = payload === null || payload === void 0 ? void 0 : payload.map((data) => ({
+        id: (0, generateObjectId_1.generateObjectId)(),
+        userId,
+        type: data.type,
+        title: data.title,
+        description: data.description,
+        amount: data.amount,
+    }));
+    const result = yield prisma_1.prisma.transaction.createMany({
+        data: formattedPayload,
+    });
+    return result;
 });
 // ! for getting monthly data
 const getMonthlyTransactions = (userId, query) => __awaiter(void 0, void 0, void 0, function* () {
@@ -36,13 +57,15 @@ const getMonthlyTransactions = (userId, query) => __awaiter(void 0, void 0, void
     const month = (_a = query === null || query === void 0 ? void 0 : query.targetMonth) !== null && _a !== void 0 ? _a : today.getUTCMonth() + 1; // eg : 2 --> feb
     const start = new Date(year, month - 1, 1);
     const end = new Date(year, month, 0, 23, 59, 59, 999);
-    const transactions = yield transaction_model_1.transactionModel
-        .find({
-        user: userId,
-        createdAt: { $gte: start, $lte: end },
-        isDeleted: false,
-    })
-        .sort({ createdAt: -1 });
+    const transactionsRaw = yield prisma_1.prisma.transaction.findMany({
+        where: {
+            userId,
+            createdAt: { gte: start, lte: end },
+            isDeleted: false,
+        },
+        orderBy: { createdAt: "desc" },
+    });
+    const transactions = transactionsRaw.map(toApiShape);
     const income = transactions
         .filter((t) => (t === null || t === void 0 ? void 0 : t.type) === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.income))
         .reduce((acc, curr) => acc + (curr === null || curr === void 0 ? void 0 : curr.amount), 0);
@@ -78,13 +101,15 @@ const getDailyTransactions = (userId) => __awaiter(void 0, void 0, void 0, funct
     const today = new Date();
     const start = new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0, 0);
     const end = new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59, 999);
-    const transactions = yield transaction_model_1.transactionModel
-        .find({
-        user: userId,
-        createdAt: { $gte: start, $lte: end },
-        isDeleted: false,
-    })
-        .sort({ createdAt: -1 });
+    const transactionsRaw = yield prisma_1.prisma.transaction.findMany({
+        where: {
+            userId,
+            createdAt: { gte: start, lte: end },
+            isDeleted: false,
+        },
+        orderBy: { createdAt: "desc" },
+    });
+    const transactions = transactionsRaw.map(toApiShape);
     const income = transactions
         .filter((t) => t.type === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.income))
         .reduce((acc, curr) => acc + curr.amount, 0);
@@ -100,11 +125,14 @@ const getYearlySummary = (userId, query) => __awaiter(void 0, void 0, void 0, fu
     const year = Number((_a = query === null || query === void 0 ? void 0 : query.targetYear) !== null && _a !== void 0 ? _a : new Date().getFullYear());
     const start = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(year + 1, 0, 1, 0, 0, 0, 0));
-    const transactions = yield transaction_model_1.transactionModel.find({
-        user: userId,
-        createdAt: { $gte: start, $lt: end },
-        isDeleted: false,
+    const transactionsRaw = yield prisma_1.prisma.transaction.findMany({
+        where: {
+            userId,
+            createdAt: { gte: start, lt: end },
+            isDeleted: false,
+        },
     });
+    const transactions = transactionsRaw.map(toApiShape);
     const totalIncome = (_b = transactions
         .filter((t) => (t === null || t === void 0 ? void 0 : t.type) === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.income))) === null || _b === void 0 ? void 0 : _b.reduce((acc, cur) => acc + (cur === null || cur === void 0 ? void 0 : cur.amount), 0);
     const totalExpense = (_c = transactions === null || transactions === void 0 ? void 0 : transactions.filter((t) => (t === null || t === void 0 ? void 0 : t.type) === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.expense))) === null || _c === void 0 ? void 0 : _c.reduce((acc, cur) => acc + (cur === null || cur === void 0 ? void 0 : cur.amount), 0);
@@ -136,30 +164,32 @@ const getYearlySummary = (userId, query) => __awaiter(void 0, void 0, void 0, fu
     };
 });
 // ! for updating transaction
-const updateTransaction = (transactionId, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const transactionData = yield transaction_model_1.transactionModel.findOne({
-        _id: transactionId,
-        isDeleted: false,
+const updateTransaction = (transactionId, userId, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const transactionData = yield prisma_1.prisma.transaction.findFirst({
+        where: { id: transactionId, userId, isDeleted: false },
     });
     if (!transactionData) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid transaction id !!!");
     }
-    return yield transaction_model_1.transactionModel.findByIdAndUpdate(transactionId, payload, {
-        new: true,
+    const result = yield prisma_1.prisma.transaction.update({
+        where: { id: transactionId },
+        data: payload,
     });
+    return toApiShape(result);
 });
 // ! for deletig transaction data
-const deleteTransactionData = (transactionId) => __awaiter(void 0, void 0, void 0, function* () {
-    const transactionData = yield transaction_model_1.transactionModel.findById(transactionId);
+const deleteTransactionData = (transactionId, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const transactionData = yield prisma_1.prisma.transaction.findFirst({
+        where: { id: transactionId, userId, isDeleted: false },
+    });
     if (!transactionData) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid transaction id !!!");
     }
-    const result = yield transaction_model_1.transactionModel.findByIdAndUpdate(transactionId, {
-        isDeleted: true,
-    }, {
-        new: true,
+    const result = yield prisma_1.prisma.transaction.update({
+        where: { id: transactionId },
+        data: { isDeleted: true },
     });
-    return result;
+    return toApiShape(result);
 });
 // ! for moneyManagement (prompt with ai)
 const moneyManagement = (prompt) => __awaiter(void 0, void 0, void 0, function* () {
@@ -181,7 +211,7 @@ You are a specialized financial transaction extraction AI. Your ONLY task is to 
 - **expense**: Money spent (bills, shopping, food, transportation, entertainment)
 
 ### 2. Amount Detection
-- Extract numeric 
+- Extract numeric
 - Handle written numbers (e.g., "five hundred" → 500)
 - Handle decimal values (e.g., "150.50", "1,200")
 - If multiple amounts in one sentence, create separate transactions
@@ -283,11 +313,14 @@ const getWeeklySummary = (userId) => __awaiter(void 0, void 0, void 0, function*
     start.setUTCHours(0, 0, 0, 0);
     const end = new Date(start);
     end.setUTCDate(start.getUTCDate() + 7);
-    const transactions = yield transaction_model_1.transactionModel.find({
-        user: userId,
-        createdAt: { $gte: start, $lt: end },
-        isDeleted: false,
+    const transactionsRaw = yield prisma_1.prisma.transaction.findMany({
+        where: {
+            userId,
+            createdAt: { gte: start, lt: end },
+            isDeleted: false,
+        },
     });
+    const transactions = transactionsRaw.map(toApiShape);
     const totalIncome = transactions
         .filter((t) => t.type === transaction_constant_1.transactionConstants.income)
         .reduce((acc, cur) => acc + cur.amount, 0);
