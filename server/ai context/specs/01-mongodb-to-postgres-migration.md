@@ -7,6 +7,7 @@ Replace MongoDB/Mongoose with PostgreSQL (via Prisma, hosted on Neon) as the ser
 ## Scope
 
 **In scope:**
+
 - New Prisma schema modeling the existing `User` and `Transaction` shapes (only two collections exist — confirmed, no other entities).
 - A one-off, safely re-runnable migration script that copies every row from MongoDB Atlas into the new Postgres database, preserving IDs, timestamps, and soft-deleted rows.
 - A verification step (counts + sums + spot-checks) that must pass before cutover.
@@ -18,6 +19,7 @@ Replace MongoDB/Mongoose with PostgreSQL (via Prisma, hosted on Neon) as the ser
 - New rows created after cutover keep using ObjectId-shaped string IDs (via a small `bson-objectid` helper), so every row — old and new — has one consistent ID format forever.
 
 **Out of scope — port behavior verbatim, do not drive-by fix:**
+
 - DATE-1/DATE-2 (UTC vs local / month-indexing quirks in the daily/monthly/yearly/weekly summary functions).
 - AI-1 (corrupted AI system prompt) — `moneyManagement` has no DB access at all and should be copied unchanged.
 - AUTH-2 (unauthenticated `manage-money` endpoint), AUTH-3 (password hash returned to client), ERR-1 (stack trace leakage), CFG-1 (no `DATABASE_URL` startup validation), CFG-3 (dead `DATABASE_URL2`), the unused `Queryuilder` class.
@@ -46,7 +48,9 @@ Prisma's `Decimal` type serializes to a **JSON string** by default (`"150.00"`),
 - `createdAt`/`updatedAt` are only ever passed to `new Date(...)`/`date-fns format()` — any parseable ISO string works; the offline queue already generates its own `new Date().toISOString()` values for pending items today.
 - The bulk-add endpoint (`POST /transactions/many-transaction`, called from `SmartAdd.tsx`) — confirmed the client only reads `result.success`/`result.message` from the response, never the created-rows array, and relies entirely on React Query's `invalidateQueries` to refetch fresh data afterward. So Postgres `createMany` (which doesn't return created rows, unlike Mongo's `insertMany`) is a non-issue — no follow-up refetch needs to be added.
 
-### Prisma schema (`server/prisma/schema.prisma`, new file)
+### Prisma schema (`server/prisma/schema.prisma`) — ALREADY DONE
+
+**Update (implemented 2026-09-02):** the installed CLI landed on Prisma **7.10.0** (matched with `@prisma/client@7.10.0` and `@prisma/adapter-neon@7.10.0` — pinned deliberately, since npm's `prisma` "latest" tag currently points at an `8.0.0-rc` prerelease with no matching stable client). Prisma 7 removed the Rust query engine and no longer allows `url`/`directUrl` inside the `datasource` block at all — connection strings move to a new `prisma.config.ts` file, and `PrismaClient` requires an explicit driver adapter. This changes two things from the original plan below: the schema has no URL in it, and the "Serverless connection setup" section further down (which assumed a plain pooled connection string with no adapter) is superseded — see the corrected version after it.
 
 ```prisma
 generator client {
@@ -55,7 +59,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -102,18 +105,22 @@ model Transaction {
 }
 ```
 
-### Serverless connection setup
+### Serverless connection setup (corrected for Prisma 7 — supersedes the original plan)
 
-`server/src/app/lib/prisma.ts` (new):
+Prisma 7 requires a driver adapter — there's no more "just call `PrismaClient()` and it reads a URL from schema.prisma" path. Neon's own Prisma 7 guide recommends `@prisma/adapter-neon` (their WebSocket-based serverless driver) for both Edge *and* normal Node serverless functions on their platform — already installed (`@prisma/adapter-neon@7.10.0`). `server/src/app/lib/prisma.ts` (not yet created — application code, next step) should look like:
 
 ```ts
 import { PrismaClient } from "@prisma/client";
+import { PrismaNeon } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL! });
 
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
+    adapter,
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 
@@ -122,14 +129,33 @@ if (process.env.NODE_ENV !== "production") {
 }
 ```
 
-This structurally fixes the existing serverless connection-exhaustion footgun (APP-4) as a side effect of switching stacks — Prisma connects lazily per query, Neon's own PgBouncer pooler absorbs concurrent Vercel invocations. No bespoke `readyState`-guard logic needed like Mongoose would require. Use Neon's pooled connection string (the default recommended one) — no need for the `@neondatabase/serverless` WebSocket driver-adapter, that exists for Edge runtimes; this app runs on Vercel's normal Node runtime per `vercel.json`.
+This uses the **pooled** `DATABASE_URL` (the adapter is the app's runtime connection) — distinct from `prisma.config.ts`'s `DATABASE_URL_UNPOOLED`, which is only for CLI/migration operations (see below). This still structurally fixes the serverless connection-exhaustion footgun (APP-4): Prisma connects lazily per query, and Neon's pooling absorbs concurrent Vercel invocations — no bespoke `readyState`-guard logic needed like Mongoose would require.
 
 `server/src/server.ts` — remove `mongoose.connect(...)` entirely; nothing replaces it at module load, Prisma connects lazily on first query.
+
+**`server/prisma.config.ts` (new file, already created)** — this is what Prisma CLI commands (`migrate`, `generate`, `db push`) read; it is separate from the application's `PrismaClient` above and is never imported by app code:
+
+```ts
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+  },
+  datasource: {
+    url: env("DATABASE_URL_UNPOOLED"),
+  },
+});
+```
+
+It intentionally uses the **unpooled** connection — Neon's pooled (PgBouncer transaction-mode) connection doesn't support the operations `prisma migrate` needs to run DDL reliably, so CLI operations go direct while the running app uses the pooled one via the adapter above.
 
 ### Migration script logic (`server/scripts/migrate-to-postgres.ts`, new — one-off, never wired into app/CI lifecycle)
 
 1. Connect **read-only** to Mongo Atlas via a temporary `MONGO_MIGRATION_URI` env var (distinct from the app's `DATABASE_URL`, which now points at Postgres) — never call a write/delete method on this connection.
-2. Instantiate `PrismaClient` against the real target `DATABASE_URL` (Postgres).
+2. Instantiate `PrismaClient` against the real target `DATABASE_URL` (Postgres) — Prisma 7 requires the same `PrismaNeon` adapter shown in "Serverless connection setup" above, so this script imports and constructs it the same way `lib/prisma.ts` does rather than calling `new PrismaClient()` bare.
 3. Migrate **all** `User` docs first (including soft-deleted ones — `isDeleted` is just a flag, not real absence), via `prisma.user.upsert({ where: { id: mongoUser._id.toString() }, create: {...}, update: {} })`. Upsert, not create, so the script is safely re-runnable if interrupted partway.
 4. Migrate **all** `Transaction` docs the same way (`userId: tx.user.toString()`), preserving `createdAt`/`updatedAt` from the original documents verbatim (not regenerated). Wrap each row in try/catch so one bad row doesn't abort the run; collect and print failed IDs at the end.
 5. Print a final summary (inserted / already-existed / failed counts, elapsed time); disconnect both clients in a `finally` block.
@@ -139,6 +165,7 @@ Needs its own `server/scripts/tsconfig.json` (`extends` the main config, `rootDi
 ### Verification step (must PASS before cutover)
 
 Compare Mongo (source of truth) against the freshly migrated Postgres:
+
 - `User`/`Transaction` row counts match exactly (`countDocuments()` vs `prisma.count()`).
 - Sum of `amount` grouped by `type` matches within a small epsilon (float-vs-Decimal comparison).
 - Spot-check 5 random transaction IDs field-by-field (title, amount, type, description, isDeleted, createdAt) between the two databases.
@@ -159,11 +186,12 @@ Compare Mongo (source of truth) against the freshly migrated Postgres:
   - Every function returning transaction data runs its result through a small `toApiShape` helper (`{ ...t, _id: t.id, amount: Number(t.amount) }`, or `.map(...)` for arrays) so response shape stays identical to today.
 - `server/src/app/util/generateObjectId.ts` — new, small helper (`bson-objectid`) for generating IDs for rows created after cutover.
 
-### Dependencies / config
+### Dependencies / config — DONE (2026-09-02)
 
-- `server/package.json`: remove `mongoose`; add `prisma` (dev dependency), `@prisma/client`, `bson-objectid`. Add `"postinstall": "prisma generate"` (needed so `tsc` sees the generated client, and so Vercel's build has a fresh one) and `"db:migrate": "prisma migrate deploy"` for future schema changes.
-- `.env` / `.env.local`: `DATABASE_URL` → the Neon pooled Postgres connection string. Add a temporary `MONGO_MIGRATION_URI` (copy of the current Mongo Atlas URI), used only by the migration script. Both files are already gitignored.
-- `server/vercel.json`: no expected change (the `postinstall` script handles `prisma generate` on Vercel), but verify against a real deploy — this project uses the older `builds`/`routes` config format, and some older-format setups skip `postinstall`, so don't assume without checking.
+- `server/package.json`: `mongoose` **not yet removed** (still needed until the service-layer rewrite below happens — removing it now would break the still-live Mongoose code). Added: `prisma@7.10.0` (pinned — npm's `prisma` "latest" tag is currently an `8.0.0-rc` prerelease with no matching stable `@prisma/client`, so this was deliberately pinned rather than left on `^`), `@prisma/client@7.10.0`, `@prisma/adapter-neon@7.10.0`. `bson-objectid` still to be added when `generateObjectId.ts` is written. Added `"postinstall": "prisma generate"` and `"db:migrate": "prisma migrate deploy"`.
+- `.env` / `.env.local`: user added `DATABASE_URL` (Neon **pooled**) and `DATABASE_URL_UNPOOLED` (Neon **direct**, used by `prisma.config.ts` for CLI/migrations) themselves. A temporary `MONGO_MIGRATION_URI` (copy of the Mongo Atlas URI) still needs to be added before the migration script can run. Both files are already gitignored.
+- `server/vercel.json`: not yet verified against a real deploy — still an open item.
+- New: `server/prisma.config.ts` (CLI config, see above) and `server/prisma/schema.prisma` (data model, see above) — both created and working (`prisma generate` and `prisma migrate dev --name init` have both been run successfully against the real Neon database; `users`/`transactions` tables with the enum types, unique email index, `userId` index, and FK constraint already exist in Neon as of this migration).
 
 ### Cutover sequence (short downtime — acceptable, this is solo use, not a live multi-user service)
 
@@ -183,11 +211,13 @@ Mongo is never modified during any of the above, so rollback is a deploy + env-v
 
 ## Implementation notes
 
-- New files: `server/prisma/schema.prisma`, `server/src/app/lib/prisma.ts`, `server/src/app/util/generateObjectId.ts`, `server/scripts/migrate-to-postgres.ts`, `server/scripts/tsconfig.json`.
-- Deleted files: `server/src/app/modules/user/user.model.ts`, `server/src/app/modules/transaction/transaction.model.ts`.
-- Rewritten: `server/src/app/modules/user/user.services.ts`, `server/src/app/modules/user/user.interface.ts`, `server/src/app/modules/transaction/transaction.service.ts`, `server/src/app/modules/transaction/transaction.interface.ts`, `server/src/server.ts`, `server/package.json`, `server/tsconfig.json` (add `scripts/` to `exclude`).
+- New files: `server/prisma/schema.prisma` ✅ done, `server/prisma.config.ts` ✅ done, `server/src/app/lib/prisma.ts` (not yet — app code), `server/src/app/util/generateObjectId.ts` (not yet), `server/scripts/migrate-to-postgres.ts` (not yet), `server/scripts/tsconfig.json` (not yet).
+- Deleted files (not yet — pending the service-layer rewrite): `server/src/app/modules/user/user.model.ts`, `server/src/app/modules/transaction/transaction.model.ts`.
+- Rewritten (not yet): `server/src/app/modules/user/user.services.ts`, `server/src/app/modules/user/user.interface.ts`, `server/src/app/modules/transaction/transaction.service.ts`, `server/src/app/modules/transaction/transaction.interface.ts`, `server/src/server.ts`, `server/tsconfig.json` (add `scripts/` to `exclude`).
+- `server/package.json` ✅ partially done — `postinstall`/`db:migrate` scripts and the three Prisma packages are in; `mongoose` removal and `bson-objectid` addition still pending the rewrite.
 - `server/src/app/modules/transaction/transaction.controller.ts` needs one small change: pass `req?.user?.userId` as a second argument to `updateTransaction`/`deleteTransactionData` (currently only passes `transactionId`) — required for the AUTH-1 fix.
 - Confirm during implementation whether Vercel's builder for this project (older `builds`/`routes` format) actually needs `app.listen()` to still exist in `server.ts` for anything in production, or whether it's local-dev-only — don't assume, check against how `dist/server.js` is invoked.
+- **Prisma version note**: this project is on Prisma **7.10.0**, which removed the Rust query engine and made driver adapters mandatory (`@prisma/adapter-neon` here) — this is materially different from Prisma 5/6-era setups (no `url` in `schema.prisma`, connection config lives in `prisma.config.ts`, `PrismaClient` takes an `adapter` option). Every code sample above already reflects this; don't fall back to older Prisma patterns found in older tutorials/training data.
 
 ## Verify when done
 

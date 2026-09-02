@@ -4,13 +4,13 @@
 
 ## Current state
 
-Core API surface is built and working: auth (register/login), transaction CRUD, four report endpoints (daily/monthly/yearly/weekly), and AI-assisted bulk transaction parsing. There is no active multi-phase build plan — this is a maintained, already-shipped personal project, not greenfield work. The `specs/` scaffolding below exists for the *next* piece of nontrivial work, not a backlog of already-completed phases.
+Core API surface is built and working: auth (register/login), transaction CRUD, four report endpoints (daily/monthly/yearly/weekly), and AI-assisted bulk transaction parsing. There is no active multi-phase build plan — this is a maintained, already-shipped personal project, not greenfield work. The `specs/` scaffolding below exists for the _next_ piece of nontrivial work, not a backlog of already-completed phases.
 
 ## Spec status
 
-| Spec | Status |
-|---|---|
-| `01-mongodb-to-postgres-migration.md` | Planned — not started |
+| Spec                                  | Status                |
+| ------------------------------------- | --------------------- |
+| `01-mongodb-to-postgres-migration.md` | In progress — Prisma configured (schema, `prisma.config.ts`, deps, tables created in Neon); service-layer rewrite and data migration script not started |
 
 ## Known Gaps
 
