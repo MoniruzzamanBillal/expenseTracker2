@@ -8,9 +8,11 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 
 ## Spec status
 
-| Spec                                  | Status                |
-| ------------------------------------- | --------------------- |
-| `01-mongodb-to-postgres-migration.md` | In progress — Prisma configured (schema, `prisma.config.ts`, deps, tables created in Neon); service-layer rewrite and data migration script not started |
+| Spec                                               | Status                                                                                  |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `01-mongodb-to-postgres-migration.md`              | Decisions/background record + Prisma config — done. Execution split into `02` and `03`. |
+| `02-migrate-user-transaction-modules-to-prisma.md` | Planned — not started                                                                   |
+| `03-migrate-mongodb-data-to-postgresql.md`         | Planned — not started (depends on `02`)                                                 |
 
 ## Known Gaps
 

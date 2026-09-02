@@ -1,5 +1,7 @@
 # 01: Migrate the database from MongoDB to PostgreSQL (Prisma + Neon)
 
+> **Status note (2026-09-02): this spec's remaining execution work has been split into two focused, actionable specs** — `02-migrate-user-transaction-modules-to-prisma.md` (the service-layer code rewrite) and `03-migrate-mongodb-data-to-postgresql.md` (the real data copy). This document remains the source of truth for the *decisions* behind the migration (data model, ID strategy, response-shape compatibility, client-compatibility research) and records the Prisma/Neon configuration work already completed — read it for background, but track remaining work in `02`/`03`.
+
 ## Goal
 
 Replace MongoDB/Mongoose with PostgreSQL (via Prisma, hosted on Neon) as the server's database, carrying over a year of real personal transaction/user data with zero loss. The user has decided MongoDB was the wrong original choice and wants off it, but this is their real financial history — correctness of the migration matters more than speed.
