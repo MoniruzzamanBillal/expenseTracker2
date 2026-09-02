@@ -10,7 +10,7 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 
 | Spec | Status |
 |---|---|
-| — none yet — see `specs/00-build-plan.md` — | n/a |
+| `01-mongodb-to-postgres-migration.md` | Planned — not started |
 
 ## Known Gaps
 
@@ -25,6 +25,6 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 
 ## Next Up (prioritized, with why-now)
 
-1. **AUTH-1** — cheapest to fix, highest data-integrity risk (one `transaction.user === req.user.userId` check in two service functions).
+1. **AUTH-1** — cheapest to fix, highest data-integrity risk (one `transaction.user === req.user.userId` check in two service functions). Now scoped as part of `specs/01-mongodb-to-postgres-migration.md`, since that work rewrites both functions anyway — not being fixed standalone ahead of it.
 2. **AUTH-2** — direct, ongoing cost exposure against your own OpenRouter key; closing it is one line (`authCheck`).
 3. **AI-1** — the corrupted prompt is actively degrading the AI-parsing feature's actual output quality right now, not just a latent risk.
