@@ -57,9 +57,8 @@ Read in this order:
 ## Highest-severity gotchas (full detail in the docs above)
 
 **Server:**
-- `POST /transactions/manage-money` (the AI-parsing endpoint) has no auth at all — a live, unauthenticated cost/abuse vector against your own OpenRouter key (`server/ai context/known-issues.md#AUTH-2`).
-- (The IDOR on transaction update/delete, `#AUTH-1`, and the missing already-deleted check on delete, `#AUTH-10`, are **resolved** as of the Prisma rewrite — see `progress-tracker.md`. Don't reintroduce either by reverting to an `_id`-only lookup.)
-- Password hashes are returned to the client on both register and login — no field is stripped before the response goes out (`#AUTH-3`).
+- Password hashes are returned to the client on both register and login — no field is stripped before the response goes out (`server/ai context/known-issues.md#AUTH-3`).
+- (`#AUTH-1`/IDOR on transaction update/delete, `#AUTH-10`/missing already-deleted check, `#AUTH-2`/unauthenticated `manage-money` route, and `#AI-1`/`#AI-3`/`#AI-4`/`#AI-5` on the AI prompt+call are all **resolved** — see `progress-tracker.md`'s Known Gaps for what fixed each and when. `known-issues.md` itself is a frozen backlog snapshot and doesn't get pruned as items are fixed; `progress-tracker.md` is the current-status source of truth, so check it — not just the inline gotchas here — before assuming an issue from that file is still live.)
 
 **Client:**
 - The axios response interceptor never rejects on HTTP errors (`return error`, not `Promise.reject(error)`) — every downstream `onError`/`catch` around a mutation is dead code; the interceptor's own Toast is the only real error surface today (`client/ai context/known-issues.md#FETCH-1`).
@@ -68,4 +67,4 @@ Read in this order:
 
 ## Known issues
 
-The full ranked backlogs live in `server/ai context/known-issues.md` and `client/ai context/known-issues.md`, grouped by module with severity tags. Notably absent from the inline list above but still worth knowing: server error responses leak a raw stack trace unconditionally in every environment (`server/ai context/known-issues.md#ERR-1`), and the AI system prompt sent to OpenRouter is currently textually corrupted, degrading extraction quality (`server/ai context/known-issues.md#AI-1`). Don't fix items from these lists as a side effect of unrelated work — flag them and update `progress-tracker.md` if you do.
+The full ranked backlogs live in `server/ai context/known-issues.md` and `client/ai context/known-issues.md`, grouped by module with severity tags — but that file is a point-in-time snapshot, not kept in sync as items get fixed, so cross-check `progress-tracker.md`'s Known Gaps checklist for current status before treating any entry as still open. Notably absent from the inline list above but still worth knowing: server error responses leak a raw stack trace unconditionally in every environment (`server/ai context/known-issues.md#ERR-1`), and there's no schema validation on the AI-parsed transaction output before it reaches the DB (`#AI-2`). Don't fix items from these lists as a side effect of unrelated work — flag them and update `progress-tracker.md` if you do.
