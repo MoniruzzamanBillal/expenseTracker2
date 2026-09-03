@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ExpenseTracker is a full-stack mobile expense-tracking app with two **fully independent** projects — there is no root `package.json`, no workspace, and no root-level lint/build/test command. Each has its own dependencies and must be worked on from within its own directory; there is no root-level script that operates on both at once.
 
 - `client/` — Expo (React Native) app using file-based routing (`expo-router`).
-- `server/` — Express + Mongoose REST API, deployed to Vercel as a serverless function.
+- `server/` — Express + Mongoose REST API, deployed to Vercel as a serverless function. A Postgres/Prisma migration is in progress but not yet live in app code — see the note below.
 
 ## Common commands
 
@@ -17,6 +17,7 @@ ExpenseTracker is a full-stack mobile expense-tracking app with two **fully inde
 - `yarn start:prod` — run the compiled server (`node ./dist/server.js`).
 - `yarn lint` / `yarn lint:fix` — ESLint over `src`.
 - `yarn prettier` / `yarn prettier:fix` — format `src`.
+- `yarn db:migrate` — apply Prisma migrations (`prisma migrate deploy`); `postinstall` runs `prisma generate` automatically. These operate on the Postgres schema, not the live Mongoose models — see the migration note below.
 - There is no real test suite (`yarn test` is a stub that exits with an error).
 
 ### client (run from `client/`)
@@ -39,6 +40,8 @@ Read in this order:
 5. `ai-workflow-rules.md` — scoping rules, protected files, verify-before-moving-on checklist
 6. `progress-tracker.md` — current state, known gaps, next up
 7. `specs/00-build-plan.md` — how to scope new work
+
+**In-progress DB migration (server):** `server/prisma/schema.prisma`, `neon.ts`, `.neon`, and `prisma.config.ts` are scaffolding for a MongoDB→Postgres migration — Prisma is configured and can connect, but all request-handling code still reads/writes through Mongoose (`server/src/app/modules/*/*.model.ts`). Don't assume Prisma is live, and don't treat Mongoose as being phased out mid-task. The full plan is `specs/01-mongodb-to-postgres-migration.md` (decisions/config — done) split into `specs/02-migrate-user-transaction-modules-to-prisma.md` and `specs/03-migrate-mongodb-data-to-postgresql.md` (both planned, not started per `progress-tracker.md`).
 
 ### Source of truth — Client (`client/ai context/`)
 

@@ -59,6 +59,36 @@ async function migrateUsers() {
   return { total: users.length, inserted, skipped, failed };
 }
 
+// 18 real Mongo transaction documents (confirmed via `{ user: { $exists: false } }`,
+// dated 2025-07-07 to 2025-07-22 — the app's first ~2 weeks, mostly before any user
+// account existed) have no `user` field at all: pre-dates the field being required.
+// User decision (2026-09-03): attach all 18 to the first account, abc@d.com
+// ("Moniruzzaman", Mongo _id 687e0a886b065df2d20c168c), rather than drop them.
+// Deliberately an explicit ID list, not a blanket "missing user -> this owner" rule —
+// a different/future orphan hitting this code path should still fail loud, not be
+// silently absorbed under a decision that was only ever about these specific rows.
+const ORPHAN_FALLBACK_OWNER_ID = "687e0a886b065df2d20c168c";
+const KNOWN_ORPHAN_TRANSACTION_IDS = new Set([
+  "686b92e53b495356a3eabc33",
+  "686b92f83b495356a3eabc36",
+  "686d1fea3a75cb848175612d",
+  "686d20873a75cb8481756132",
+  "686d209e3a75cb8481756135",
+  "686d20b33a75cb8481756138",
+  "686d20c83a75cb848175613b",
+  "687c9f85250dbffe9cbdd4f8",
+  "687c9fa0250dbffe9cbdd4fb",
+  "687c9fc2250dbffe9cbdd501",
+  "687ca97cbd9f276fe4973bd9",
+  "687cb027c214675fdca0f007",
+  "687cb7da18fc2a67395782f0",
+  "687cb80218fc2a67395782f3",
+  "687efcd41eb24a156ca9af96",
+  "687eff24f2f84061d43c4913",
+  "687f5d556008f5564ddade80",
+  "687f620fabbdfff7110f72cd",
+]);
+
 async function migrateTransactions() {
   const transactions = (await MongoTransaction.find({}).lean()) as any[]; // ALL, including isDeleted
   let inserted = 0;
@@ -67,11 +97,24 @@ async function migrateTransactions() {
 
   for (const t of transactions) {
     try {
+      const mongoId = t._id.toString();
+      let userId: string;
+      if (t.user) {
+        userId = t.user.toString();
+      } else if (KNOWN_ORPHAN_TRANSACTION_IDS.has(mongoId)) {
+        userId = ORPHAN_FALLBACK_OWNER_ID;
+        console.log(`Transaction ${mongoId}: no user field, assigning known fallback owner ${ORPHAN_FALLBACK_OWNER_ID}`);
+      } else {
+        throw new Error(
+          `Transaction ${mongoId} has no user field and is not in the reviewed KNOWN_ORPHAN_TRANSACTION_IDS list — refusing to guess an owner.`,
+        );
+      }
+
       await prisma.transaction.upsert({
-        where: { id: t._id.toString() },
+        where: { id: mongoId },
         create: {
-          id: t._id.toString(),
-          userId: t.user.toString(),
+          id: mongoId,
+          userId,
           type: t.type,
           title: t.title,
           description: t.description ?? null,
