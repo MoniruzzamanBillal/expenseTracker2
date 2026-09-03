@@ -29,12 +29,16 @@ const openRouterClient = new openai_1.default({
     },
 });
 // ! free models to try in order - if one is rate limited/down, fall back to the next
-// ! verified live against OpenRouter's /models catalog on 2026-09-03 — the previous
-// ! list (nemotron-3-nano-30b, llama-3.2-3b, qwen3-next-80b) had all three retired
-// ! from the free tier by OpenRouter; re-verify here before trusting this list long-term
+// ! curated 2026-09-03 (see specs/06) against real chat-completion calls, not just the
+// ! /models catalog listing: catalog entries can be non-chat (e.g. rerank, always 400s
+// ! on chat/completions) or technically "free" but slow enough (40s+) to always blow
+// ! the client's own 20s timeout. Verify both correctness AND latency before adding an
+// ! entry here, and keep the list short — every entry ahead of a working one adds to
+// ! worst-case request latency.
 const FREE_MODELS = [
     "nvidia/nemotron-3-super-120b-a12b:free",
     "minimax/minimax-m2.7:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     "google/gemma-4-26b-a4b-it:free",
 ];
 // ! single choke point every ai feature talks through

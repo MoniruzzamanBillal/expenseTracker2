@@ -15,6 +15,7 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 | `03-migrate-mongodb-data-to-postgresql.md`         | Completed through verification 2026-09-03 — **cutover not yet done**, see below.            |
 | `04-openrouter-resilient-ai-integration.md`        | Completed 2026-09-03 — see `05` for a follow-up fix hit during its own verification.        |
 | `05-fix-stale-free-model-list.md`                  | Completed 2026-09-03, same session as `04`.                                                 |
+| `06-fix-free-model-list-latency-and-broken-entry.md` | Completed 2026-09-03 — found during a full-backend regression pass, after the model list was manually edited to 8 entries. |
 
 ## Spec 02 — Verify when done (checked against the empty Postgres tables, via local `yarn dev` + curl)
 
