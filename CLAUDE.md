@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ExpenseTracker is a full-stack mobile expense-tracking app with two **fully independent** projects — there is no root `package.json`, no workspace, and no root-level lint/build/test command. Each has its own dependencies and must be worked on from within its own directory; there is no root-level script that operates on both at once.
 
 - `client/` — Expo (React Native) app using file-based routing (`expo-router`).
-- `server/` — Express + Mongoose REST API, deployed to Vercel as a serverless function. A Postgres/Prisma migration is in progress but not yet live in app code — see the note below.
+- `server/` — Express REST API, deployed to Vercel as a serverless function. Mid-migration from MongoDB/Mongoose to Postgres/Prisma — see the note below before assuming which one is authoritative for a given piece of code.
 
 ## Common commands
 
@@ -41,7 +41,7 @@ Read in this order:
 6. `progress-tracker.md` — current state, known gaps, next up
 7. `specs/00-build-plan.md` — how to scope new work
 
-**In-progress DB migration (server):** `server/prisma/schema.prisma`, `neon.ts`, `.neon`, and `prisma.config.ts` are scaffolding for a MongoDB→Postgres migration — Prisma is configured and can connect, but all request-handling code still reads/writes through Mongoose (`server/src/app/modules/*/*.model.ts`). Don't assume Prisma is live, and don't treat Mongoose as being phased out mid-task. The full plan is `specs/01-mongodb-to-postgres-migration.md` (decisions/config — done) split into `specs/02-migrate-user-transaction-modules-to-prisma.md` and `specs/03-migrate-mongodb-data-to-postgresql.md` (both planned, not started per `progress-tracker.md`).
+**In-progress DB migration (server):** the `user` and `transaction` modules' data-access code now runs on Prisma/Postgres (`server/prisma/schema.prisma`, `server/src/app/lib/prisma.ts`) — `specs/02-migrate-user-transaction-modules-to-prisma.md` is complete, `mongoose` is gone from those two modules. Mongoose still lingers in a handful of unrelated files outside that scope (`handleCatError.ts`/`handleValidationError.ts` for type-only `CastError`/`ValidationError` annotations, and the unused `Queryuilder.ts`) — don't treat that as "the migration isn't real," it's a flagged, deliberate exception, not an oversight. The real-data copy (`specs/03-migrate-mongodb-data-to-postgresql.md`, via the standalone `server/scripts/migrate-to-postgres.ts` — never imported by the app, never run automatically) is in progress; check `progress-tracker.md` for current status before assuming Postgres already holds the full, final dataset or that cutover (swapping the deployed app's `DATABASE_URL`) has happened — as of writing it has not, production is still Mongoose-backed.
 
 ### Source of truth — Client (`client/ai context/`)
 
@@ -57,8 +57,8 @@ Read in this order:
 ## Highest-severity gotchas (full detail in the docs above)
 
 **Server:**
-- IDOR — transaction update/delete has no ownership check; any authenticated user can edit/delete another user's transactions (`server/ai context/known-issues.md#AUTH-1`).
-- `POST /transactions/manage-money` (the AI-parsing endpoint) has no auth at all — a live, unauthenticated cost/abuse vector against your own OpenRouter key (`#AUTH-2`).
+- `POST /transactions/manage-money` (the AI-parsing endpoint) has no auth at all — a live, unauthenticated cost/abuse vector against your own OpenRouter key (`server/ai context/known-issues.md#AUTH-2`).
+- (The IDOR on transaction update/delete, `#AUTH-1`, and the missing already-deleted check on delete, `#AUTH-10`, are **resolved** as of the Prisma rewrite — see `progress-tracker.md`. Don't reintroduce either by reverting to an `_id`-only lookup.)
 - Password hashes are returned to the client on both register and login — no field is stripped before the response goes out (`#AUTH-3`).
 
 **Client:**
