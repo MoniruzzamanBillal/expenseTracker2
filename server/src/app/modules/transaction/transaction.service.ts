@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
 import AppError from "../../Error/AppError";
-import { openai } from "../../helper/openRouter";
+import { askOpenRouter } from "../../helper/openRouter";
 import { prisma } from "../../lib/prisma";
 import { generateObjectId } from "../../util/generateObjectId";
 import { transactionConstants } from "./transaction.constant";
@@ -274,21 +274,13 @@ const deleteTransactionData = async (
 
 // ! for moneyManagement (prompt with ai)
 const moneyManagement = async (prompt: string) => {
-  const response = await openai.chat.completions.create({
-    // model: "z-ai/glm-4.5-air:free",
-    // model: "arcee-ai/trinity-large-preview:free",
-    model: "nvidia/nemotron-3-nano-30b-a3b:free",
-
-    messages: [
-      {
-        role: "system",
-        content: `
+  const systemPrompt = `
 You are a specialized financial transaction extraction AI. Your ONLY task is to extract income and expense transactions from user text with high accuracy.
 
 ## EXTRACTION RULES:
 
 ### 1. Transaction Types
-- **income**: Money received (salary, gift, refund, cashnvidia/nemotron-3-nano-30b-a3b:freeback, investment returns)
+- **income**: Money received (salary, gift, refund, cashback, investment returns)
 - **expense**: Money spent (bills, shopping, food, transportation, entertainment)
 
 ### 2. Amount Detection
@@ -296,7 +288,7 @@ You are a specialized financial transaction extraction AI. Your ONLY task is to 
 - Handle written numbers (e.g., "five hundred" → 500)
 - Handle decimal values (e.g., "150.50", "1,200")
 - If multiple amounts in one sentence, create separate transactions
-nvidia/nemotron-3-nano-30b-a3b:free
+
 ### 3. Title Generation
 - Create concise, descriptive titles (max 5-6 words)
 
@@ -363,21 +355,19 @@ Output: [
 - NEVER include explanatory text outside JSON
 - If no transactions found, return empty array []
 - Ensure all required fields are present
-`,
-      },
-      {
-        role: "user",
-        content: `Text: "${prompt}"`,
-      },
-    ],
-    temperature: 0.7,
-  });
+`;
 
-  const rawResponse = response.choices[0].message?.content;
+  const rawResponse = await askOpenRouter(
+    [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `Text: "${prompt}"` },
+    ],
+    { temperature: 0.2 },
+  );
 
   let parsed;
   try {
-    parsed = JSON.parse(rawResponse as string);
+    parsed = JSON.parse(rawResponse);
   } catch {
     throw new AppError(
       httpStatus.BAD_REQUEST,

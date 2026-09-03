@@ -8,11 +8,13 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 
 ## Spec status
 
-| Spec                                               | Status                                                                                  |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `01-mongodb-to-postgres-migration.md`              | Decisions/background record + Prisma config — done. Execution split into `02` and `03`. |
+| Spec                                               | Status                                                                                      |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `01-mongodb-to-postgres-migration.md`              | Decisions/background record + Prisma config — done. Execution split into `02` and `03`.     |
 | `02-migrate-user-transaction-modules-to-prisma.md` | Completed 2026-09-02, with 2 flagged exceptions — see spec's "Verify when done" note below. |
-| `03-migrate-mongodb-data-to-postgresql.md`         | Completed through verification 2026-09-03 — **cutover not yet done**, see below.        |
+| `03-migrate-mongodb-data-to-postgresql.md`         | Completed through verification 2026-09-03 — **cutover not yet done**, see below.            |
+| `04-openrouter-resilient-ai-integration.md`        | Completed 2026-09-03 — see `05` for a follow-up fix hit during its own verification.        |
+| `05-fix-stale-free-model-list.md`                  | Completed 2026-09-03, same session as `04`.                                                 |
 
 ## Spec 02 — Verify when done (checked against the empty Postgres tables, via local `yarn dev` + curl)
 
@@ -33,10 +35,11 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 ## Spec 03 — status as of 2026-09-03 11:05 (verification passed, cutover not started)
 
 Done, all per the spec, through its "Verification (must PASS before cutover)" step:
+
 - `git tag pre-postgres-migration` created (before spec 02's implementation began).
 - `mongodump` backup of the live Atlas cluster taken to `~/expensetracker-mongo-backups/20260902-212437/` (outside the repo — real financial data, not committed).
 - `server/scripts/migrate-to-postgres.ts` + `server/scripts/tsconfig.json` written; `server/tsconfig.json` updated to exclude `scripts/`; `MONGO_MIGRATION_URI` added to `server/.env`.
-- **Important correction made while implementing**: the spec's own text describes the source DB as "`expenseTrackerNative`", but the *actual* database name on the Atlas cluster has a literal trailing `>` character — `expenseTrackerNative>` — confirmed via `listDatabases()` and document counts vs. the never-read `DATABASE_URL2`'s stale `expTracker>` db. `MONGO_MIGRATION_URI` is correctly URL-encoded (`%3E`) for this. Don't "fix" this trailing `>` as a typo in any future work — it's real.
+- **Important correction made while implementing**: the spec's own text describes the source DB as "`expenseTrackerNative`", but the _actual_ database name on the Atlas cluster has a literal trailing `>` character — `expenseTrackerNative>` — confirmed via `listDatabases()` and document counts vs. the never-read `DATABASE_URL2`'s stale `expTracker>` db. `MONGO_MIGRATION_URI` is correctly URL-encoded (`%3E`) for this. Don't "fix" this trailing `>` as a typo in any future work — it's real.
 - **18 orphaned transactions** (no `user` field in Mongo at all — dated 2025-07-07 to 2025-07-22, the app's first ~2 weeks, before `user` became a required field) could not be assigned a Postgres `userId` automatically. Asked the user rather than guessing; **user decision (2026-09-03): attach all 18 to the abc@d.com account** ("Moniruzzaman", Mongo `_id` 687e0a886b065df2d20c168c). Implemented as an explicit, reviewed `KNOWN_ORPHAN_TRANSACTION_IDS` list in the script (not a blanket rule) so any different/future orphan still fails loud instead of being silently absorbed.
 - Migration script run for real against live Mongo → Neon Postgres, multiple times (idempotent, safe to re-run): the live app is still Mongoose-backed and actively used, so a couple of re-runs were needed to catch up with new transactions arriving mid-run (~500s per run, since each row is a separate network round-trip) — this is expected behavior of migrating from a live source, not a bug. Final run: **4/4 users, 1841/1841 transactions, 0 failures.**
 - Verification run and printed **`VERIFICATION PASSED`**: user count, transaction count, income sum, expense sum, and 5 random spot-checks all matched.
@@ -58,16 +61,18 @@ Done, all per the spec, through its "Verification (must PASS before cutover)" st
 
 - [x] AUTH-1 — IDOR on transaction update/delete — resolved by `specs/02-migrate-user-transaction-modules-to-prisma.md` (2026-09-02).
 - [x] AUTH-10 — `deleteTransactionData` missing already-deleted check — resolved by `specs/02-migrate-user-transaction-modules-to-prisma.md` (2026-09-02).
-- [ ] AUTH-2 — `manage-money` endpoint unauthenticated
+- [x] AUTH-2 — `manage-money` endpoint unauthenticated — resolved by `specs/04-openrouter-resilient-ai-integration.md` (2026-09-03).
 - [ ] AUTH-3 — password hash returned to client
 - [ ] VALID-1 — bulk-create has no validation
 - [ ] ERR-1 — stack trace leaked in every error response
-- [ ] AI-1 — corrupted system prompt
+- [x] AI-1 — corrupted system prompt — resolved by `specs/04-openrouter-resilient-ai-integration.md` (2026-09-03).
 - [ ] AI-2 — no schema validation on AI output
+- [x] AI-3 — non-deterministic temperature for structured extraction — resolved by `specs/04-openrouter-resilient-ai-integration.md` (2026-09-03).
+- [x] AI-4 — unsafe `choices[0]` indexing — resolved incidentally by `specs/04-openrouter-resilient-ai-integration.md` (2026-09-03), via the shared helper's empty-content guard.
+- [x] AI-5 — hardcoded model id with dead commented-out alternatives — resolved by `specs/04-openrouter-resilient-ai-integration.md` (2026-09-03), superseded by the `FREE_MODELS` fallback list.
 - [ ] (see `known-issues.md` for the full ranked list — Medium/Low items omitted here)
 
 ## Next Up (prioritized, with why-now)
 
-1. **AUTH-2** — direct, ongoing cost exposure against your own OpenRouter key; closing it is one line (`authCheck`).
-2. **AI-1** — the corrupted prompt is actively degrading the AI-parsing feature's actual output quality right now, not just a latent risk.
-3. Small follow-up (not yet scoped as a spec): remove the two remaining `mongoose` type-only imports in `handleCatError.ts`/`handleValidationError.ts` so `mongoose` can actually be dropped from `package.json` — see the flagged exception above.
+1. Small follow-up (not yet scoped as a spec): remove the two remaining `mongoose` type-only imports in `handleCatError.ts`/`handleValidationError.ts` so `mongoose` can actually be dropped from `package.json` — see the flagged exception above.
+2. **AI-2** — no schema validation on the AI-parsed transaction output — natural next step now that the AI integration itself (`04`/`05`) is resilient; not bundled into `04` since it's a downstream-of-the-call concern, not integration/transport.
