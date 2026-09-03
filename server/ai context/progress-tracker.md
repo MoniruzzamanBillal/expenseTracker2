@@ -12,7 +12,7 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 | -------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | `01-mongodb-to-postgres-migration.md`              | Decisions/background record + Prisma config — done. Execution split into `02` and `03`. |
 | `02-migrate-user-transaction-modules-to-prisma.md` | Completed 2026-09-02, with 2 flagged exceptions — see spec's "Verify when done" note below. |
-| `03-migrate-mongodb-data-to-postgresql.md`         | **Blocked — needs a decision from the user, see below.**                                |
+| `03-migrate-mongodb-data-to-postgresql.md`         | Completed through verification 2026-09-03 — **cutover not yet done**, see below.        |
 
 ## Spec 02 — Verify when done (checked against the empty Postgres tables, via local `yarn dev` + curl)
 
@@ -30,25 +30,29 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 - [ ] Full Expo client manual walkthrough — **not done**. No device/simulator available in this (headless, unattended-loop) environment; the equivalent API-level checks above were run instead via direct HTTP calls against the running server.
 - [x] `yarn lint` — clean on every file this spec touched; 4 pre-existing errors remain elsewhere (`app.ts`, `Queryuilder.ts`, `interface/index.d.ts`, `globalErrorHandler.ts` — all untouched by this spec, confirmed via `git status`), not introduced by this work.
 
-## Spec 03 — status as of 2026-09-02 21:34 (blocked, awaiting a decision)
+## Spec 03 — status as of 2026-09-03 11:05 (verification passed, cutover not started)
 
-Done so far, all per the spec:
+Done, all per the spec, through its "Verification (must PASS before cutover)" step:
 - `git tag pre-postgres-migration` created (before spec 02's implementation began).
 - `mongodump` backup of the live Atlas cluster taken to `~/expensetracker-mongo-backups/20260902-212437/` (outside the repo — real financial data, not committed).
 - `server/scripts/migrate-to-postgres.ts` + `server/scripts/tsconfig.json` written; `server/tsconfig.json` updated to exclude `scripts/`; `MONGO_MIGRATION_URI` added to `server/.env`.
-- **Important correction while implementing**: the spec's own text describes the source DB as "`expenseTrackerNative`", but the *actual* database name on the Atlas cluster has a literal trailing `>` character — `expenseTrackerNative>` — confirmed via `listDatabases()` (4 users / 1838 transactions, matches "a year of real financial data") vs. the never-read `DATABASE_URL2`'s `expTracker>` (1 user / 8 transactions, clearly stale/test). `MONGO_MIGRATION_URI` is correctly URL-encoded (`%3E`) for this. Don't "fix" this trailing `>` as a typo in any future work — it's real.
-- Migration script run for real against live Mongo → Neon Postgres: **4/4 users migrated, 1820/1838 transactions migrated.**
+- **Important correction made while implementing**: the spec's own text describes the source DB as "`expenseTrackerNative`", but the *actual* database name on the Atlas cluster has a literal trailing `>` character — `expenseTrackerNative>` — confirmed via `listDatabases()` and document counts vs. the never-read `DATABASE_URL2`'s stale `expTracker>` db. `MONGO_MIGRATION_URI` is correctly URL-encoded (`%3E`) for this. Don't "fix" this trailing `>` as a typo in any future work — it's real.
+- **18 orphaned transactions** (no `user` field in Mongo at all — dated 2025-07-07 to 2025-07-22, the app's first ~2 weeks, before `user` became a required field) could not be assigned a Postgres `userId` automatically. Asked the user rather than guessing; **user decision (2026-09-03): attach all 18 to the abc@d.com account** ("Moniruzzaman", Mongo `_id` 687e0a886b065df2d20c168c). Implemented as an explicit, reviewed `KNOWN_ORPHAN_TRANSACTION_IDS` list in the script (not a blanket rule) so any different/future orphan still fails loud instead of being silently absorbed.
+- Migration script run for real against live Mongo → Neon Postgres, multiple times (idempotent, safe to re-run): the live app is still Mongoose-backed and actively used, so a couple of re-runs were needed to catch up with new transactions arriving mid-run (~500s per run, since each row is a separate network round-trip) — this is expected behavior of migrating from a live source, not a bug. Final run: **4/4 users, 1841/1841 transactions, 0 failures.**
+- Verification run and printed **`VERIFICATION PASSED`**: user count, transaction count, income sum, expense sum, and 5 random spot-checks all matched.
 
-**Blocked on**: 18 transactions in Mongo have no `user` field at all (confirmed via direct query, not a script bug — `db.transactions.countDocuments({ user: { $exists: false } })` → 18, matches the failed-ID list exactly). These can't be assigned a Postgres `userId` (NOT NULL FK) without guessing an owner. Pattern observed: all 18 are dated 2025-07-07 through 2025-07-22 (the app's earliest ~2 weeks — before the one real user account, "Moniruzzaman", was even created on 2025-07-21), half are already `isDeleted: true`, and several have placeholder/gibberish titles ("asdfas", "sadfsa", "ggh", `http://localhost:8081/addTransaction`) — this strongly looks like early dev/testing data from before `user` became a required field, not real financial history. But that's a read of the data, not a decision this session should make unilaterally on a year of someone's real financial records — full list of 18 IDs is in the background task log referenced in this session's transcript, easy to re-derive with the query above.
+**Not done, by design (per this session's standing boundary — stop before touching production)**: the entire Cutover sequence, including its non-production-touching step 6 (run the `02`-rewritten server locally against the real migrated data, log in with the real account, exercise the Expo client end-to-end) through its production-touching steps 7-9 (swap Vercel's `DATABASE_URL`, deploy, live smoke-test). The app is still live on Mongoose. Because the live app keeps writing, whoever picks up cutover should treat "run the migration script one more time, then verify, then swap the env var" as one tight sequence (per the spec's own cutover step 3) rather than trusting this session's verification pass to still hold days later — more real transactions will have arrived by then.
 
-Formal verification (`VERIFICATION PASSED`) was **not run** — it would fail on the transaction-count check by design (1820 ≠ 1838) until this is resolved, so running it now wouldn't add information beyond what's already known.
+### Spec 03 — Verify when done (up through Verification, per this session's boundary)
 
-**Options for the user, next time this is picked up:**
-1. Treat the 18 as acceptable dev/test noise, exclude them permanently, proceed to verification with 1820 as the expected transaction count.
-2. Investigate further (e.g. check `updatedAt`/context) to see if an owner can be inferred for any of them.
-3. Something else the user prefers.
-
-Script is idempotent — safe to re-run as-is once a decision is made (already-migrated rows are untouched via `upsert`/no-op `update: {}`).
+- [x] `mongodump` backup taken and stored before running the migration script for real.
+- [x] Migration script run against the live Mongo Atlas connection; prints final counts with zero entries in `failed`.
+- [x] Verification script prints `VERIFICATION PASSED`.
+- [ ] Local server (from `02`) running against the real migrated Postgres data, logged in with the real account, history/summaries manually confirmed — **not done, first step of the Cutover sequence, deferred to when the user is present.**
+- [ ] Expo client run against that local server end-to-end with the real account — **not done, same reason.**
+- [ ] Production `DATABASE_URL` confirmed/swapped on Vercel, code deployed, live smoke-test passed — **not done, same reason.**
+- [x] `git tag pre-postgres-migration` exists, created before `02`'s implementation began.
+- [x] Mongo Atlas cluster confirmed still running/preserved (not deleted) — untouched throughout, script only ever reads from it.
 
 ## Known Gaps
 
