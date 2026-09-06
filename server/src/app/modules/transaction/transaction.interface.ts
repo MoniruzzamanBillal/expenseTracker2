@@ -1,11 +1,10 @@
-import { ObjectId } from "mongoose";
 import { transactionConstants } from "./transaction.constant";
 
 export interface TTransaction {
-  user?: ObjectId;
+  userId?: string;
   type: keyof typeof transactionConstants;
   title: string;
-  description: string;
+  description?: string;
   amount: number;
   isDeleted: boolean;
 

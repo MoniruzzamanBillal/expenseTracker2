@@ -5,12 +5,9 @@ export type TUser = {
   email: string;
   password: string;
   profilePicture?: string;
-  isDeleted: boolean;
-  userRole: TUserRole;
 };
 
 export const UserRole = {
   admin: "admin",
-
   user: "user",
 } as const;

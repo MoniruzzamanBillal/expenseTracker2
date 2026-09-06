@@ -15,35 +15,46 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.userServices = void 0;
 const argon2_1 = __importDefault(require("argon2"));
 const http_status_1 = __importDefault(require("http-status"));
-const AppError_1 = __importDefault(require("../../Error/AppError"));
-const user_model_1 = require("./user.model");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const AppError_1 = __importDefault(require("../../Error/AppError"));
 const config_1 = __importDefault(require("../../config"));
-// ! for craeting a user
+const prisma_1 = require("../../lib/prisma");
+const generateObjectId_1 = require("../../util/generateObjectId");
+// ! for creating a user
 const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield user_model_1.userModel.create(payload);
-    return result;
+    const hashedPassword = yield argon2_1.default.hash(payload.password);
+    const result = yield prisma_1.prisma.user.create({
+        data: {
+            id: (0, generateObjectId_1.generateObjectId)(),
+            name: payload.name,
+            email: payload.email,
+            password: hashedPassword,
+            profilePicture: payload.profilePicture,
+        },
+    });
+    return Object.assign(Object.assign({}, result), { _id: result.id });
 });
 const loginFromDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = yield user_model_1.userModel.findOne({ email: payload === null || payload === void 0 ? void 0 : payload.email });
+    const userData = yield prisma_1.prisma.user.findUnique({
+        where: { email: payload.email },
+    });
     if (!userData) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User dont exist with this email !!!");
     }
-    const isPasswordMatch = yield argon2_1.default.verify(userData === null || userData === void 0 ? void 0 : userData.password, payload === null || payload === void 0 ? void 0 : payload.password);
+    const isPasswordMatch = yield argon2_1.default.verify(userData.password, payload.password);
     if (!isPasswordMatch) {
         throw new AppError_1.default(http_status_1.default.FORBIDDEN, "Password don't match !!");
     }
     const jwtPayload = {
-        userId: userData === null || userData === void 0 ? void 0 : userData.id,
-        userEmail: userData === null || userData === void 0 ? void 0 : userData.email,
+        userId: userData.id,
+        userEmail: userData.email,
     };
     const token = jsonwebtoken_1.default.sign(jwtPayload, config_1.default.jwt_secret, {
         expiresIn: "15d",
     });
     return {
-        userData,
+        userData: Object.assign(Object.assign({}, userData), { _id: userData.id }),
         token,
     };
 });
-//
 exports.userServices = { createUser, loginFromDb };

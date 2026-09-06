@@ -41,8 +41,8 @@ const addManyTransaction = (0, catchAsync_1.default)((req, res) => __awaiter(voi
 }));
 // ! Update transaction
 const updateTransaction = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const result = yield transaction_service_1.transactionServices.updateTransaction((_a = req.params) === null || _a === void 0 ? void 0 : _a.transactionId, req === null || req === void 0 ? void 0 : req.body);
+    var _a, _b;
+    const result = yield transaction_service_1.transactionServices.updateTransaction((_a = req.params) === null || _a === void 0 ? void 0 : _a.transactionId, (_b = req === null || req === void 0 ? void 0 : req.user) === null || _b === void 0 ? void 0 : _b.userId, req === null || req === void 0 ? void 0 : req.body);
     (0, sendResponse_1.default)(res, {
         status: http_status_1.default.OK,
         success: true,
@@ -96,8 +96,8 @@ const getWeeklySummary = (0, catchAsync_1.default)((req, res) => __awaiter(void 
 }));
 // ! for deletig transaction data
 const deleteTransactionData = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const result = yield transaction_service_1.transactionServices.deleteTransactionData((_a = req.params) === null || _a === void 0 ? void 0 : _a.transactionId);
+    var _a, _b;
+    const result = yield transaction_service_1.transactionServices.deleteTransactionData((_a = req.params) === null || _a === void 0 ? void 0 : _a.transactionId, (_b = req === null || req === void 0 ? void 0 : req.user) === null || _b === void 0 ? void 0 : _b.userId);
     (0, sendResponse_1.default)(res, {
         status: http_status_1.default.OK,
         success: true,
