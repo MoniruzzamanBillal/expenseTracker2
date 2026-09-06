@@ -15,6 +15,7 @@ Core screens are built and working: home, add-transaction, history, monthly, wee
 | [03-pending-transaction-date-visibility](specs/03-pending-transaction-date-visibility.md) | Completed — implemented, not yet manually verified against a running app |
 | [04-edit-delete-pending-transaction](specs/04-edit-delete-pending-transaction.md)         | Completed — implemented, not yet manually verified against a running app |
 | [05-fix-blank-error-toast-on-network-failure](specs/05-fix-blank-error-toast-on-network-failure.md) | Completed — implemented, not yet manually verified against a running app |
+| [06-visual-redesign-xpnsapp-design-system](specs/06-visual-redesign-xpnsapp-design-system.md) | Drafted — has open questions for the user before implementation starts |
 
 ## Known Gaps
 
