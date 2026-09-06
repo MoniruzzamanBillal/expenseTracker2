@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ExpenseTracker is a full-stack mobile expense-tracking app with two **fully independent** projects — there is no root `package.json`, no workspace, and no root-level lint/build/test command. Each has its own dependencies and must be worked on from within its own directory; there is no root-level script that operates on both at once.
 
 - `client/` — Expo (React Native) app using file-based routing (`expo-router`).
-- `server/` — Express + Mongoose REST API, deployed to Vercel as a serverless function.
+- `server/` — Express REST API, deployed to Vercel as a serverless function. Mid-migration from MongoDB/Mongoose to Postgres/Prisma — see the note below before assuming which one is authoritative for a given piece of code.
 
 ## Common commands
 
@@ -17,6 +17,7 @@ ExpenseTracker is a full-stack mobile expense-tracking app with two **fully inde
 - `yarn start:prod` — run the compiled server (`node ./dist/server.js`).
 - `yarn lint` / `yarn lint:fix` — ESLint over `src`.
 - `yarn prettier` / `yarn prettier:fix` — format `src`.
+- `yarn db:migrate` — apply Prisma migrations (`prisma migrate deploy`); `postinstall` runs `prisma generate` automatically. These operate on the Postgres schema, not the live Mongoose models — see the migration note below.
 - There is no real test suite (`yarn test` is a stub that exits with an error).
 
 ### client (run from `client/`)
@@ -40,6 +41,8 @@ Read in this order:
 6. `progress-tracker.md` — current state, known gaps, next up
 7. `specs/00-build-plan.md` — how to scope new work
 
+**In-progress DB migration (server):** the `user` and `transaction` modules' data-access code now runs on Prisma/Postgres (`server/prisma/schema.prisma`, `server/src/app/lib/prisma.ts`) — `specs/02-migrate-user-transaction-modules-to-prisma.md` is complete, `mongoose` is gone from those two modules. Mongoose still lingers in a handful of unrelated files outside that scope (`handleCatError.ts`/`handleValidationError.ts` for type-only `CastError`/`ValidationError` annotations, and the unused `Queryuilder.ts`) — don't treat that as "the migration isn't real," it's a flagged, deliberate exception, not an oversight. The real-data copy (`specs/03-migrate-mongodb-data-to-postgresql.md`, via the standalone `server/scripts/migrate-to-postgres.ts` — never imported by the app, never run automatically) is in progress; check `progress-tracker.md` for current status before assuming Postgres already holds the full, final dataset or that cutover (swapping the deployed app's `DATABASE_URL`) has happened — as of writing it has not, production is still Mongoose-backed.
+
 ### Source of truth — Client (`client/ai context/`)
 
 Read in this order:
@@ -54,9 +57,8 @@ Read in this order:
 ## Highest-severity gotchas (full detail in the docs above)
 
 **Server:**
-- IDOR — transaction update/delete has no ownership check; any authenticated user can edit/delete another user's transactions (`server/ai context/known-issues.md#AUTH-1`).
-- `POST /transactions/manage-money` (the AI-parsing endpoint) has no auth at all — a live, unauthenticated cost/abuse vector against your own OpenRouter key (`#AUTH-2`).
-- Password hashes are returned to the client on both register and login — no field is stripped before the response goes out (`#AUTH-3`).
+- Password hashes are returned to the client on both register and login — no field is stripped before the response goes out (`server/ai context/known-issues.md#AUTH-3`).
+- (`#AUTH-1`/IDOR on transaction update/delete, `#AUTH-10`/missing already-deleted check, `#AUTH-2`/unauthenticated `manage-money` route, and `#AI-1`/`#AI-3`/`#AI-4`/`#AI-5` on the AI prompt+call are all **resolved** — see `progress-tracker.md`'s Known Gaps for what fixed each and when. `known-issues.md` itself is a frozen backlog snapshot and doesn't get pruned as items are fixed; `progress-tracker.md` is the current-status source of truth, so check it — not just the inline gotchas here — before assuming an issue from that file is still live.)
 
 **Client:**
 - The axios response interceptor never rejects on HTTP errors (`return error`, not `Promise.reject(error)`) — every downstream `onError`/`catch` around a mutation is dead code; the interceptor's own Toast is the only real error surface today (`client/ai context/known-issues.md#FETCH-1`).
@@ -65,4 +67,4 @@ Read in this order:
 
 ## Known issues
 
-The full ranked backlogs live in `server/ai context/known-issues.md` and `client/ai context/known-issues.md`, grouped by module with severity tags. Notably absent from the inline list above but still worth knowing: server error responses leak a raw stack trace unconditionally in every environment (`server/ai context/known-issues.md#ERR-1`), and the AI system prompt sent to OpenRouter is currently textually corrupted, degrading extraction quality (`server/ai context/known-issues.md#AI-1`). Don't fix items from these lists as a side effect of unrelated work — flag them and update `progress-tracker.md` if you do.
+The full ranked backlogs live in `server/ai context/known-issues.md` and `client/ai context/known-issues.md`, grouped by module with severity tags — but that file is a point-in-time snapshot, not kept in sync as items get fixed, so cross-check `progress-tracker.md`'s Known Gaps checklist for current status before treating any entry as still open. Notably absent from the inline list above but still worth knowing: server error responses leak a raw stack trace unconditionally in every environment (`server/ai context/known-issues.md#ERR-1`), and there's no schema validation on the AI-parsed transaction output before it reaches the DB (`#AI-2`). Don't fix items from these lists as a side effect of unrelated work — flag them and update `progress-tracker.md` if you do.

@@ -50,7 +50,11 @@ router.post(
 );
 
 // ! for money management , giving prompt to generate cost-spendature
-router.post("/manage-money", transactionControllers.moneyManagement);
+router.post(
+  "/manage-money",
+  authCheck,
+  transactionControllers.moneyManagement,
+);
 
 // ! for updating transaction
 router.patch(

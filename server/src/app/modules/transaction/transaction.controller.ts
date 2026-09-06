@@ -37,6 +37,7 @@ const addManyTransaction = catchAsync(async (req, res) => {
 const updateTransaction = catchAsync(async (req, res) => {
   const result = await transactionServices.updateTransaction(
     req.params?.transactionId,
+    req?.user?.userId,
     req?.body,
   );
 
@@ -104,6 +105,7 @@ const getWeeklySummary = catchAsync(async (req, res) => {
 const deleteTransactionData = catchAsync(async (req, res) => {
   const result = await transactionServices.deleteTransactionData(
     req.params?.transactionId,
+    req?.user?.userId,
   );
 
   sendResponse(res, {
