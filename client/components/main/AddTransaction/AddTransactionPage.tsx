@@ -1,29 +1,41 @@
-import { usePost } from "@/hooks/useApi";
-import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
-import { TransactionTypeConst, TTransactionType } from "@/constants/TransactionType.constant";
-import { useTheme, text, spacing } from "@/theme";
-import TypeToggle from "@/components/main/shared/TypeToggle";
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
+import TypeToggle from "@/components/main/shared/TypeToggle";
+import {
+  TransactionTypeConst,
+  TTransactionType,
+} from "@/constants/TransactionType.constant";
+import { usePost } from "@/hooks/useApi";
+import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
+import { spacing, text, useTheme } from "@/theme";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Keyboard, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Keyboard,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 
 export default function AddTransactionPage() {
   const C = useTheme();
   const router = useRouter();
 
-  const [type, setType] = useState<TTransactionType>(TransactionTypeConst.income);
+  const [type, setType] = useState<TTransactionType>(
+    TransactionTypeConst.income,
+  );
   const [amount, setAmount] = useState<string | null>(null);
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
+  const accentColor =
+    type === TransactionTypeConst.income ? C.income : C.expense;
 
   const addTransactionMutation = usePost([
     ["daily-transaction"],
@@ -132,18 +144,30 @@ export default function AddTransactionPage() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
       <KeyboardAwareScrollView
-        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingHorizontal: spacing.screenPad },
+        ]}
         bottomOffset={30}
         extraKeyboardSpace={10}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.nav}>
-          <Text style={[text.navTitle, { color: C.text }]}>Add Transaction</Text>
+          <Text style={[text.navTitle, { color: C.text }]}>
+            Add Transaction
+          </Text>
           <TouchableOpacity
             onPress={() => router.push("/smart-add")}
-            style={[styles.smartAddBtn, { backgroundColor: C.accentDim, borderColor: C.accentBorder }]}
+            style={[
+              styles.smartAddBtn,
+              { backgroundColor: C.accentDim, borderColor: C.accentBorder },
+            ]}
           >
-            <MaterialCommunityIcons name="creation" size={13} color={C.accent} />
+            <MaterialCommunityIcons
+              name="creation"
+              size={13}
+              color={C.accent}
+            />
             <Text style={[text.label, { color: C.accent }]}>Smart Add</Text>
           </TouchableOpacity>
         </View>
@@ -151,7 +175,16 @@ export default function AddTransactionPage() {
         <TypeToggle value={type} onChange={setType} />
 
         <View style={[styles.amountBlock, { borderBottomColor: accentColor }]}>
-          <Text style={[text.label, { color: C.textSecondary, textAlign: "center", marginBottom: spacing.md }]}>
+          <Text
+            style={[
+              text.label,
+              {
+                color: C.textSecondary,
+                textAlign: "center",
+                marginVertical: spacing.sm,
+              },
+            ]}
+          >
             AMOUNT (BDT)
           </Text>
           <FormField
@@ -161,11 +194,22 @@ export default function AddTransactionPage() {
             keyboardType="decimal-pad"
             placeholder="0.00"
             error={errors.amount}
-            inputStyle={{ fontSize: 40, textAlign: "center", color: accentColor, height: 64 }}
+            inputStyle={{
+              fontSize: 40,
+              textAlign: "center",
+              color: accentColor,
+              height: 64,
+            }}
           />
         </View>
 
-        <FormField label="Title" value={title || ""} onChangeText={setTitle} error={errors.title} placeholder="e.g. Groceries" />
+        <FormField
+          label="Title"
+          value={title || ""}
+          onChangeText={setTitle}
+          error={errors.title}
+          placeholder="e.g. Groceries"
+        />
         <FormField
           label="Description"
           value={description || ""}
@@ -176,7 +220,11 @@ export default function AddTransactionPage() {
         />
 
         <PrimaryButton
-          label={addTransactionMutation?.isPending ? "Saving Transaction..." : "Save Transaction"}
+          label={
+            addTransactionMutation?.isPending
+              ? "Saving Transaction..."
+              : "Save Transaction"
+          }
           onPress={handleAddTransaction}
           loading={addTransactionMutation?.isPending}
           disabled={!title || !amount}
@@ -190,7 +238,24 @@ export default function AddTransactionPage() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: { flexGrow: 1, paddingTop: spacing.lg, paddingBottom: 40 },
-  nav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.xl },
-  smartAddBtn: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.md, paddingVertical: 6 },
-  amountBlock: { borderBottomWidth: 2, marginBottom: spacing.xl, paddingBottom: spacing.md },
+  nav: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.xl,
+  },
+  smartAddBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+  },
+  amountBlock: {
+    borderBottomWidth: 2,
+    marginBottom: spacing.xl,
+    paddingBottom: spacing.md,
+  },
 });
