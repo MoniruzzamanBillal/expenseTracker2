@@ -93,6 +93,7 @@ export default function TransactionCard({
           style={[
             styles.row,
             styles.pendingRow,
+
             { borderColor: C.border, backgroundColor: C.surface },
           ]}
         >
@@ -294,6 +295,7 @@ export default function TransactionCard({
             styles.row,
             {
               paddingVertical: compact ? 12 : 13,
+              paddingHorizontal: spacing.sm,
               borderBottomColor: C.divider,
               borderBottomWidth: isLast ? 0 : 1,
               backgroundColor: C.background,

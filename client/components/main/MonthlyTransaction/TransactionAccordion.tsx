@@ -132,8 +132,9 @@ export default function TransactionAccordion({
               <Collapsible collapsed={activeDate !== day?.date}>
                 <View
                   style={{
-                    paddingHorizontal: spacing.sm,
+                    // paddingHorizontal: spacing.xs,
                     paddingBottom: spacing.xs,
+                    // backgroundColor: "red",
                   }}
                 >
                   {day?.transactions?.map((item, i) => (
