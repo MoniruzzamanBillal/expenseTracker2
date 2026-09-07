@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFetchData } from "@/hooks/useApi";
 import { TTransaction } from "@/types/Transaction.tyes";

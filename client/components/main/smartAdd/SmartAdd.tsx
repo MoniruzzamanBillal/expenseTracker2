@@ -10,7 +10,6 @@ import { useState } from "react";
 import {
   Alert,
   Keyboard,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 

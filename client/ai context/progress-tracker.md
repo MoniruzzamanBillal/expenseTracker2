@@ -18,6 +18,7 @@ Core screens are built and working: home, add-transaction, history, monthly+week
 | [06-visual-redesign-xpnsapp-design-system](specs/06-visual-redesign-xpnsapp-design-system.md)       | Completed 2026-09-07 — implemented and manually verified (headless-browser click-through, light+dark) against a mocked-but-real backend; see spec's Implementation notes for what remains for a human pass (real device, real login) |
 | [07-fix-accordion-crash-on-empty-day-bucket](specs/07-fix-accordion-crash-on-empty-day-bucket.md)   | Completed — fixed a crash found while manually verifying spec 06 |
 | [08-discoverable-logout](specs/08-discoverable-logout.md)                                           | Completed 2026-09-07 — Option A implemented, avatar removed per user's follow-up instruction; also fixed a related bug where the logout button did nothing on web (`known-issues.md#UX-3`) |
+| [09-fix-deprecated-safeareaview](specs/09-fix-deprecated-safeareaview.md)                            | Completed 2026-09-07 — swapped `SafeAreaView` to `react-native-safe-area-context` in all 7 affected screens; Android safe-area behavior change flagged for a human device check |
 
 ## Known Gaps
 

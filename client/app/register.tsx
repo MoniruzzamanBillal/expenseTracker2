@@ -5,8 +5,9 @@ import { usePost } from "@/hooks/useApi";
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import { useTheme, text, spacing } from "@/theme";
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 

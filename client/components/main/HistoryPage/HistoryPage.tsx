@@ -1,6 +1,7 @@
 import { useFetchData } from "@/hooks/useApi";
 import { useMemo, useState } from "react";
-import { FlatList, RefreshControl, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { TTransactionHistory } from "@/types/Transaction.tyes";
 import { useTheme, text, spacing, radius, fontFamily } from "@/theme";

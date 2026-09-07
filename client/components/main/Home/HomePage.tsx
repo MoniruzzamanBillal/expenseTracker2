@@ -9,7 +9,6 @@ import {
   Alert,
   Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
+import { SafeAreaView } from "react-native-safe-area-context";
 import EmptyState from "../shared/EmptyState";
 import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
