@@ -1,6 +1,7 @@
 import { Platform, View } from "react-native";
 import { Tabs } from "expo-router";
 import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AuthGuard from "@/utils/AuthGuard";
 import { useTheme, fontFamily } from "@/theme";
@@ -21,7 +22,6 @@ function AddTabIcon({ focused }: { focused: boolean }) {
         borderWidth: 1,
         alignItems: "center",
         justifyContent: "center",
-        marginTop: -14,
         backgroundColor: C.accentDim,
         borderColor: focused ? C.accent : C.accentBorder,
       }}
@@ -33,13 +33,14 @@ function AddTabIcon({ focused }: { focused: boolean }) {
 
 export default function TabLayout() {
   const C = useTheme();
+  const insets = useSafeAreaInsets();
 
   const tabBarStyle = {
     backgroundColor: C.tabBarBg,
     borderTopColor: C.border,
     borderTopWidth: 1,
-    height: Platform.OS === "ios" ? 84 : 64,
-    paddingBottom: Platform.OS === "ios" ? 28 : 10,
+    height: (Platform.OS === "ios" ? 56 : 54) + insets.bottom,
+    paddingBottom: insets.bottom + (Platform.OS === "ios" ? 8 : 10),
     paddingTop: 10,
   };
 

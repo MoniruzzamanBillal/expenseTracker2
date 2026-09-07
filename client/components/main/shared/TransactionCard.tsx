@@ -1,12 +1,19 @@
+import { TransactionTypeConst } from "@/constants/TransactionType.constant";
 import { usePatch } from "@/hooks/useApi";
 import { useRemovePendingTransaction } from "@/hooks/usePendingTransactions";
-import { TransactionTypeConst } from "@/constants/TransactionType.constant";
-import { useTheme, text, spacing, radius, fontFamily } from "@/theme";
+import { fontFamily, radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useRef, useState } from "react";
-import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import PendingTransactionEditModal from "./PendingTransactionEditModal";
@@ -92,38 +99,74 @@ export default function TransactionCard({
           <View
             style={[
               styles.icon,
-              { width: iconSize, height: iconSize, backgroundColor: isIncome ? C.incomeBg : C.expenseBg },
+              {
+                width: iconSize,
+                height: iconSize,
+                backgroundColor: isIncome ? C.incomeBg : C.expenseBg,
+              },
             ]}
           >
-            <MaterialCommunityIcons name="clock-outline" size={18} color={C.textSecondary} />
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={18}
+              color={C.textSecondary}
+            />
           </View>
           <View style={styles.info}>
             <Text
-              style={[compact ? { fontSize: 14, fontFamily: fontFamily.medium } : text.bodyMd, { color: C.text }]}
+              style={[
+                compact
+                  ? { fontSize: 14, fontFamily: fontFamily.medium }
+                  : text.bodyMd,
+                { color: C.text },
+              ]}
               numberOfLines={1}
             >
               {transactionData?.title}
             </Text>
-            <Text style={[text.caption, { color: C.textSecondary, marginTop: 2 }]} numberOfLines={1}>
-              Pending sync · {format(new Date(transactionData?.createdAt as string), "d MMM")}
+            <Text
+              style={[text.caption, { color: C.textSecondary, marginTop: 2 }]}
+              numberOfLines={1}
+            >
+              Pending sync ·{" "}
+              {format(new Date(transactionData?.createdAt as string), "d MMM")}
             </Text>
           </View>
           <View style={styles.pendingRight}>
             <View style={styles.pendingActions}>
               <TouchableOpacity
                 onPress={() => setModalOpen(true)}
-                style={[styles.pendingActionButton, { backgroundColor: C.accentDim }]}
+                style={[
+                  styles.pendingActionButton,
+                  { backgroundColor: C.accentDim },
+                ]}
               >
-                <MaterialCommunityIcons name="pencil-outline" size={14} color={C.accent} />
+                <MaterialCommunityIcons
+                  name="pencil-outline"
+                  size={14}
+                  color={C.accent}
+                />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleDeletePending}
-                style={[styles.pendingActionButton, { backgroundColor: C.expenseBg }]}
+                style={[
+                  styles.pendingActionButton,
+                  { backgroundColor: C.expenseBg },
+                ]}
               >
-                <MaterialCommunityIcons name="delete-outline" size={14} color={C.expense} />
+                <MaterialCommunityIcons
+                  name="delete-outline"
+                  size={14}
+                  color={C.expense}
+                />
               </TouchableOpacity>
             </View>
-            <Text style={[text.amountSm, { color: isIncome ? C.income : C.expense }]}>
+            <Text
+              style={[
+                text.amountSm,
+                { color: isIncome ? C.income : C.expense },
+              ]}
+            >
               {isIncome ? "+" : "−"}৳{fmt(transactionData?.amount)}
             </Text>
           </View>
@@ -167,7 +210,11 @@ export default function TransactionCard({
   const confirmDelete = () => {
     Alert.alert("Delete transaction?", transactionData?.title, [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: handleDeleteTransaction },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: handleDeleteTransaction,
+      },
     ]);
   };
 
@@ -178,7 +225,12 @@ export default function TransactionCard({
       extrapolate: "clamp",
     });
     return (
-      <Animated.View style={[styles.leftAction, { backgroundColor: C.expense, transform: [{ scale }] }]}>
+      <Animated.View
+        style={[
+          styles.leftAction,
+          { backgroundColor: C.expense, transform: [{ scale }] },
+        ]}
+      >
         <TouchableOpacity
           activeOpacity={0.6}
           onPress={() => {
@@ -200,7 +252,12 @@ export default function TransactionCard({
     });
 
     return (
-      <Animated.View style={[styles.rightAction, { backgroundColor: C.income, transform: [{ scale }] }]}>
+      <Animated.View
+        style={[
+          styles.rightAction,
+          { backgroundColor: C.income, transform: [{ scale }] },
+        ]}
+      >
         <TouchableOpacity
           activeOpacity={0.6}
           onPress={() => {
@@ -208,7 +265,11 @@ export default function TransactionCard({
             setModalOpen(true);
           }}
         >
-          <MaterialCommunityIcons name="book-edit-outline" size={26} color="#fff" />
+          <MaterialCommunityIcons
+            name="book-edit-outline"
+            size={26}
+            color="#fff"
+          />
         </TouchableOpacity>
       </Animated.View>
     );
@@ -242,7 +303,11 @@ export default function TransactionCard({
           <View
             style={[
               styles.icon,
-              { width: iconSize, height: iconSize, backgroundColor: isIncome ? C.incomeBg : C.expenseBg },
+              {
+                width: iconSize,
+                height: iconSize,
+                backgroundColor: isIncome ? C.incomeBg : C.expenseBg,
+              },
             ]}
           >
             <MaterialCommunityIcons
@@ -253,36 +318,94 @@ export default function TransactionCard({
           </View>
           <View style={styles.info}>
             <Text
-              style={[compact ? { fontSize: 14, fontFamily: fontFamily.medium } : text.bodyMd, { color: C.text }]}
+              style={[
+                compact
+                  ? { fontSize: 14, fontFamily: fontFamily.medium }
+                  : text.bodyMd,
+                { color: C.text },
+              ]}
               numberOfLines={1}
             >
               {transactionData?.title}
             </Text>
-            <Text style={[text.caption, { color: C.textSecondary, marginTop: compact ? 1 : 2 }]} numberOfLines={1}>
-              {compact ? time : transactionData?.description ? `${transactionData.description} · ${time}` : time}
+            <Text
+              style={[
+                text.caption,
+                { color: C.textSecondary, marginTop: compact ? 1 : 2 },
+              ]}
+              numberOfLines={1}
+            >
+              {compact
+                ? time
+                : transactionData?.description
+                  ? `${transactionData.description} · ${time}`
+                  : time}
             </Text>
           </View>
-          <Text style={[compact ? text.amountXs : text.amountSm, { color: isIncome ? C.income : C.expense }]}>
+          <Text
+            style={[
+              compact ? text.amountXs : text.amountSm,
+              { color: isIncome ? C.income : C.expense },
+            ]}
+          >
             {isIncome ? "+" : "−"}৳{fmt(transactionData?.amount)}
           </Text>
         </View>
       </Swipeable>
 
       {modalOpen && (
-        <UpdateTransactionModal open={modalOpen} setOpen={setModalOpen} initialValue={transactionData} />
+        <UpdateTransactionModal
+          open={modalOpen}
+          setOpen={setModalOpen}
+          initialValue={transactionData}
+        />
       )}
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  pendingRow: { paddingVertical: 12, paddingHorizontal: spacing.md, borderWidth: 1, borderStyle: "dashed", borderRadius: radius.md, opacity: 0.75, marginBottom: 4 },
-  icon: { borderRadius: radius.sm, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  pendingRow: {
+    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: radius.md,
+    opacity: 0.75,
+    marginBottom: 4,
+  },
+  icon: {
+    borderRadius: radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
   info: { flex: 1, minWidth: 0 },
   pendingRight: { alignItems: "flex-end", gap: 2 },
   pendingActions: { flexDirection: "row", alignItems: "center" },
-  pendingActionButton: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", marginLeft: 4 },
-  leftAction: { width: 70, justifyContent: "center", alignItems: "center", borderRadius: radius.sm },
-  rightAction: { width: 70, justifyContent: "center", alignItems: "center", borderRadius: radius.sm },
+  pendingActionButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 4,
+  },
+  leftAction: {
+    width: 70,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: radius.sm,
+  },
+  rightAction: {
+    width: 70,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: radius.sm,
+  },
 });

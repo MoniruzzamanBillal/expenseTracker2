@@ -19,6 +19,7 @@ Core screens are built and working: home, add-transaction, history, monthly+week
 | [07-fix-accordion-crash-on-empty-day-bucket](specs/07-fix-accordion-crash-on-empty-day-bucket.md)   | Completed — fixed a crash found while manually verifying spec 06 |
 | [08-discoverable-logout](specs/08-discoverable-logout.md)                                           | Completed 2026-09-07 — Option A implemented, avatar removed per user's follow-up instruction; also fixed a related bug where the logout button did nothing on web (`known-issues.md#UX-3`) |
 | [09-fix-deprecated-safeareaview](specs/09-fix-deprecated-safeareaview.md)                            | Completed 2026-09-07 — swapped `SafeAreaView` to `react-native-safe-area-context` in all 7 affected screens; Android safe-area behavior change flagged for a human device check |
+| [10-pre-production-manual-checklist](specs/10-pre-production-manual-checklist.md)                   | Drafted — a human-run checklist (real device: swipe gestures, offline queue, real login, production build) that automated headless-browser testing couldn't cover; not yet run |
 
 ## Known Gaps
 

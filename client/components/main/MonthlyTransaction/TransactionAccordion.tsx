@@ -1,4 +1,4 @@
-import { useTheme, text, spacing, radius, fontFamily } from "@/theme";
+import { fontFamily, radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
@@ -25,7 +25,11 @@ type TProps = {
 
 const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
-export default function TransactionAccordion({ dailyData, showBar = false, maxAbs = 1 }: TProps) {
+export default function TransactionAccordion({
+  dailyData,
+  showBar = false,
+  maxAbs = 1,
+}: TProps) {
   const C = useTheme();
   const openSwipeableRef = useRef<Swipeable | null>(null);
 
@@ -43,26 +47,62 @@ export default function TransactionAccordion({ dailyData, showBar = false, maxAb
           const net = day.income - day.expense;
           const isPositive = net >= 0;
           const barColor = isPositive ? C.income : C.expense;
-          const barWidth = day.transactions.length > 0 ? Math.max((Math.abs(net) / maxAbs) * 100, 6) : 0;
+          const barWidth =
+            day.transactions.length > 0
+              ? Math.max((Math.abs(net) / maxAbs) * 100, 6)
+              : 0;
 
           return (
-            <View key={day?.date} style={[styles.accordionItem, { backgroundColor: C.surface, borderColor: C.border }]}>
-              <TouchableOpacity onPress={() => toggleAccordion(day?.date)} style={styles.header}>
+            <View
+              key={day?.date}
+              style={[
+                styles.accordionItem,
+                { backgroundColor: C.surface, borderColor: C.border },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => toggleAccordion(day?.date)}
+                style={styles.header}
+              >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Text style={[text.bodyMd, { color: C.text }]}>
                     {format(new Date(`${day?.date}T00:00:00`), "d MMM")}
                   </Text>
-                  <Text style={[text.caption, { color: C.accent, marginLeft: 6 }]}>
+                  <Text
+                    style={[text.caption, { color: C.accent, marginLeft: 6 }]}
+                  >
                     {format(new Date(`${day?.date}T00:00:00`), "EEEE")}
                   </Text>
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <View style={styles.amounts}>
-                    <Text style={[text.caption, { color: C.income, fontFamily: fontFamily.medium }]}>+৳{fmt(day?.income)}</Text>
-                    <Text style={[text.caption, { color: C.expense, fontFamily: fontFamily.medium }]}>−৳{fmt(day?.expense)}</Text>
-                    <Text style={[text.caption, { color: net < 0 ? C.expense : C.accent, fontFamily: fontFamily.semiBold }]}>
-                      B: {(net).toFixed(2)}
+                    <Text
+                      style={[
+                        text.caption,
+                        { color: C.income, fontFamily: fontFamily.medium },
+                      ]}
+                    >
+                      +৳{fmt(day?.income)}
+                    </Text>
+                    <Text
+                      style={[
+                        text.caption,
+                        { color: C.expense, fontFamily: fontFamily.medium },
+                      ]}
+                    >
+                      −৳{fmt(day?.expense)}
+                    </Text>
+                    <Text
+                      style={[
+                        text.caption,
+                        {
+                          color: net < 0 ? C.expense : C.accent,
+                          fontFamily: fontFamily.semiBold,
+                        },
+                      ]}
+                    >
+                      B: {net.toFixed(2)}
                     </Text>
                   </View>
                   <MaterialCommunityIcons
@@ -76,14 +116,26 @@ export default function TransactionAccordion({ dailyData, showBar = false, maxAb
 
               {showBar && (
                 <View style={styles.barWrap}>
-                  <View style={[styles.barTrack, { backgroundColor: C.divider }]}>
-                    <View style={[styles.barFill, { width: `${barWidth}%`, backgroundColor: barColor }]} />
+                  <View
+                    style={[styles.barTrack, { backgroundColor: C.divider }]}
+                  >
+                    <View
+                      style={[
+                        styles.barFill,
+                        { width: `${barWidth}%`, backgroundColor: barColor },
+                      ]}
+                    />
                   </View>
                 </View>
               )}
 
               <Collapsible collapsed={activeDate !== day?.date}>
-                <View style={{ paddingHorizontal: spacing.sm, paddingBottom: spacing.xs }}>
+                <View
+                  style={{
+                    paddingHorizontal: spacing.sm,
+                    paddingBottom: spacing.xs,
+                  }}
+                >
                   {day?.transactions?.map((item, i) => (
                     <TransactionCard
                       key={item?._id}
@@ -91,7 +143,10 @@ export default function TransactionAccordion({ dailyData, showBar = false, maxAb
                       compact
                       isLast={i === day.transactions.length - 1}
                       onSwipeOpen={(ref) => {
-                        if (openSwipeableRef.current && openSwipeableRef.current !== ref) {
+                        if (
+                          openSwipeableRef.current &&
+                          openSwipeableRef.current !== ref
+                        ) {
                           openSwipeableRef.current.close();
                         }
                         openSwipeableRef.current = ref;
