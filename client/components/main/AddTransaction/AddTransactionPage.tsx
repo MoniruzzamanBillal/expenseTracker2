@@ -1,31 +1,28 @@
 import { usePost } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
-import { COLORS } from "@/utils/colors";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { TransactionTypeConst, TTransactionType } from "@/constants/TransactionType.constant";
+import { useTheme, text, spacing } from "@/theme";
+import TypeToggle from "@/components/main/shared/TypeToggle";
+import FormField from "@/components/main/shared/FormField";
+import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Keyboard, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Keyboard, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { Button, Text, TextInput } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 
-export const transactionConstants = {
-  income: "income",
-  expense: "expense",
-} as const;
-
-export type TTransactionType = "income" | "expense";
-
 export default function AddTransactionPage() {
+  const C = useTheme();
   const router = useRouter();
 
-  const [type, setType] = useState<TTransactionType>(
-    transactionConstants?.income,
-  );
-
+  const [type, setType] = useState<TTransactionType>(TransactionTypeConst.income);
   const [amount, setAmount] = useState<string | null>(null);
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
 
   const addTransactionMutation = usePost([
     ["daily-transaction"],
@@ -47,7 +44,6 @@ export default function AddTransactionPage() {
         type: "error",
         text1: "Invalid Amount",
         text2: "Only numeric values are allowed (e.g. 100 or 50.25)",
-        // position: "bottom",
       });
       setAmount("");
       return;
@@ -58,24 +54,16 @@ export default function AddTransactionPage() {
   const handleAddTransaction = async () => {
     Keyboard.dismiss();
 
-    if (!title?.trim()) {
+    const e: Record<string, string> = {};
+    if (!title?.trim()) e.title = "Title is required";
+    if (!amount?.trim()) e.amount = "Enter a valid amount";
+    setErrors(e);
+    if (Object.keys(e).length) {
       Toast.show({
         type: "error",
         text1: "Missing Fields",
-        text2: "Please enter title!!!",
-        // position: "bottom",
+        text2: "Please fill in the required fields",
       });
-
-      return;
-    }
-    if (!amount?.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Missing Field",
-        text2: "Please enter valid amount",
-        // position: "bottom",
-      });
-
       return;
     }
 
@@ -83,25 +71,21 @@ export default function AddTransactionPage() {
       const payload = {
         type,
         amount: parseFloat(amount!),
-        title,
-        description: description ?? " ",
+        title: title!,
+        description: description?.trim() || " ",
       };
-
-      // transactions/new-transaction
 
       const result = await addTransactionMutation.mutateAsync({
         url: "/transactions/new-transaction",
         payload,
       });
 
-      // console.log(result);
-
       if (result?.success) {
         const successMessage = result?.message;
         setTitle("");
         setDescription("");
         setAmount(null);
-        setType(transactionConstants?.income);
+        setType(TransactionTypeConst.income);
 
         Toast.show({
           type: "success",
@@ -121,7 +105,7 @@ export default function AddTransactionPage() {
         setTitle("");
         setDescription("");
         setAmount(null);
-        setType(transactionConstants?.income);
+        setType(TransactionTypeConst.income);
 
         Toast.show({
           type: "success",
@@ -145,215 +129,67 @@ export default function AddTransactionPage() {
   };
 
   return (
-    <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{
-        flexGrow: 1,
-        justifyContent: "center",
-      }}
-      bottomOffset={30}
-      extraKeyboardSpace={10}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={addTransactionStyles.pageWrapper}>
-        {/* income , expense button view  */}
-        <View
-          style={{
-            flexDirection: "row",
-            columnGap: 10,
-            justifyContent: "center",
-          }}
-        >
-          {/* income button  */}
+    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
+        bottomOffset={30}
+        extraKeyboardSpace={10}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.nav}>
+          <Text style={[text.navTitle, { color: C.text }]}>Add Transaction</Text>
           <TouchableOpacity
-            style={[
-              addTransactionStyles.typeButton,
-              type === transactionConstants?.income &&
-                addTransactionStyles.typeButtonActive,
-            ]}
-            onPress={() => setType(transactionConstants?.income)}
+            onPress={() => router.push("/smart-add")}
+            style={[styles.smartAddBtn, { backgroundColor: C.accentDim, borderColor: C.accentBorder }]}
           >
-            <MaterialCommunityIcons
-              name="arrow-up"
-              size={18}
-              color={
-                type === transactionConstants?.income ? COLORS.white : "green"
-              }
-            />
-            <Text
-              style={[
-                addTransactionStyles.typeButtonText,
-                type === transactionConstants?.income &&
-                  addTransactionStyles.typeButtonTextActive,
-              ]}
-            >
-              Income{" "}
-            </Text>
+            <MaterialCommunityIcons name="creation" size={13} color={C.accent} />
+            <Text style={[text.label, { color: C.accent }]}>Smart Add</Text>
           </TouchableOpacity>
-
-          {/* expense button  */}
-          <TouchableOpacity
-            style={[
-              addTransactionStyles.typeButton,
-              type === transactionConstants?.expense &&
-                addTransactionStyles.typeButtonActive,
-            ]}
-            onPress={() => setType(transactionConstants?.expense)}
-          >
-            <MaterialCommunityIcons
-              name="arrow-down"
-              size={18}
-              color={
-                type === transactionConstants?.expense ? COLORS.white : "red"
-              }
-            />
-            <Text
-              style={[
-                addTransactionStyles.typeButtonText,
-                type === transactionConstants?.expense &&
-                  addTransactionStyles.typeButtonTextActive,
-              ]}
-            >
-              Expense
-            </Text>
-          </TouchableOpacity>
-
-          {/*  */}
         </View>
 
-        {/* horizontal line  */}
-        <View
-          style={{
-            height: 1,
-            width: "100%",
-            backgroundColor: COLORS.border,
-            margin: 15,
-          }}
-        />
+        <TypeToggle value={type} onChange={setType} />
 
-        {/* money input field  */}
-        <View
-          style={{
-            borderBottomWidth: 1,
-            borderBottomColor: COLORS.border,
-          }}
-        >
-          <TextInput
-            placeholder="+৳ 00.0"
-            keyboardType="numeric"
+        <View style={[styles.amountBlock, { borderBottomColor: accentColor }]}>
+          <Text style={[text.label, { color: C.textSecondary, textAlign: "center", marginBottom: spacing.md }]}>
+            AMOUNT (BDT)
+          </Text>
+          <FormField
+            label=""
             value={amount || ""}
             onChangeText={handleTextChange}
-            textColor={COLORS.text}
-            style={{
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              padding: 0,
-              fontSize: 22,
-            }}
+            keyboardType="decimal-pad"
+            placeholder="0.00"
+            error={errors.amount}
+            inputStyle={{ fontSize: 40, textAlign: "center", color: accentColor, height: 64 }}
           />
         </View>
 
-        {/* title input field  */}
-        <View
-          style={{
-            width: "100%",
-            borderBottomWidth: 1,
-            borderBottomColor: COLORS.border,
-          }}
-        >
-          <TextInput
-            placeholder="Transaction Title "
-            value={title || ""}
-            onChangeText={setTitle}
-            underlineColorAndroid="transparent"
-            textColor={COLORS.text}
-            style={{
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              padding: 0,
-              fontSize: 20,
-            }}
-          />
-        </View>
+        <FormField label="Title" value={title || ""} onChangeText={setTitle} error={errors.title} placeholder="e.g. Groceries" />
+        <FormField
+          label="Description"
+          value={description || ""}
+          onChangeText={setDescription}
+          placeholder="Add a note… (optional)"
+          multiline
+          inputStyle={{ height: 80, textAlignVertical: "top", paddingTop: 12 }}
+        />
 
-        {/* transaction details input field  */}
-        <View
-          style={{
-            width: "100%",
-            borderBottomWidth: 1,
-            borderBottomColor: COLORS.border,
-          }}
-        >
-          <TextInput
-            placeholder="Transaction Description "
-            value={description || ""}
-            onChangeText={setDescription}
-            textColor={COLORS.text}
-            style={{
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              padding: 0,
-              fontSize: 20,
-            }}
-          />
-        </View>
-
-        <Button
-          disabled={addTransactionMutation?.isPending}
-          mode="contained"
+        <PrimaryButton
+          label={addTransactionMutation?.isPending ? "Saving Transaction..." : "Save Transaction"}
           onPress={handleAddTransaction}
-          style={{ marginTop: 20, backgroundColor: COLORS.primary }}
-          labelStyle={{ color: COLORS.background }}
-        >
-          {addTransactionMutation?.isPending
-            ? "Saving Transaction..."
-            : " Save Transaction"}
-        </Button>
-      </View>
-    </KeyboardAwareScrollView>
+          loading={addTransactionMutation?.isPending}
+          disabled={!title || !amount}
+          color={accentColor}
+        />
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 }
 
-const addTransactionStyles = StyleSheet.create({
-  pageWrapper: {
-    width: "90%",
-    margin: "auto",
-
-    backgroundColor: COLORS.background,
-    padding: 12,
-    borderRadius: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-
-  typeButton: {
-    flexDirection: "row",
-    alignSelf: "center",
-    alignItems: "center",
-    columnGap: 3,
-    padding: 10,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-
-  typeButtonActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-
-  typeButtonText: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-
-  typeButtonTextActive: {
-    color: COLORS.white,
-  },
-
-  //
+const styles = StyleSheet.create({
+  safe: { flex: 1 },
+  content: { flexGrow: 1, paddingTop: spacing.lg, paddingBottom: 40 },
+  nav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.xl },
+  smartAddBtn: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.md, paddingVertical: 6 },
+  amountBlock: { borderBottomWidth: 2, marginBottom: spacing.xl, paddingBottom: spacing.md },
 });

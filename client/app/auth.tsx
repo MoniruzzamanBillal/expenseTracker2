@@ -1,14 +1,16 @@
 import { useUserContext } from "@/context/user.context";
 import { usePost } from "@/hooks/useApi";
-import { COLORS } from "@/utils/colors";
+import { useTheme, text, spacing, radius } from "@/theme";
+import FormField from "@/components/main/shared/FormField";
+import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Keyboard, Pressable, StyleSheet, View } from "react-native";
+import { Keyboard, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { Button, Text, TextInput } from "react-native-paper";
 import Toast from "react-native-toast-message";
 
 export default function AuthScreen() {
+  const C = useTheme();
   const [email, setEmail] = useState<string | null>(null);
   const [password, setPassword] = useState<string | null>(null);
 
@@ -37,8 +39,6 @@ export default function AuthScreen() {
         url: "/auth/login",
         payload,
       });
-
-      // console.log("result = ", result);
 
       if (result?.success) {
         const successMessage = result?.message;
@@ -73,107 +73,71 @@ export default function AuthScreen() {
   };
 
   return (
-    <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{
-        flexGrow: 1,
-        justifyContent: "center",
-      }}
-      bottomOffset={30}
-      extraKeyboardSpace={10}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={authStyles.wrapperContainer}>
-        <Text
-          style={{
-            fontWeight: "600",
-            fontSize: 30,
-            color: COLORS.text,
-            textAlign: "center",
-            paddingVertical: 10,
-          }}
-        >
-          Welcome Back
+    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
+        bottomOffset={30}
+        extraKeyboardSpace={10}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.wordmark}>
+          <View style={[styles.logo, { backgroundColor: C.accentDim, borderColor: C.accentBorder }]}>
+            <Text style={[text.h3, { color: C.accent }]}>৳</Text>
+          </View>
+          <Text style={[text.h2, { color: C.text }]}>ExpenseTracker</Text>
+        </View>
+
+        <Text style={[text.h1, { color: C.text, marginBottom: spacing.xs }]}>Welcome back</Text>
+        <Text style={[text.body, { color: C.textSecondary, marginBottom: spacing.xxl }]}>
+          Sign in to continue tracking
         </Text>
 
-        {/* login form  */}
-        <View style={authStyles.loginForm}>
-          <TextInput
-            placeholder="Enter Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setEmail}
-            value={email || ""}
-            textColor={COLORS.text}
-            style={{
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              padding: 0,
-            }}
-          />
-          <TextInput
-            placeholder="Enter Password"
-            secureTextEntry={true}
-            onChangeText={setPassword}
-            value={password || ""}
-            textColor={COLORS.text}
-            style={{
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              padding: 0,
-            }}
-          />
+        <FormField
+          label="Email"
+          value={email || ""}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder="you@example.com"
+        />
+        <FormField
+          label="Password"
+          value={password || ""}
+          onChangeText={setPassword}
+          secureTextEntry
+          passwordToggle
+          placeholder="••••••••"
+        />
 
-          <Button
-            mode="contained"
-            onPress={handleLogin}
-            disabled={loginMutation?.isPending}
-            labelStyle={{ color: COLORS.text }}
-          >
-            {loginMutation?.isPending ? "Loggin in..." : "Login"}
-          </Button>
+        <Text style={[text.bodySm, { color: C.accentText, textAlign: "right", marginBottom: spacing.xl }]}>
+          Forgot password?
+        </Text>
 
-          <View style={{ flexDirection: "row", marginTop: 10 }}>
-            <Text style={{ color: COLORS.text }}>
-              {" "}
-              {"Don't Have any account ?"}{" "}
-            </Text>
+        <PrimaryButton
+          label={loginMutation?.isPending ? "Logging in..." : "Sign In"}
+          onPress={handleLogin}
+          loading={loginMutation?.isPending}
+          disabled={!email || !password}
+          style={{ marginBottom: spacing.lg }}
+        />
 
-            <Pressable onPress={() => router.replace("/register")}>
-              <Text style={{ color: "blue", textDecorationLine: "underline" }}>
-                Sign Up{" "}
-              </Text>
-            </Pressable>
-          </View>
+        <View style={styles.footer}>
+          <Text style={[text.bodySm, { color: C.textSecondary }]}>No account? </Text>
+          <TouchableOpacity onPress={() => router.push("/register")}>
+            <Text style={[text.bodySm, { color: C.accent }]}>Create one</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 }
 
-const authStyles = StyleSheet.create({
-  wrapperContainer: {
-    width: "90%",
-    alignSelf: "center",
-    backgroundColor: "#f3f4f6",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderColor: "#d1d5db",
-    borderWidth: 1,
-    borderRadius: 8,
-  },
-
-  loginForm: {
-    marginTop: 20,
-    flexDirection: "column",
-    rowGap: 12,
-  },
-
-  //
+const styles = StyleSheet.create({
+  safe: { flex: 1 },
+  content: { flexGrow: 1, paddingTop: Platform.OS === "ios" ? 60 : 40, paddingBottom: 40, justifyContent: "center" },
+  wordmark: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: 48 },
+  logo: { width: 44, height: 44, borderRadius: radius.md, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  footer: { flexDirection: "row", justifyContent: "center", marginTop: spacing.xl },
 });

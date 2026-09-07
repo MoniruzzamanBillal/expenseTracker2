@@ -9,17 +9,16 @@ The Expo/React Native mobile app for ExpenseTracker, a personal income/expense t
 | Screen | Purpose |
 |---|---|
 | `index.tsx` | Home — today's totals + transaction list |
-| `addTransaction.tsx` | Manual transaction entry |
-| `history.tsx` | Yearly history, per-month totals |
-| `monthlyTransactions.tsx` | Current month's daily breakdown |
-| `weeklyTransactions.tsx` | Friday–Thursday weekly summary + average spend |
-| `smart-add.tsx` | Natural-language AI-assisted bulk entry (calls the server's `manage-money` endpoint, then lets the user review/edit before saving) |
+| `addTransaction.tsx` | Manual transaction entry; also the entry point to Smart Add (a button, not a tab — see below) |
+| `history.tsx` | Yearly history, per-month totals (read-only, no drill-in) |
+| `monthlyTransactions.tsx` | Current month's daily breakdown **and** the current Friday–Thursday weekly summary, toggled via an in-page segmented control ("Monthly"/"Weekly") — the two were merged into one tab during the visual redesign (`specs/06-visual-redesign-xpnsapp-design-system.md`, Decision 8); there is no separate `weeklyTransactions.tsx` route anymore |
+| `smart-add.tsx` | Natural-language AI-assisted bulk entry (calls the server's `manage-money` endpoint, then lets the user review/edit before saving). Not shown in the tab bar (`href: null`) as of the same redesign (Decision 7) — reached via a button on Add Transaction's nav row instead |
 
 Plus `app/auth.tsx`/`app/register.tsx` outside the tab group.
 
 ## Tech stack
 
-Expo, React Native, `expo-router` (file-based routing), `react-native-paper` (no custom design system on top — see `architecture.md`), TanStack Query + Axios for data fetching, `AsyncStorage` for session persistence.
+Expo, React Native, `expo-router` (file-based routing), a custom design system in `theme/` (colors/typography/spacing, light+dark — see `architecture.md`) with `react-native-paper` kept mounted only for its `Portal`/`Modal` primitives (used by the two edit modals), TanStack Query + Axios for data fetching, `AsyncStorage` for session persistence.
 
 ## Not a shared-types monorepo
 

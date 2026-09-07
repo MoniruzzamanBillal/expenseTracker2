@@ -1,55 +1,27 @@
-import { COLORS } from "@/utils/colors";
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { View, StyleSheet } from "react-native";
+import { useTheme, spacing, radius } from "@/theme";
 
 export default function TransactionCardSkeleton() {
+  const C = useTheme();
   return (
-    <View style={styles.mainContainer}>
-      <View style={styles.wrapper}>
-        {/* Transaction list skeletons */}
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 10 }}
-          style={styles.transactionList}
-        >
-          {Array.from({ length: 8 }).map((_, index) => (
-            <View key={index} style={styles.transactionCard}>
-              <View style={[styles.skeleton, { width: "80%", height: 20 }]} />
-              <View style={{ marginTop: 6 }}>
-                <View style={[styles.skeleton, { width: "50%", height: 16 }]} />
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
+    <View>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <View key={i} style={[styles.row, { borderBottomColor: C.divider, opacity: 1 - i * 0.12 }]}>
+          <View style={[styles.icon, { backgroundColor: C.surface2 }]} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <View style={[styles.bar, { backgroundColor: C.surface2, width: "55%" }]} />
+            <View style={[styles.bar, { backgroundColor: C.surface2, width: "35%", height: 10 }]} />
+          </View>
+          <View style={[styles.bar, { backgroundColor: C.surface2, width: 50, height: 14 }]} />
+        </View>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-  },
-  wrapper: {
-    width: "98%",
-    alignSelf: "center",
-  },
-
-  transactionList: {
-    marginTop: 6,
-  },
-  transactionCard: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-    overflow: "hidden",
-  },
-  skeleton: {
-    backgroundColor: "#e1e9ee",
-    borderRadius: 4,
-  },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: 13, borderBottomWidth: 1 },
+  icon: { width: 40, height: 40, borderRadius: radius.sm },
+  bar: { height: 12, borderRadius: 4 },
 });

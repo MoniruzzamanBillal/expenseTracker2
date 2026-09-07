@@ -1,17 +1,22 @@
+import { useUserContext } from "@/context/user.context";
 import { useFetchData } from "@/hooks/useApi";
 import { usePendingTransactions } from "@/hooks/usePendingTransactions";
+import { radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
-import { COLORS } from "@/utils/colors";
-import { useRef, useState } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useMemo, useRef } from "react";
 import {
-  Dimensions,
+  Alert,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
-import { Text } from "react-native-paper";
+import EmptyState from "../shared/EmptyState";
 import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
 import TransactionCard from "../shared/TransactionCard";
@@ -23,17 +28,16 @@ type TData = {
   transactions: TTransaction[];
 };
 
-const screenHeight = Dimensions.get("window").height;
-
 export default function HomePage() {
-  const [refreshing, setRefreshing] = useState(false);
-
+  const C = useTheme();
+  const { user, logoutFunction } = useUserContext();
   const openSwipeableRef = useRef<Swipeable | null>(null);
 
   const {
     data: dailyTransaction,
     isLoading,
     refetch,
+    isRefetching,
   } = useFetchData<TData>(
     ["daily-transaction"],
     `/transactions/daily-transaction`,
@@ -54,107 +58,156 @@ export default function HomePage() {
     }),
   );
 
-  // console.log("dailyTransaction =", dailyTransaction?.data);
+  const transactions = dailyTransaction?.data?.transactions ?? [];
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    refetch();
-    setRefreshing(false);
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  }, []);
+
+  const handleLogoutPress = () => {
+    Alert.alert("Log out?", undefined, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Log out", style: "destructive", onPress: logoutFunction },
+    ]);
+  };
+
+  const handleSwipeOpen = (ref: Swipeable) => {
+    if (openSwipeableRef.current && openSwipeableRef.current !== ref) {
+      openSwipeableRef.current.close();
+    }
+    openSwipeableRef.current = ref;
   };
 
   return (
-    <View style={homePageStyles.mainContainer}>
-      {/* Total balance card */}
-      <TotalBalanceCard
-        income={dailyTransaction?.data?.income ?? 0}
-        expense={dailyTransaction?.data?.expense ?? 0}
-      />
-
-      <PendingSyncBanner />
-
-      {/* Title for transactions */}
-      <Text
-        style={{
-          marginTop: 6,
-          fontSize: 19,
-          fontWeight: "800",
-          color: COLORS.text,
-        }}
-      >
-        Transactions :
-      </Text>
-
-      {/* Scrollable Transactions */}
-
+    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
       <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingHorizontal: spacing.screenPad },
+        ]}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={C.accent}
+          />
         }
       >
-        {isLoading && <TransactionCardSkeleton />}
-        {!isLoading &&
-          !dailyTransaction?.data?.transactions?.length &&
-          !pendingAsTransactions.length && (
-            <Text style={{ fontWeight: "600", fontSize: 24, color: "red" }}>
-              No transactions yet !!!
+        <View style={styles.header}>
+          <View>
+            <Text
+              style={[
+                text.caption,
+                { color: C.textSecondary, marginBottom: 2 },
+              ]}
+            >
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+              })}
             </Text>
-          )}
-
-        {pendingAsTransactions.length > 0 && (
-          <Text
-            style={{
-              marginBottom: 4,
-              fontSize: 13,
-              fontWeight: "700",
-              color: COLORS.textLight,
-            }}
+            <Text style={[text.h3, { color: C.text }]}>
+              {greeting}
+              {user?.name ? `, ${user.name.split(" ")[0]}` : ""}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={handleLogoutPress}
+            activeOpacity={0.8}
+            style={[
+              styles.logoutBtn,
+              { backgroundColor: C.surface2, borderColor: C.border },
+            ]}
           >
-            Pending Sync
-          </Text>
-        )}
+            <MaterialCommunityIcons
+              name="logout"
+              size={18}
+              color={C.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
 
-        {pendingAsTransactions.map((transaction) => (
-          <TransactionCard
-            key={transaction?._id}
-            transactionData={transaction}
-            pending
+        <TotalBalanceCard
+          income={dailyTransaction?.data?.income ?? 0}
+          expense={dailyTransaction?.data?.expense ?? 0}
+          label="Today's Balance"
+        />
+
+        <PendingSyncBanner />
+
+        {isLoading ? (
+          <TransactionCardSkeleton />
+        ) : !transactions.length && !pendingAsTransactions.length ? (
+          <EmptyState
+            title="No transactions today"
+            subtitle="Tap + to add your first one"
           />
-        ))}
+        ) : (
+          <>
+            {pendingAsTransactions.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.labelRow}>
+                  <Text style={[text.label, { color: C.textSecondary }]}>
+                    PENDING SYNC
+                  </Text>
+                </View>
+                {pendingAsTransactions.map((t) => (
+                  <TransactionCard key={t._id} transactionData={t} pending />
+                ))}
+              </View>
+            )}
 
-        {dailyTransaction?.data?.transactions &&
-          dailyTransaction?.data?.transactions?.map(
-            (transaction: TTransaction) => (
-              <TransactionCard
-                key={transaction?._id}
-                transactionData={transaction}
-                onSwipeOpen={(ref) => {
-                  if (
-                    openSwipeableRef.current &&
-                    openSwipeableRef.current !== ref
-                  ) {
-                    openSwipeableRef.current.close();
-                  }
-                  openSwipeableRef.current = ref;
-                }}
-              />
-            ),
-          )}
+            {transactions.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.labelRow}>
+                  <Text style={[text.label, { color: C.textSecondary }]}>
+                    TODAY
+                  </Text>
+                </View>
+                {transactions.map((t, i) => (
+                  <TransactionCard
+                    key={t?._id}
+                    transactionData={t}
+                    isLast={i === transactions.length - 1}
+                    onSwipeOpen={handleSwipeOpen}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
-const homePageStyles = StyleSheet.create({
-  mainContainer: {
-    width: "90%",
-    alignSelf: "center",
-    flex: 1,
+const styles = StyleSheet.create({
+  safe: { flex: 1 },
+  content: { paddingTop: spacing.lg, paddingBottom: spacing.xxl },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.xl,
   },
-  scrollableList: {
-    marginTop: 4,
-    flex: 1,
-    maxHeight: screenHeight * 0.7,
+  logoutBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  section: { marginBottom: spacing.base },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
 });

@@ -1,59 +1,22 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import { useTheme, spacing, radius } from "@/theme";
 
 export default function HistoryCardSkeleton() {
+  const C = useTheme();
   return (
-    <View style={styles.container}>
-      {/* Month skeleton */}
-      <View
-        style={[
-          styles.skeleton,
-          { width: "50%", height: 20, marginBottom: 10 },
-        ]}
-      />
-
-      {/* Money Section skeleton */}
-      <View style={styles.moneySection}>
-        {/* Income section skeleton */}
-        <View>
-          <View style={[styles.skeleton, { width: 90, height: 20 }]} />
-        </View>
-
-        {/* Expense section skeleton */}
-        <View>
-          <View style={[styles.skeleton, { width: 90, height: 20 }]} />
-        </View>
-
-        {/* Balance section skeleton */}
-        <View>
-          <View style={[styles.skeleton, { width: 90, height: 20 }]} />
-        </View>
+    <View style={[styles.card, { borderColor: C.divider }]}>
+      <View style={styles.rowBetween}>
+        <View style={[styles.bar, { backgroundColor: C.surface2, width: 70, height: 14 }]} />
+        <View style={[styles.bar, { backgroundColor: C.surface2, width: 60, height: 12 }]} />
       </View>
+      <View style={[styles.bar, { backgroundColor: C.surface2, width: "100%", height: 4, marginTop: 8 }]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginVertical: 10,
-    flexDirection: "column",
-    backgroundColor: "white",
-    padding: 10,
-    borderRadius: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  moneySection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
-
-  skeleton: {
-    backgroundColor: "#e1e9ee",
-    borderRadius: 4,
-  },
+  card: { borderRadius: radius.md, borderWidth: 1, padding: spacing.md, marginBottom: 4 },
+  rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  bar: { borderRadius: 4 },
 });

@@ -1,25 +1,38 @@
 import { usePost } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
+import { TransactionTypeConst } from "@/constants/TransactionType.constant";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { createBatchId } from "@/utils/transactionQueue";
-import { COLORS } from "@/utils/colors";
+import { useTheme, text, spacing, radius } from "@/theme";
+import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Keyboard, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Keyboard,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { Button, IconButton, Text, TextInput } from "react-native-paper";
-
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 
+type TDraftTransaction = TTransaction;
+
 export default function SmartAddPage() {
+  const C = useTheme();
   const router = useRouter();
 
-  const [prompt, setPrompt] = useState<string | null>();
-  const [chatResponseData, setChatResponseData] = useState([]);
+  const [prompt, setPrompt] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<TDraftTransaction[] | null>(null);
 
-  const addPromptMutation = usePost([[""]]);
-
-  const addTransactionMutation = usePost([
+  const parseMutation = usePost([[""]]);
+  const saveMutation = usePost([
     ["daily-transaction"],
     ["monthly-transaction"],
     ["weekly-transaction"],
@@ -28,43 +41,33 @@ export default function SmartAddPage() {
 
   const enqueuePendingTransactions = useEnqueuePendingTransactions();
 
-  //   ! for giving prompt
-  const handleAddPrompt = async () => {
-    setChatResponseData([]);
-
+  const handleParse = async () => {
     if (!prompt?.trim()) {
       Toast.show({
         type: "error",
         text1: "Give a valid prompt!!!",
         position: "top",
       });
-
       return;
     }
 
     Keyboard.dismiss();
 
     try {
-      const result = await addPromptMutation.mutateAsync({
+      const result = await parseMutation.mutateAsync({
         url: "/transactions/manage-money",
         payload: { prompt },
       });
 
-      //   console.log(result);
-
       if (result?.success) {
-        const successMessage = result?.message;
         Toast.show({
           type: "success",
-          text1: successMessage,
+          text1: result?.message,
           position: "top",
         });
 
         setPrompt(null);
-
-        if (result?.data) {
-          setChatResponseData(result?.data);
-        }
+        setDrafts(result?.data ?? []);
       }
     } catch (error) {
       console.log("error = ", error);
@@ -76,37 +79,53 @@ export default function SmartAddPage() {
     }
   };
 
-  //   ! for adding prompt data
-  const handleAddPromptData = async () => {
-    if (!chatResponseData?.length) {
+  const updateDraft = (i: number, key: keyof TDraftTransaction, value: string | number) => {
+    setDrafts((prev) => (prev ? prev.map((d, idx) => (idx === i ? { ...d, [key]: value } : d)) : prev));
+  };
+
+  const removeDraft = (i: number) => {
+    Alert.alert("Remove transaction?", "This item will be removed from the list", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => setDrafts((prev) => (prev ? prev.filter((_, idx) => idx !== i) : prev)),
+      },
+    ]);
+  };
+
+  const handleSaveAll = async () => {
+    if (!drafts?.length) {
       Toast.show({
         type: "error",
         text1: "No response data available",
         position: "top",
       });
+      return;
     }
 
     try {
-      const result = await addTransactionMutation.mutateAsync({
+      const result = await saveMutation.mutateAsync({
         url: "/transactions/many-transaction",
-        payload: chatResponseData,
+        payload: drafts.map((d) => ({
+          type: d.type,
+          title: d.title,
+          amount: d.amount,
+          description: d.description ?? " ",
+        })),
       });
 
       if (result?.success) {
-        const successMessage = result?.message;
-
-        setChatResponseData([]);
-        setPrompt(null);
-
         Toast.show({
           type: "success",
-          text1: successMessage,
+          text1: result?.message,
           position: "top",
         });
 
-        setTimeout(() => {
-          router.push("/");
-        }, 100);
+        setPrompt(null);
+        setDrafts(null);
+
+        setTimeout(() => router.push("/"), 100);
       } else {
         // Didn't reach the server (offline or a server-side failure — both
         // resolve here rather than throwing, see known-issues.md#FETCH-1).
@@ -115,7 +134,7 @@ export default function SmartAddPage() {
         const batchId = createBatchId();
 
         await enqueuePendingTransactions(
-          chatResponseData.map((item: TTransaction) => ({
+          drafts.map((item) => ({
             payload: {
               type: item.type,
               amount: item.amount,
@@ -127,8 +146,8 @@ export default function SmartAddPage() {
           })),
         );
 
-        setChatResponseData([]);
         setPrompt(null);
+        setDrafts(null);
 
         Toast.show({
           type: "success",
@@ -137,9 +156,7 @@ export default function SmartAddPage() {
           position: "top",
         });
 
-        setTimeout(() => {
-          router.push("/");
-        }, 100);
+        setTimeout(() => router.push("/"), 100);
       }
     } catch (error) {
       console.log("error = ", error);
@@ -151,218 +168,128 @@ export default function SmartAddPage() {
     }
   };
 
-  const handleRemoveItem = (index: number) => {
-    Alert.alert(
-      "Remove transaction?",
-      "This item will be removed from the list",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => {
-            setChatResponseData((prev) => prev.filter((_, i) => i !== index));
-          },
-        },
-      ],
-    );
-  };
-
-  //   console.log(chatResponseData);
-
   return (
-    <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{
-        flexGrow: 1,
-        justifyContent: "center",
-      }}
-      bottomOffset={30}
-      extraKeyboardSpace={10}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* top input fields  */}
-      <View style={styles.topInputContent}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
+        bottomOffset={30}
+        extraKeyboardSpace={10}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.heading}>
+          <Text style={[text.navTitle, { color: C.text }]}>Smart Add</Text>
+          <View style={[styles.aiBadge, { backgroundColor: C.accentDim, borderColor: C.accentBorder }]}>
+            <Text style={[text.label, { color: C.accent }]}>AI</Text>
+          </View>
+        </View>
+        <Text style={[text.bodySm, { color: C.textSecondary, marginBottom: spacing.lg }]}>
+          Describe transactions in plain text
+        </Text>
+
         <TextInput
-          placeholder="Enter Detailed prompt..."
           value={prompt || ""}
           onChangeText={setPrompt}
-          numberOfLines={6}
           multiline
-          textColor={COLORS.text}
-          style={{
-            borderWidth: 0,
-            backgroundColor: "transparent",
-            fontSize: 18,
-            minHeight: 90,
-            maxHeight: 110,
-          }}
+          style={[styles.textarea, { backgroundColor: C.inputBg, borderColor: C.accentBorder, color: C.text }, text.body]}
+          placeholder="bought groceries for 850 taka and got 5000 taka salary"
+          placeholderTextColor={C.placeholder}
         />
 
-        <Button
-          disabled={
-            addPromptMutation?.isPending || addTransactionMutation?.isPending
-          }
-          mode="contained"
-          onPress={handleAddPrompt}
-          style={{ marginTop: 20, backgroundColor: COLORS.primary }}
-          labelStyle={{ color: COLORS.background }}
-        >
-          {addPromptMutation?.isPending ? "Sending Prompt..." : " Add Prompt"}
-        </Button>
-      </View>
-
-      {chatResponseData?.length && (
-        <View
-          style={{
-            height: 1,
-            width: "100%",
-            backgroundColor: COLORS.border,
-            marginVertical: 20,
-          }}
+        <PrimaryButton
+          label={parseMutation?.isPending ? "Parsing..." : "Parse with AI"}
+          onPress={handleParse}
+          loading={parseMutation?.isPending}
+          disabled={!prompt?.trim()}
+          style={{ marginBottom: spacing.xl }}
         />
-      )}
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        keyboardDismissMode="on-drag"
-      >
-        {/* chat respond data   */}
-        {chatResponseData &&
-          chatResponseData?.map((item: TTransaction, idx: number) => (
-            <View key={idx} style={styles.transactionCard}>
-              <View style={styles.transactionHeader}>
-                <Text
-                  style={[
-                    styles.transactionType,
-                    item.type === "income"
-                      ? styles.incomeText
-                      : styles.expenseText,
-                  ]}
-                >
-                  {item.type.toUpperCase()}
-                </Text>
+        {drafts !== null && (
+          <ScrollView contentContainerStyle={{ paddingBottom: 12 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <View style={styles.resultsHeader}>
+              <Text style={[text.label, { color: C.textSecondary }]}>PARSED RESULTS</Text>
+              <View style={[styles.countBadge, { backgroundColor: C.accentDim }]}>
+                <Text style={[text.label, { color: C.accent }]}>{drafts.length} found</Text>
+              </View>
+            </View>
 
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Text
-                    style={[
-                      styles.transactionAmount,
-                      item.type === "income"
-                        ? styles.incomeText
-                        : styles.expenseText,
-                    ]}
-                  >
-                    ৳ {item.amount}
-                  </Text>
+            {drafts.length === 0 && (
+              <Text style={[text.body, { color: C.textSecondary, textAlign: "center", marginBottom: spacing.xl }]}>
+                Couldn&apos;t parse any transactions — try rephrasing.
+              </Text>
+            )}
 
-                  <IconButton
-                    icon="delete-outline"
-                    size={18}
-                    iconColor="red"
-                    onPress={() => handleRemoveItem(idx)}
-                    style={{ margin: 0 }}
+            {drafts.map((draft, i) => {
+              const isIncome = draft.type === TransactionTypeConst.income;
+              const typeColor = isIncome ? C.income : C.expense;
+              const typeBorder = isIncome ? C.incomeBg : C.expenseBg;
+              return (
+                <View key={i} style={[styles.draftCard, { backgroundColor: C.surface, borderColor: typeBorder }]}>
+                  <View style={styles.draftTypeRow}>
+                    <View style={styles.draftTypeLeft}>
+                      <View style={[styles.dot, { backgroundColor: typeColor }]} />
+                      <TouchableOpacity
+                        onPress={() =>
+                          updateDraft(i, "type", isIncome ? TransactionTypeConst.expense : TransactionTypeConst.income)
+                        }
+                      >
+                        <Text style={[text.label, { color: typeColor }]}>{isIncome ? "INCOME" : "EXPENSE"}</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity onPress={() => removeDraft(i)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                      <MaterialCommunityIcons name="close" size={18} color={C.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+                  <TextInput
+                    value={draft.title}
+                    onChangeText={(v) => updateDraft(i, "title", v)}
+                    style={[styles.draftInput, text.bodyMd, { color: C.text, borderBottomColor: C.divider }]}
+                  />
+                  <View style={styles.draftAmountRow}>
+                    <Text style={[text.caption, { color: C.textSecondary }]}>৳</Text>
+                    <TextInput
+                      value={String(draft.amount)}
+                      onChangeText={(v) => updateDraft(i, "amount", parseFloat(v.replace(/[^0-9.]/g, "")) || 0)}
+                      keyboardType="decimal-pad"
+                      style={[text.h3, { color: typeColor, flex: 1 }]}
+                    />
+                  </View>
+                  <TextInput
+                    value={draft.description ?? ""}
+                    onChangeText={(v) => updateDraft(i, "description", v)}
+                    placeholder="Add note…"
+                    placeholderTextColor={C.placeholder}
+                    style={[text.caption, { color: C.textSecondary, marginTop: 4 }]}
                   />
                 </View>
-              </View>
+              );
+            })}
 
-              <Text style={styles.transactionTitle}>{item.title}</Text>
-
-              {!!item.description && (
-                <Text style={styles.transactionDescription}>
-                  {item.description}
-                </Text>
-              )}
-            </View>
-          ))}
-
-        {chatResponseData?.length && (
-          <Button
-            disabled={
-              addPromptMutation?.isPending || addTransactionMutation?.isPending
-            }
-            mode="contained"
-            onPress={handleAddPromptData}
-            style={{ marginTop: 8, backgroundColor: COLORS.primary }}
-            labelStyle={{ color: COLORS.background }}
-          >
-            {addTransactionMutation?.isPending
-              ? "Saving Transaction..."
-              : " Save Transaction"}
-          </Button>
+            {drafts.length > 0 && (
+              <PrimaryButton
+                label={saveMutation?.isPending ? "Saving..." : `Save ${drafts.length} Transaction${drafts.length > 1 ? "s" : ""}`}
+                onPress={handleSaveAll}
+                loading={saveMutation?.isPending}
+              />
+            )}
+          </ScrollView>
         )}
-
-        {/*  */}
-      </ScrollView>
-    </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 }
 
-//
 const styles = StyleSheet.create({
-  topInputContent: {
-    width: "90%",
-    margin: "auto",
-  },
-
-  scrollContent: {
-    width: "90%",
-    margin: "auto",
-    paddingBottom: 12,
-  },
-
-  //
-
-  incomeText: {
-    color: "green",
-    fontWeight: "600",
-  },
-
-  expenseText: {
-    color: "red",
-    fontWeight: "600",
-  },
-
-  balanceText: {
-    color: COLORS.text,
-    fontWeight: "700",
-  },
-
-  transactionCard: {
-    backgroundColor: COLORS.background,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    elevation: 2,
-  },
-
-  transactionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-
-  transactionType: {
-    fontSize: 15,
-    fontWeight: "900",
-  },
-
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-
-  transactionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.text,
-  },
-
-  transactionDescription: {
-    fontSize: 12,
-    color: COLORS.text,
-    opacity: 0.8,
-  },
-
-  //
+  safe: { flex: 1 },
+  content: { flexGrow: 1, paddingTop: spacing.lg, paddingBottom: 40 },
+  heading: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.xs },
+  aiBadge: { borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3 },
+  textarea: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, minHeight: 96, marginBottom: spacing.md, textAlignVertical: "top" },
+  resultsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
+  countBadge: { borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3 },
+  draftCard: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, marginBottom: spacing.sm, gap: 10 },
+  draftTypeRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  draftTypeLeft: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  dot: { width: 8, height: 8, borderRadius: 999 },
+  draftInput: { borderBottomWidth: 1, paddingVertical: 6, fontSize: 15 },
+  draftAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 4 },
 });

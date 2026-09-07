@@ -2,12 +2,13 @@ import {
   usePendingTransactions,
   useSyncPendingTransactions,
 } from "@/hooks/usePendingTransactions";
-import { COLORS } from "@/utils/colors";
+import { useTheme, text, spacing, radius } from "@/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { StyleSheet, View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { StyleSheet, Text, View } from "react-native";
+import PrimaryButton from "./PrimaryButton";
 
 export default function PendingSyncBanner() {
+  const C = useTheme();
   const { data: pendingTransactions } = usePendingTransactions();
   const { syncAll, isSyncing } = useSyncPendingTransactions();
 
@@ -16,32 +17,20 @@ export default function PendingSyncBanner() {
   if (!pendingCount) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.accentDim, borderColor: C.accentBorder }]}>
       <View style={styles.textRow}>
-        <MaterialCommunityIcons
-          name="cloud-upload-outline"
-          size={18}
-          color={COLORS.primary}
-        />
-        <Text style={styles.text}>
+        <MaterialCommunityIcons name="cloud-upload-outline" size={18} color={C.accent} />
+        <Text style={[text.bodySm, { color: C.text }]}>
           {pendingCount} transaction{pendingCount === 1 ? "" : "s"} pending sync
         </Text>
       </View>
 
-      <Button
-        mode="contained"
-        compact
-        disabled={isSyncing}
+      <PrimaryButton
+        label={isSyncing ? "Syncing..." : "Sync now"}
         onPress={syncAll}
-        style={{ backgroundColor: COLORS.primary }}
-        labelStyle={{
-          fontSize: 12,
-          fontWeight: "400",
-          color: COLORS.white,
-        }}
-      >
-        {isSyncing ? "Syncing..." : "Sync now"}
-      </Button>
+        loading={isSyncing}
+        style={styles.syncBtn}
+      />
     </View>
   );
 }
@@ -51,12 +40,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: COLORS.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 6,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.base,
+    gap: spacing.sm,
   },
   textRow: {
     flexDirection: "row",
@@ -64,9 +52,8 @@ const styles = StyleSheet.create({
     columnGap: 6,
     flexShrink: 1,
   },
-  text: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.text,
+  syncBtn: {
+    height: 36,
+    paddingHorizontal: spacing.md,
   },
 });

@@ -2,7 +2,7 @@
 
 ## Component organization
 
-`components/main/<Feature>/` holds screen-specific UI (`AddTransaction/`, `HistoryPage/`, `Home/`, `MonthlyTransaction/`, `smartAdd/`, `weeklyTransactionsPage/`), plus a cross-screen `components/main/shared/` bucket (`TransactionCard.tsx`, `UpdateTransactionModal.tsx`, `TransactionCardSkeleton.tsx`, `TotalBalanceCard`). Top-level `components/*.tsx` and `components/ui/` are unmodified Expo template scaffolding (`hello-wave.tsx`, `themed-text.tsx`, `collapsible.tsx`, etc.) — don't add feature-specific components there.
+`components/main/<Feature>/` holds screen-specific UI (`AddTransaction/`, `HistoryPage/`, `Home/`, `MonthlyTransaction/` — now also renders the Weekly view, see `architecture.md`'s Routing structure — `smartAdd/`), plus a cross-screen `components/main/shared/` bucket (`TransactionCard.tsx`, `UpdateTransactionModal.tsx`, `PendingTransactionEditModal.tsx`, `PendingSyncBanner.tsx`, `TransactionCardSkeleton.tsx`, `TotalBalanceCard.tsx`, `EmptyState.tsx`, `FormField.tsx`, `PrimaryButton.tsx`, `TypeToggle.tsx`, `SummaryPills.tsx`). There is no `weeklyTransactionsPage/` anymore — it was folded into `MonthlyTransaction/` (`specs/06-visual-redesign-xpnsapp-design-system.md`, Decision 8). Top-level `components/*.tsx` and `components/ui/` are unmodified Expo template scaffolding (`hello-wave.tsx`, `themed-text.tsx`, `collapsible.tsx`, etc.) — don't add feature-specific components there.
 
 ## Data-fetching hooks — which ones are actually live
 
@@ -12,11 +12,11 @@ The app's "delete" is a `usePatch` call against a PATCH endpoint (soft-delete), 
 
 ## Constants — enum source of truth
 
-Import the income/expense enum **only** from `constants/TransactionType.constant.ts` (`TransactionTypeConst`) in any new code. Two other copies exist (`known-issues.md#TYPE-1`) — don't add a fourth, and don't import from `AddTransactionPage.tsx`'s local `transactionConstants` the way `UpdateTransactionModal.tsx` currently does.
+Import the income/expense enum **only** from `constants/TransactionType.constant.ts` (`TransactionTypeConst`, plus its `TTransactionType` type alias). The two other copies that used to exist (`AddTransactionPage.tsx`'s local `transactionConstants`, `TransactionCard.tsx`'s untyped inline `typeOptions`) were removed during the visual redesign (`specs/06-visual-redesign-xpnsapp-design-system.md`) — `known-issues.md#TYPE-1` is resolved as of that spec; don't reintroduce a second copy.
 
 ## Styling
 
-`react-native-paper` defaults throughout; no custom design tokens/theme file exists. If you need a new visual pattern, check how the nearest existing screen in `components/main/` does it before introducing something new.
+Custom design system in `theme/` (`useTheme()`, `text`, `spacing`, `radius`, `shadows` — see `architecture.md`), light+dark. Pull colors from `useTheme()`, never hardcode a hex value. `react-native-paper` is still mounted but only used for `Portal`/`Modal` in the two edit modals — don't reach for its other components (`Button`/`TextInput`/`Text`/`IconButton`) in new code; use the `components/main/shared/` primitives (`PrimaryButton`, `FormField`, `TypeToggle`, etc.) instead. If you need a new visual pattern, check how the nearest existing screen in `components/main/` does it before introducing something new.
 
 ## Error handling — current (broken) pattern, documented as-is
 

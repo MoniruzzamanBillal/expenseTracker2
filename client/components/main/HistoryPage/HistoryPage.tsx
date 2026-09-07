@@ -1,26 +1,17 @@
 import { useFetchData } from "@/hooks/useApi";
-import { useState } from "react";
-import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { Text } from "react-native-paper";
-import HistoryCard from "./HistoryCard";
-import HistoryCardSkeleton from "./HistoryCardSkeleton";
+import { useMemo, useState } from "react";
+import { FlatList, RefreshControl, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { TTransactionHistory } from "@/types/Transaction.tyes";
-import { COLORS } from "@/utils/colors";
+import { useTheme, text, spacing, radius, fontFamily } from "@/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import TotalBalanceCard from "../shared/TotalBalanceCard";
-import MonthlyBreakdownHeader from "./MonthlyBreakdownHeader";
+import SummaryPills from "../shared/SummaryPills";
+import HistoryCardSkeleton from "./HistoryCardSkeleton";
 
-const yearChangeDirection = {
-  prev: "prev",
-  next: "next",
-} as const;
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 type TData = {
   totalExpense: number;
@@ -31,130 +22,139 @@ type TData = {
 const startYear = 2025;
 const currentYear = new Date().getFullYear();
 
+const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
+
 export default function HistoryPage() {
-  const [refreshing, setRefreshing] = useState(false);
+  const C = useTheme();
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   const {
     data: yearlyTransactions,
     isLoading,
     refetch,
+    isRefetching,
   } = useFetchData<TData>(
     ["yearly-transaction", String(selectedYear)],
     `/transactions/yearly-transaction?targetYear=${selectedYear}`,
   );
 
-  // console.log("yearlyTransactions = ", yearlyTransactions);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    refetch();
-    setRefreshing(false);
-  };
-
-  const handleYearChange = (direction: keyof typeof yearChangeDirection) => {
-    if (direction === yearChangeDirection.prev && selectedYear > startYear) {
-      setSelectedYear(selectedYear - 1);
-    }
-
-    if (direction === yearChangeDirection.next && selectedYear < currentYear) {
-      setSelectedYear(selectedYear + 1);
-    }
-  };
+  const yearSummary = useMemo(
+    () => yearlyTransactions?.data?.yearSummary ?? [],
+    [yearlyTransactions?.data?.yearSummary],
+  );
+  const maxAbs = useMemo(
+    () => Math.max(...yearSummary.map((m) => Math.abs(m.income - m.expense)), 1),
+    [yearSummary],
+  );
 
   return (
-    <View style={{ width: "92%", alignSelf: "center", marginTop: 10 }}>
-      {/* year select  */}
-      <View style={styles.yearContainer}>
-        <View style={styles.yearContainerWrapper}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleYearChange(yearChangeDirection.prev)}
-            disabled={selectedYear === startYear}
-          >
-            <MaterialCommunityIcons
-              name="chevron-left"
-              size={18}
-              color={COLORS.text}
-            />
-          </TouchableOpacity>
-
-          <Text style={styles.yearText}> {selectedYear} </Text>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleYearChange(yearChangeDirection.next)}
-            disabled={selectedYear === currentYear}
-          >
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={18}
-              color={COLORS.text}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <TotalBalanceCard
-        income={yearlyTransactions?.data?.totalIncome ?? 0}
-        expense={yearlyTransactions?.data?.totalExpense ?? 0}
-      />
-
-      <MonthlyBreakdownHeader year={selectedYear ?? 0} />
-
-      <ScrollView
+    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+      <FlatList
+        data={yearSummary}
+        keyExtractor={(m) => String(m.month)}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={C.accent} />}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 280 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-      >
-        {isLoading &&
-          !refreshing &&
-          Array.from({ length: 8 })?.map((_, ind) => (
-            <HistoryCardSkeleton key={ind} />
-          ))}
-        {refreshing &&
-          Array.from({ length: 8 })?.map((_, ind) => (
-            <HistoryCardSkeleton key={ind} />
-          ))}
+        ListHeaderComponent={
+          <View>
+            <View style={styles.yearNav}>
+              <TouchableOpacity
+                onPress={() => setSelectedYear((y) => y - 1)}
+                disabled={selectedYear === startYear}
+                style={[styles.navBtn, { backgroundColor: C.surface2, opacity: selectedYear === startYear ? 0.4 : 1 }]}
+              >
+                <MaterialCommunityIcons name="chevron-left" size={18} color={C.textSecondary} />
+              </TouchableOpacity>
+              <Text style={[text.h2, { color: C.text }]}>{selectedYear}</Text>
+              <TouchableOpacity
+                onPress={() => setSelectedYear((y) => y + 1)}
+                disabled={selectedYear >= currentYear}
+                style={[styles.navBtn, { backgroundColor: C.surface2, opacity: selectedYear >= currentYear ? 0.4 : 1 }]}
+              >
+                <MaterialCommunityIcons name="chevron-right" size={18} color={C.textSecondary} />
+              </TouchableOpacity>
+            </View>
 
-        {yearlyTransactions?.data &&
-          yearlyTransactions?.data?.yearSummary?.map(
-            (historyData: TTransactionHistory) => (
-              <HistoryCard key={historyData?.month} historyData={historyData} />
-            ),
-          )}
-      </ScrollView>
-    </View>
+            <SummaryPills
+              pills={[
+                { label: "INCOME", value: `৳${fmt(yearlyTransactions?.data?.totalIncome ?? 0)}`, color: C.income, bg: C.incomeBg },
+                { label: "EXPENSE", value: `৳${fmt(yearlyTransactions?.data?.totalExpense ?? 0)}`, color: C.expense, bg: C.expenseBg },
+                {
+                  label: "NET",
+                  value: `৳${fmt((yearlyTransactions?.data?.totalIncome ?? 0) - (yearlyTransactions?.data?.totalExpense ?? 0))}`,
+                  color: C.accent,
+                  bg: C.accentDim,
+                },
+              ]}
+            />
+
+            {(isLoading || isRefetching) &&
+              Array.from({ length: 6 }).map((_, i) => <HistoryCardSkeleton key={i} />)}
+          </View>
+        }
+        renderItem={({ item: m }) => {
+          const net = m.income - m.expense;
+          const isPositive = net >= 0;
+          const barColor = isPositive ? C.income : C.expense;
+          const barWidth = (Math.abs(net) / maxAbs) * 100;
+          const isCurrent = m.month === new Date().getMonth() && selectedYear === currentYear;
+
+          return (
+            <View
+              style={[
+                styles.monthCard,
+                { backgroundColor: isCurrent ? C.surface : "transparent", borderColor: isCurrent ? C.accentBorder : C.divider },
+              ]}
+            >
+              {isCurrent ? (
+                <>
+                  <View style={styles.rowBetween}>
+                    <Text style={[text.bodyMd, { color: C.text }]}>{MONTHS[m.month]}</Text>
+                    <Text style={[text.amountXs, { color: barColor }]}>
+                      {isPositive ? "+" : "−"}৳{fmt(net)}
+                    </Text>
+                  </View>
+                  <View style={[styles.barTrack, { backgroundColor: C.divider }]}>
+                    <View style={[styles.barFill, { width: `${barWidth}%`, backgroundColor: barColor }]} />
+                  </View>
+                  <View style={[styles.rowBetween, { marginTop: 5, marginBottom: 0 }]}>
+                    <Text style={[text.caption, { color: C.textSecondary }]}>In ৳{fmt(m.income)}</Text>
+                    <Text style={[text.caption, { color: C.textSecondary }]}>Exp ৳{fmt(m.expense)}</Text>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.compactRow}>
+                  <Text style={[{ fontSize: 14, fontFamily: fontFamily.medium, width: 80 }, { color: C.text }]}>
+                    {MONTHS[m.month]}
+                  </Text>
+                  <View style={styles.compactBarWrap}>
+                    <View style={[styles.barTrackSm, { backgroundColor: C.divider }]}>
+                      <View style={[styles.barFill, { width: `${barWidth}%`, backgroundColor: barColor, opacity: 0.7 }]} />
+                    </View>
+                  </View>
+                  <Text style={[text.amountXs, { color: barColor, width: 76, textAlign: "right" }]}>
+                    {isPositive ? "+" : "−"}৳{fmt(net)}
+                  </Text>
+                </View>
+              )}
+            </View>
+          );
+        }}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  // year select
-  yearContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  yearContainerWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 9999,
-    backgroundColor: COLORS.background,
-  },
-  button: {
-    padding: 3,
-  },
-  yearText: {
-    fontFamily: "System",
-    fontWeight: "bold",
-    fontSize: 15,
-    color: COLORS.text,
-    letterSpacing: 0.5,
-  },
+  safe: { flex: 1 },
+  content: { paddingTop: spacing.lg, paddingBottom: spacing.xxl },
+  yearNav: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.xl, marginBottom: spacing.base },
+  navBtn: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  monthCard: { borderRadius: radius.md, borderWidth: 1, padding: spacing.md, marginBottom: 4 },
+  rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.sm },
+  barTrack: { height: 4, borderRadius: 2, overflow: "hidden" },
+  barTrackSm: { height: 3, borderRadius: 2, overflow: "hidden" },
+  barFill: { height: "100%", borderRadius: 2 },
+  compactRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  compactBarWrap: { flex: 1 },
 });
