@@ -17,7 +17,7 @@ Core screens are built and working: home, add-transaction, history, monthly+week
 | [05-fix-blank-error-toast-on-network-failure](specs/05-fix-blank-error-toast-on-network-failure.md) | Completed — implemented, not yet manually verified against a running app                                                                                 |
 | [06-visual-redesign-xpnsapp-design-system](specs/06-visual-redesign-xpnsapp-design-system.md)       | Completed 2026-09-07 — implemented and manually verified (headless-browser click-through, light+dark) against a mocked-but-real backend; see spec's Implementation notes for what remains for a human pass (real device, real login) |
 | [07-fix-accordion-crash-on-empty-day-bucket](specs/07-fix-accordion-crash-on-empty-day-bucket.md)   | Completed — fixed a crash found while manually verifying spec 06 |
-| [08-discoverable-logout](specs/08-discoverable-logout.md)                                           | Completed 2026-09-07 — Option A implemented, avatar removed per user's follow-up instruction |
+| [08-discoverable-logout](specs/08-discoverable-logout.md)                                           | Completed 2026-09-07 — Option A implemented, avatar removed per user's follow-up instruction; also fixed a related bug where the logout button did nothing on web (`known-issues.md#UX-3`) |
 
 ## Known Gaps
 
@@ -25,6 +25,7 @@ Core screens are built and working: home, add-transaction, history, monthly+week
 - [ ] AUTH-1 — `AuthGuard`'s logged-in-redirect branch is dead in practice
 - [ ] AUTH-2 — 401 handling doesn't sync in-memory session state
 - [ ] TYPE-2 — client/server `TTransaction` shape drift
+- [ ] UX-3 — `Alert.alert` no-ops on the web target; fixed for Home's logout button, still open for TransactionCard/PendingTransactionEditModal/SmartAdd's delete/remove confirms
 - [x] FETCH-7 — error toast shows blank text on a no-response (offline/timeout) failure — fixed via spec 05
 - [x] TYPE-1 — three independent copies of the transaction-type enum — resolved via spec 06 (the two duplicate copies were removed as an incidental result of rewriting `AddTransactionPage.tsx`/`TransactionCard.tsx`, not a dedicated cleanup pass)
 - [ ] (see `known-issues.md` for the full ranked list — Low items omitted here)

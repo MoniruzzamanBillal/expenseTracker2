@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMemo, useRef } from "react";
 import {
   Alert,
+  Platform,
   RefreshControl,
   SafeAreaView,
   ScrollView,
@@ -68,6 +69,16 @@ export default function HomePage() {
   }, []);
 
   const handleLogoutPress = () => {
+    // react-native-web's Alert.alert is a hard no-op (see node_modules/react-native-web's
+    // Alert export — `static alert() {}`), so it never shows anything on web. Use the
+    // browser's native confirm() there instead; native platforms keep Alert.alert as-is.
+    if (Platform.OS === "web") {
+      if (window.confirm("Log out?")) {
+        logoutFunction();
+      }
+      return;
+    }
+
     Alert.alert("Log out?", undefined, [
       { text: "Cancel", style: "cancel" },
       { text: "Log out", style: "destructive", onPress: logoutFunction },

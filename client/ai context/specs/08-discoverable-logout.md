@@ -45,6 +45,12 @@ Option A, chosen 2026-09-07 — with the added instruction to drop the avatar en
 - No change to `context/user.context.tsx` — `logoutFunction()` untouched.
 - Re-verified with the same headless-browser harness used for spec 06: logged in (mocked), confirmed the new logout icon renders clearly in Home's header (screenshot), `npx tsc --noEmit` and `yarn lint` both clean.
 
+### Follow-up fix: `Alert.alert` is a no-op on web
+
+User reported "when I click the logout icon, nothing happens." Root cause: `react-native-web`'s `Alert` export is a hard stub — `node_modules/react-native-web/dist/exports/Alert/index.js` is literally `class Alert { static alert() {} }`. This isn't specific to the new logout button; it silently no-ops **every** `Alert.alert` call in the app when run on the web target (delete-transaction confirms, pending-transaction delete confirm, Smart Add's remove-draft confirm, etc. all share this exposure) — worth a `known-issues.md` entry (`UX-` series) covering the other call sites, not fixed here since only logout was reported broken.
+
+Fix applied to `handleLogoutPress` only: branch on `Platform.OS === "web"` and use `window.confirm("Log out?")` there instead of `Alert.alert`, calling `logoutFunction()` if the user confirms; native platforms (iOS/Android) keep the original `Alert.alert` path unchanged, since it works correctly there. Verified via the headless-browser harness — clicking the logout button now fires a real `confirm` dialog, and accepting it correctly clears session and redirects to `/auth`.
+
 ## Verify when done
 
 - [x] Logout is reachable from Home without prior knowledge that the avatar is tappable — it's now a standalone, clearly-iconed button, not the avatar
