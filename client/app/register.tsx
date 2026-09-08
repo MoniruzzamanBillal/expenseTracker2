@@ -2,23 +2,37 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 
 import { usePost } from "@/hooks/useApi";
-import { COLORS } from "@/utils/colors";
-import { Pressable, StyleSheet, View } from "react-native";
+import FormField from "@/components/main/shared/FormField";
+import PrimaryButton from "@/components/main/shared/PrimaryButton";
+import { useTheme, text, spacing } from "@/theme";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { Button, Text, TextInput } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 
 export default function RegisterScreen() {
+  const C = useTheme();
   const router = useRouter();
 
   const [name, setName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [password, setPassword] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const registerMutation = usePost([["register"]]);
 
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!name?.trim()) e.name = "Name is required";
+    if (!email?.trim()) e.email = "Email is required";
+    if (!password?.trim()) e.password = "Password is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleRegistration = async () => {
-    if (!email?.trim() || !password?.trim() || !name?.trim()) {
+    if (!validate()) {
       Toast.show({
         type: "error",
         text1: "Missing Fields",
@@ -56,119 +70,72 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{
-        flexGrow: 1,
-        justifyContent: "center",
-      }}
-      bottomOffset={30}
-      extraKeyboardSpace={10}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={registerStyles.wrapperContainer}>
-        <Text
-          style={{
-            fontWeight: "600",
-            fontSize: 30,
-            color: COLORS.text,
-            textAlign: "center",
-            paddingVertical: 10,
-          }}
-        >
-          Create Account
+    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
+        bottomOffset={30}
+        extraKeyboardSpace={10}
+        showsVerticalScrollIndicator={false}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={[styles.back, { backgroundColor: C.surface2 }]}>
+          <MaterialCommunityIcons name="arrow-left" size={18} color={C.textSecondary} />
+        </TouchableOpacity>
+
+        <Text style={[text.h1, { color: C.text, marginBottom: spacing.xs }]}>Create Account</Text>
+        <Text style={[text.body, { color: C.textSecondary, marginBottom: spacing.xxl }]}>
+          Start tracking in seconds
         </Text>
 
-        {/* login form  */}
-        <View style={registerStyles.registerForm}>
-          <TextInput
-            placeholder="Enter Name"
-            autoCorrect={false}
-            onChangeText={setName}
-            value={name || ""}
-            textColor={COLORS.text}
-            style={{
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              padding: 0,
-            }}
-          />
+        <FormField
+          label="Full Name"
+          value={name || ""}
+          onChangeText={setName}
+          error={errors.name}
+          placeholder="Your name"
+          autoCapitalize="words"
+        />
+        <FormField
+          label="Email"
+          value={email || ""}
+          onChangeText={setEmail}
+          error={errors.email}
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        <FormField
+          label="Password"
+          value={password || ""}
+          onChangeText={setPassword}
+          error={errors.password}
+          placeholder="••••••••"
+          secureTextEntry
+          passwordToggle
+        />
 
-          <TextInput
-            placeholder="Enter Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setEmail}
-            value={email || ""}
-            textColor={COLORS.text}
-            style={{
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              padding: 0,
-            }}
-          />
-          <TextInput
-            placeholder="Enter Password"
-            secureTextEntry={true}
-            onChangeText={setPassword}
-            value={password || ""}
-            textColor={COLORS.text}
-            style={{
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              padding: 0,
-            }}
-          />
-          <Button
-            mode="contained"
-            onPress={handleRegistration}
-            disabled={registerMutation?.isPending}
-            labelStyle={{ color: COLORS.text }}
-          >
-            {registerMutation?.isPending ? "Registering..." : "Register"}
-          </Button>
+        <PrimaryButton
+          label={registerMutation?.isPending ? "Registering..." : "Create Account"}
+          onPress={handleRegistration}
+          loading={registerMutation?.isPending}
+          disabled={!name || !email || !password}
+        />
 
-          <View style={{ flexDirection: "row", marginTop: 10 }}>
-            <Text style={{ color: COLORS.text }}>
-              Already have any account ?{" "}
-            </Text>
-
-            <Pressable onPress={() => router.replace("/auth")}>
-              <Text style={{ color: "blue", textDecorationLine: "underline" }}>
-                Log in
-              </Text>
-            </Pressable>
-          </View>
+        <View style={styles.footer}>
+          <Text style={[text.bodySm, { color: C.textSecondary }]}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => router.replace("/auth")}>
+            <Text style={[text.bodySm, { color: C.accent }]}>Log in</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 }
 
-//
-const registerStyles = StyleSheet.create({
-  wrapperContainer: {
-    width: "90%",
-    alignSelf: "center",
-    backgroundColor: "#f3f4f6",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderColor: "#d1d5db",
-    borderWidth: 1,
-    borderRadius: 8,
-  },
-
-  registerForm: {
-    marginTop: 20,
-    flexDirection: "column",
-    rowGap: 12,
-  },
-
-  //
+const styles = StyleSheet.create({
+  safe: { flex: 1 },
+  content: { flexGrow: 1, paddingTop: 24, paddingBottom: 40 },
+  back: { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center", marginBottom: spacing.xxl },
+  footer: { flexDirection: "row", justifyContent: "center", marginTop: spacing.xl },
 });

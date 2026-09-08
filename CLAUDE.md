@@ -4,10 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-ExpenseTracker is a full-stack mobile expense-tracking app with two **fully independent** projects — there is no root `package.json`, no workspace, and no root-level lint/build/test command. Each has its own dependencies and must be worked on from within its own directory; there is no root-level script that operates on both at once.
+ExpenseTracker is a full-stack mobile expense-tracking app with two **fully independent, shipped** projects — there is no root `package.json`, no workspace, and no root-level lint/build/test command. Each has its own dependencies and must be worked on from within its own directory; there is no root-level script that operates on both at once.
 
-- `client/` — Expo (React Native) app using file-based routing (`expo-router`).
+- `client/` — Expo (React Native) app using file-based routing (`expo-router`). This is the app that ships.
 - `server/` — Express REST API, deployed to Vercel as a serverless function. Mid-migration from MongoDB/Mongoose to Postgres/Prisma — see the note below before assuming which one is authoritative for a given piece of code.
+
+Two other top-level directories exist but are **not** independent projects in the same sense — don't treat either as something to build, test, or deploy on its own:
+- `designbundle/` — a static Claude Design handoff bundle (HTML/CSS mockups + a chat transcript). No code to run; read-only reference material for `client/`'s visual redesign.
+- `xpnsapp/` — a separate, non-shipping Expo app built purely as a **visual reference** for `client/`'s redesign. It has its own `package.json`/dependencies and deliberately mirrors `client/`'s architecture (same component layout, same hooks/utils patterns) so the design was easy to port, but it has a placeholder API URL and intentionally omits real functionality `client/` has (offline transaction queue, swipe-to-edit/delete) — see `xpnsapp/ai context/known-issues.md`'s "Scope Deviations." `client/` is the one that ships; full context on the port is in `client/ai context/specs/06-visual-redesign-xpnsapp-design-system.md`.
 
 ## Common commands
 
@@ -63,7 +67,7 @@ Read in this order:
 **Client:**
 - The axios response interceptor never rejects on HTTP errors (`return error`, not `Promise.reject(error)`) — every downstream `onError`/`catch` around a mutation is dead code; the interceptor's own Toast is the only real error surface today (`client/ai context/known-issues.md#FETCH-1`).
 - On a 401, `AsyncStorage` is cleared but `UserProvider`'s in-memory state isn't — the UI can look "still logged in" until reload or manual logout (`#AUTH-2`).
-- Three independent copies of the income/expense enum exist across the codebase, with two different casings of the constant name — import the enum only from `constants/TransactionType.constant.ts` in new code (`#TYPE-1`).
+- (`#TYPE-1`'s three-independent-copies-of-the-enum issue is **resolved** — the duplicate copies were removed during the client's visual redesign; see `progress-tracker.md`'s Known Gaps for what changed and when. Import the enum only from `constants/TransactionType.constant.ts` in new code regardless.)
 
 ## Known issues
 

@@ -1,130 +1,52 @@
-import { COLORS } from "@/utils/colors";
-import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, View } from "react-native";
-import { Text } from "react-native-paper";
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { useTheme, text, spacing, radius, shadows } from "@/theme";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-type TPageProps = {
+type TProps = {
   income: number;
   expense: number;
+  label?: string;
 };
 
-export default function TotalBalanceCard({
-  income = 0,
-  expense = 0,
-}: TPageProps) {
-  const totalBalance = (income - expense).toFixed(2);
+const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
-  // console.log(totalBalance);
+export default function TotalBalanceCard({ income = 0, expense = 0, label = "Today's Balance" }: TProps) {
+  const C = useTheme();
+  const balance = income - expense;
+  const isPositive = balance >= 0;
 
   return (
-    <LinearGradient
-      colors={["#f7dfd2", "#ebccbc"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={cardStyles.container}
-    >
-      {/* Content */}
-      <View style={cardStyles.contentContainer}>
-        {/* total balance  */}
-        <View>
-          <Text style={cardStyles.totalBalanceLabel}>Total Balance</Text>
-          <Text style={cardStyles.totalBalanceAmount}>৳ {totalBalance}</Text>
+    <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }, shadows.md]}>
+      <Text style={[text.label, { color: C.textSecondary, marginBottom: spacing.sm }]}>
+        {label.toUpperCase()}
+      </Text>
+      <Text style={[text.balance, { color: isPositive ? C.text : C.expense, marginBottom: spacing.lg }]}>
+        {isPositive ? "" : "−"}৳{fmt(balance)}
+      </Text>
+      <View style={styles.pills}>
+        <View style={[styles.pill, { backgroundColor: C.incomeBg }]}>
+          <View style={styles.pillLabelRow}>
+            <MaterialCommunityIcons name="arrow-up" size={11} color={C.income} />
+            <Text style={[text.label, { color: C.income }]}>INCOME</Text>
+          </View>
+          <Text style={[text.amountSm, { color: C.text }]}>৳{fmt(income)}</Text>
         </View>
-
-        {/*  Income/Expense Cards */}
-        <View style={cardStyles.rightSection}>
-          {/* Income Card */}
-          <View style={cardStyles.statCard}>
-            <Text style={cardStyles.statLabel}>Income</Text>
-            <Text style={[cardStyles.statAmount, cardStyles.incomeAmount]}>
-              +৳ {income.toLocaleString("en-IN")}
-            </Text>
+        <View style={[styles.pill, { backgroundColor: C.expenseBg }]}>
+          <View style={styles.pillLabelRow}>
+            <MaterialCommunityIcons name="arrow-down" size={11} color={C.expense} />
+            <Text style={[text.label, { color: C.expense }]}>EXPENSES</Text>
           </View>
-
-          {/* Expense Card */}
-          <View style={cardStyles.statCard}>
-            <Text style={cardStyles.statLabel}>Expense</Text>
-            <Text style={[cardStyles.statAmount, cardStyles.expenseAmount]}>
-              -৳ {expense.toLocaleString("en-IN")}
-            </Text>
-          </View>
+          <Text style={[text.amountSm, { color: C.text }]}>৳{fmt(expense)}</Text>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
-const cardStyles = StyleSheet.create({
-  container: {
-    marginVertical: 10,
-    borderRadius: 10,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-
-  contentContainer: {
-    padding: 16,
-    flexDirection: "column",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-
-  totalBalanceLabel: {
-    color: COLORS.primary,
-    fontSize: 13,
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  totalBalanceAmount: {
-    color: COLORS.primary,
-    fontSize: 24,
-    fontWeight: "bold",
-    letterSpacing: -0.5,
-    marginBottom: 8,
-  },
-
-  rightSection: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  statCard: {
-    backgroundColor: COLORS.background,
-    borderRadius: 10,
-    padding: 8,
-    minWidth: "45%",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  statLabel: {
-    color: COLORS.text,
-    fontSize: 10,
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 1,
-  },
-  statAmount: {
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  incomeAmount: {
-    color: COLORS.income,
-    textShadowColor: "rgba(76, 175, 80, 0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  expenseAmount: {
-    color: COLORS.expense,
-    textShadowColor: "rgba(195, 83, 75, 0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
+const styles = StyleSheet.create({
+  card: { borderRadius: radius.xl, borderWidth: 1, padding: spacing.xl, marginBottom: spacing.lg },
+  pills: { flexDirection: "row", gap: spacing.md },
+  pill: { flex: 1, borderRadius: radius.md, padding: spacing.md },
+  pillLabelRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: spacing.xs },
 });

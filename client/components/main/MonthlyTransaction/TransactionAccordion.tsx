@@ -1,12 +1,11 @@
+import { fontFamily, radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
-import { COLORS } from "@/utils/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useRef, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { Swipeable } from "react-native-gesture-handler";
-import { Text } from "react-native-paper";
 import TransactionCard from "../shared/TransactionCard";
 
 type TDailyData = {
@@ -18,14 +17,23 @@ type TDailyData = {
 
 type TProps = {
   dailyData: TDailyData[];
+  /** Weekly-only: render a read-only bar under the header row, ported from WeekDayRow's math. */
+  showBar?: boolean;
+  /** Weekly-only: scale for the bar width relative to the whole week's buckets. */
+  maxAbs?: number;
 };
 
-export default function TransactionAccordion({ dailyData }: TProps) {
+const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
+
+export default function TransactionAccordion({
+  dailyData,
+  showBar = false,
+  maxAbs = 1,
+}: TProps) {
+  const C = useTheme();
   const openSwipeableRef = useRef<Swipeable | null>(null);
 
   const [activeDate, setActiveDate] = useState<string | null>(null);
-
-  // console.log(dailyData);
 
   const toggleAccordion = (date: string) => {
     setActiveDate(activeDate === date ? null : date);
@@ -36,91 +44,105 @@ export default function TransactionAccordion({ dailyData }: TProps) {
       {dailyData &&
         dailyData?.map((day: TDailyData) => {
           const isActive = activeDate === day?.date;
+          const net = day.income - day.expense;
+          const isPositive = net >= 0;
+          const barColor = isPositive ? C.income : C.expense;
+          const barWidth =
+            day.transactions.length > 0
+              ? Math.max((Math.abs(net) / maxAbs) * 100, 6)
+              : 0;
 
           return (
-            <View key={day?.date} style={styles.accordionItem}>
-              {/* Accordion Header */}
-
+            <View
+              key={day?.date}
+              style={[
+                styles.accordionItem,
+                { backgroundColor: C.surface, borderColor: C.border },
+              ]}
+            >
               <TouchableOpacity
                 onPress={() => toggleAccordion(day?.date)}
                 style={styles.header}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={styles.date}>
-                    {format(new Date(day?.date as string), "d MMM")}
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text style={[text.bodyMd, { color: C.text }]}>
+                    {format(new Date(`${day?.date}T00:00:00`), "d MMM")}
                   </Text>
                   <Text
-                    style={{
-                      fontSize: 13,
-                      fontWeight: "900",
-                      color: COLORS.primary,
-                    }}
+                    style={[text.caption, { color: C.accent, marginLeft: 6 }]}
                   >
-                    {" , "}
-                    {format(
-                      new Date(day?.transactions[0]?.createdAt as string),
-                      "EEEE",
-                    )}
+                    {format(new Date(`${day?.date}T00:00:00`), "EEEE")}
                   </Text>
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <View style={styles.amounts}>
-                    <Text style={styles.income}>+৳{day?.income}</Text>
-                    <Text style={styles.expense}>-৳{day?.expense}</Text>
-                    <Text style={styles.balance}>
-                      <Text
-                        style={{ color: COLORS.primary, fontWeight: "bold" }}
-                      >
-                        B:
-                      </Text>
-                      <Text
-                        style={{
-                          fontWeight: "bold",
-                          color:
-                            day?.income - day?.expense < 0
-                              ? "red"
-                              : COLORS.primary,
-                        }}
-                      >
-                        {(day?.income - day?.expense).toFixed(2) || 0}
-                      </Text>
-                    </Text>
-                    {/* <Text
+                    <Text
                       style={[
-                        styles.balance,
+                        text.caption,
+                        { color: C.income, fontFamily: fontFamily.medium },
+                      ]}
+                    >
+                      +৳{fmt(day?.income)}
+                    </Text>
+                    <Text
+                      style={[
+                        text.caption,
+                        { color: C.expense, fontFamily: fontFamily.medium },
+                      ]}
+                    >
+                      −৳{fmt(day?.expense)}
+                    </Text>
+                    <Text
+                      style={[
+                        text.caption,
                         {
-                          color:
-                            day?.income - day?.expense < 0
-                              ? "red"
-                              : COLORS.primary,
+                          color: net < 0 ? C.expense : C.accent,
+                          fontFamily: fontFamily.semiBold,
                         },
                       ]}
                     >
-                      B:{(day?.income - day?.expense).toFixed(2) || 0}
-                    </Text> */}
+                      B: {net.toFixed(2)}
+                    </Text>
                   </View>
                   <MaterialCommunityIcons
                     name={isActive ? "chevron-up" : "chevron-down"}
-                    size={24}
-                    color="#333"
+                    size={22}
+                    color={C.textSecondary}
                     style={{ marginLeft: 8 }}
                   />
                 </View>
               </TouchableOpacity>
 
-              {/* Collapsible Content */}
+              {showBar && (
+                <View style={styles.barWrap}>
+                  <View
+                    style={[styles.barTrack, { backgroundColor: C.divider }]}
+                  >
+                    <View
+                      style={[
+                        styles.barFill,
+                        { width: `${barWidth}%`, backgroundColor: barColor },
+                      ]}
+                    />
+                  </View>
+                </View>
+              )}
+
               <Collapsible collapsed={activeDate !== day?.date}>
-                <View style={{ paddingHorizontal: 6 }}>
-                  {day?.transactions?.map((item) => (
+                <View
+                  style={{
+                    // paddingHorizontal: spacing.xs,
+                    paddingBottom: spacing.xs,
+                    // backgroundColor: "red",
+                  }}
+                >
+                  {day?.transactions?.map((item, i) => (
                     <TransactionCard
                       key={item?._id}
                       transactionData={item}
+                      compact
+                      isLast={i === day.transactions.length - 1}
                       onSwipeOpen={(ref) => {
                         if (
                           openSwipeableRef.current &&
@@ -143,44 +165,32 @@ export default function TransactionAccordion({ dailyData }: TProps) {
 
 const styles = StyleSheet.create({
   accordionItem: {
-    marginBottom: 6,
-    backgroundColor: "#fff",
-    borderRadius: 6,
+    marginBottom: spacing.sm,
+    borderRadius: radius.md,
     overflow: "hidden",
-    elevation: 1,
-    padding: 2,
     borderWidth: 1,
-    borderColor: "#ccc",
   },
   header: {
-    padding: 8,
-    backgroundColor: "#fff",
+    padding: spacing.md,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  date: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: COLORS.text,
-  },
   amounts: {
     flexDirection: "row",
-    columnGap: 8,
+    columnGap: spacing.sm,
   },
-  income: {
-    color: "green",
-    fontWeight: "bold",
-    fontSize: 13,
+  barWrap: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
   },
-  expense: {
-    color: "red",
-    fontWeight: "bold",
-    fontSize: 13,
+  barTrack: {
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden",
   },
-  balance: {
-    fontWeight: "bold",
-    fontSize: 13,
-    // color: COLORS.primary,
+  barFill: {
+    height: "100%",
+    borderRadius: 2,
   },
 });
