@@ -16,6 +16,7 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 | `04-openrouter-resilient-ai-integration.md`        | Completed 2026-09-03 — see `05` for a follow-up fix hit during its own verification.        |
 | `05-fix-stale-free-model-list.md`                  | Completed 2026-09-03, same session as `04`.                                                 |
 | `06-fix-free-model-list-latency-and-broken-entry.md` | Completed 2026-09-03 — found during a full-backend regression pass, after the model list was manually edited to 8 entries. |
+| `07-bikelog-transaction-request-sync.md`             | Completed 2026-09-09 — server side of the 3-spec cross-repo feature; see spec's "Verify when done" note below. |
 
 ## Spec 02 — Verify when done (checked against the empty Postgres tables, via local `yarn dev` + curl)
 
@@ -57,6 +58,21 @@ Done, all per the spec, through its "Verification (must PASS before cutover)" st
 - [ ] Production `DATABASE_URL` confirmed/swapped on Vercel, code deployed, live smoke-test passed — **not done, same reason.**
 - [x] `git tag pre-postgres-migration` exists, created before `02`'s implementation began.
 - [x] Mongo Atlas cluster confirmed still running/preserved (not deleted) — untouched throughout, script only ever reads from it.
+
+## Spec 07 — Verify when done (checked via local `yarn dev` + curl against real Neon Postgres)
+
+- [x] `npx prisma migrate dev --name add_transaction_request` ran clean (`20260909061550_add_transaction_request`).
+- [x] `POST /api/transaction-requests/ingest` with a valid `x-integration-key` and well-formed body returns `201` and a `pending` row.
+- [x] The same curl payload sent twice does not create a duplicate row (idempotency via the `@@unique([sourceApp, sourceRecordId])` constraint, `P2002` caught and existing row returned).
+- [x] A missing/wrong `x-integration-key` returns `401`.
+- [x] `GET /api/transaction-requests` with a valid user JWT returns only that user's `pending` rows.
+- [x] `PATCH /:id/accept` with an edited `amount` creates a real `Transaction` reflecting the edited value (verified it shows up correctly in `GET /transactions/daily-transaction`'s totals), and the request row flips to `status: "accepted"` with `transactionId` set.
+- [x] `PATCH /:id/accept` on someone else's request, or on an already-reviewed request, returns `404`.
+- [x] `PATCH /:id/reject` flips status to `rejected` and the row stops appearing in `GET /api/transaction-requests` but still exists in the DB.
+
+All exercised live against the real dev Neon database (adapter is `@prisma/adapter-neon`, no separate test DB exists) with one throwaway registered user (`spec07test@example.com`) plus one throwaway `TransactionRequest` row tied to the real account for the initial ingest/idempotency check — all test fixtures (throwaway user, its 1 accepted `Transaction`, and both throwaway/real-account test `TransactionRequest` rows) were deleted afterward via a temporary in-tree script (`src/scripts/__tmpSpec07Cleanup.ts`, reusing the app's own `prisma` client, deleted immediately after running — same pattern as bikelog's own spec-cleanup convention). `npx tsc --noEmit` and `yarn build` both clean; `yarn lint` shows the same 4 pre-existing errors in untouched files (`app.ts`, `Queryuilder.ts`, `interface/index.d.ts`, `globalErrorHandler.ts`) as spec 02's baseline — none new.
+
+**Scope note**: this is the server piece only. The client inbox screen is `client/ai context/specs/11-bikelog-transaction-requests-inbox.md` (separate progress tracker); the bikelog-side outbound caller is `bikelog_server/context/specs/30-sync-spend-logs-to-expense-tracker.md`.
 
 ## Known Gaps
 

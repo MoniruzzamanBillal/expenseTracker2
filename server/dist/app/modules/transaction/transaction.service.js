@@ -21,8 +21,8 @@ const generateObjectId_1 = require("../../util/generateObjectId");
 const transaction_constant_1 = require("./transaction.constant");
 const toApiShape = (t) => (Object.assign(Object.assign({}, t), { _id: t.id, amount: Number(t.amount) }));
 // ! for adding new transaction
-const addNewTransaction = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.prisma.transaction.create({
+const addNewTransaction = (payload_1, userId_1, ...args_1) => __awaiter(void 0, [payload_1, userId_1, ...args_1], void 0, function* (payload, userId, client = prisma_1.prisma) {
+    const result = yield client.transaction.create({
         data: {
             id: (0, generateObjectId_1.generateObjectId)(),
             userId,

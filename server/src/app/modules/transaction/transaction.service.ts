@@ -13,8 +13,12 @@ const toApiShape = <T extends { id: string; amount: unknown }>(t: T) => ({
 });
 
 // ! for adding new transaction
-const addNewTransaction = async (payload: TTransaction, userId: string) => {
-  const result = await prisma.transaction.create({
+const addNewTransaction = async (
+  payload: TTransaction,
+  userId: string,
+  client: Pick<typeof prisma, "transaction"> = prisma,
+) => {
+  const result = await client.transaction.create({
     data: {
       id: generateObjectId(),
       userId,

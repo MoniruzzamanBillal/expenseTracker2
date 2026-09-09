@@ -12,4 +12,5 @@ exports.default = {
     database_url: process.env.DATABASE_URL,
     jwt_secret: process.env.JWT_ACCESS_SECRET,
     openRouterApiKey: process.env.openRouterApiKey,
+    integrationApiKey: process.env.INTEGRATION_API_KEY,
 };

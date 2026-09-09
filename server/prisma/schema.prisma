@@ -16,6 +16,12 @@ enum TransactionType {
   expense
 }
 
+enum TransactionRequestStatus {
+  pending
+  accepted
+  rejected
+}
+
 model User {
   id             String   @id
   name           String
@@ -47,4 +53,26 @@ model Transaction {
 
   @@index([userId])
   @@map("transactions")
+}
+
+model TransactionRequest {
+  id             String                   @id
+  userEmail      String
+  sourceApp      String
+  sourceType     String
+  sourceRecordId String
+  type           TransactionType          @default(expense)
+  title          String
+  description    String?
+  amount         Decimal                  @db.Decimal(12, 2)
+  occurredAt     DateTime
+  status         TransactionRequestStatus @default(pending)
+  transactionId  String?
+  reviewedAt     DateTime?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  @@unique([sourceApp, sourceRecordId])
+  @@index([userEmail, status])
+  @@map("transaction_requests")
 }
