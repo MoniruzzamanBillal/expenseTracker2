@@ -20,6 +20,7 @@ Core screens are built and working: home, add-transaction, history, monthly+week
 | [08-discoverable-logout](specs/08-discoverable-logout.md)                                           | Completed 2026-09-07 — Option A implemented, avatar removed per user's follow-up instruction; also fixed a related bug where the logout button did nothing on web (`known-issues.md#UX-3`) |
 | [09-fix-deprecated-safeareaview](specs/09-fix-deprecated-safeareaview.md)                            | Completed 2026-09-07 — swapped `SafeAreaView` to `react-native-safe-area-context` in all 7 affected screens; Android safe-area behavior change flagged for a human device check |
 | [10-pre-production-manual-checklist](specs/10-pre-production-manual-checklist.md)                   | Drafted — a human-run checklist (real device: swipe gestures, offline queue, real login, production build) that automated headless-browser testing couldn't cover; not yet run |
+| [11-bikelog-transaction-requests-inbox](specs/11-bikelog-transaction-requests-inbox.md)             | Completed 2026-09-09 — implemented and manually verified (headless-browser click-through) against a local server; see spec's Implementation notes for the UX-3 caveat on the direct accept/reject icons |
 
 ## Known Gaps
 
@@ -27,7 +28,7 @@ Core screens are built and working: home, add-transaction, history, monthly+week
 - [ ] AUTH-1 — `AuthGuard`'s logged-in-redirect branch is dead in practice
 - [ ] AUTH-2 — 401 handling doesn't sync in-memory session state
 - [ ] TYPE-2 — client/server `TTransaction` shape drift
-- [ ] UX-3 — `Alert.alert` no-ops on the web target; fixed for Home's logout button, still open for TransactionCard/PendingTransactionEditModal/SmartAdd's delete/remove confirms
+- [ ] UX-3 — `Alert.alert` no-ops on the web target; fixed for Home's logout button, still open for TransactionCard/PendingTransactionEditModal/SmartAdd's delete/remove confirms, and now also `TransactionRequestsPage`'s direct Accept/Reject icon confirms (spec 11) — the pencil-edit-then-Accept path (no `Alert.alert`) was verified working on web; the direct icon-button confirms were not, same pre-existing limitation, not fixed as part of spec 11 per this project's own "don't fix known-issues items as a side effect" rule
 - [x] FETCH-7 — error toast shows blank text on a no-response (offline/timeout) failure — fixed via spec 05
 - [x] TYPE-1 — three independent copies of the transaction-type enum — resolved via spec 06 (the two duplicate copies were removed as an incidental result of rewriting `AddTransactionPage.tsx`/`TransactionCard.tsx`, not a dedicated cleanup pass)
 - [ ] (see `known-issues.md` for the full ranked list — Low items omitted here)

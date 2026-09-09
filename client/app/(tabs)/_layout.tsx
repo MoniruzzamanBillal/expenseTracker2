@@ -113,6 +113,9 @@ export default function TabLayout() {
 
         {/* Reached only via the "Smart Add" button on Add Transaction — not shown in the tab bar. */}
         <Tabs.Screen name="smart-add" options={{ href: null }} />
+
+        {/* Reached only via the "Requests" button on Add Transaction — not shown in the tab bar. */}
+        <Tabs.Screen name="transaction-requests" options={{ href: null }} />
       </Tabs>
     </AuthGuard>
   );
