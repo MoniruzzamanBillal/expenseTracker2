@@ -156,20 +156,36 @@ export default function AddTransactionPage() {
           <Text style={[text.navTitle, { color: C.text }]}>
             Add Transaction
           </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/smart-add")}
-            style={[
-              styles.smartAddBtn,
-              { backgroundColor: C.accentDim, borderColor: C.accentBorder },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="creation"
-              size={13}
-              color={C.accent}
-            />
-            <Text style={[text.label, { color: C.accent }]}>Smart Add</Text>
-          </TouchableOpacity>
+          <View style={styles.navButtons}>
+            <TouchableOpacity
+              onPress={() => router.push("/smart-add")}
+              style={[
+                styles.smartAddBtn,
+                { backgroundColor: C.accentDim, borderColor: C.accentBorder },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="creation"
+                size={13}
+                color={C.accent}
+              />
+              <Text style={[text.label, { color: C.accent }]}>Smart Add</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/transaction-requests")}
+              style={[
+                styles.smartAddBtn,
+                { backgroundColor: C.accentDim, borderColor: C.accentBorder },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="inbox-arrow-down"
+                size={13}
+                color={C.accent}
+              />
+              <Text style={[text.label, { color: C.accent }]}>Requests</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TypeToggle value={type} onChange={setType} />
@@ -243,6 +259,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: spacing.xl,
+  },
+  navButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
   },
   smartAddBtn: {
     flexDirection: "row",
