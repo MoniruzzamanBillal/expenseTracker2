@@ -5,6 +5,8 @@ import { TTransaction } from "@/types/Transaction.tyes";
 import { createBatchId } from "@/utils/transactionQueue";
 import { useTheme, text, spacing, radius } from "@/theme";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
+import FormField from "@/components/main/shared/FormField";
+import TypeToggle from "@/components/main/shared/TypeToggle";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -220,45 +222,40 @@ export default function SmartAddPage() {
 
             {drafts.map((draft, i) => {
               const isIncome = draft.type === TransactionTypeConst.income;
-              const typeColor = isIncome ? C.income : C.expense;
               const typeBorder = isIncome ? C.incomeBg : C.expenseBg;
               return (
                 <View key={i} style={[styles.draftCard, { backgroundColor: C.surface, borderColor: typeBorder }]}>
-                  <View style={styles.draftTypeRow}>
-                    <View style={styles.draftTypeLeft}>
-                      <View style={[styles.dot, { backgroundColor: typeColor }]} />
-                      <TouchableOpacity
-                        onPress={() =>
-                          updateDraft(i, "type", isIncome ? TransactionTypeConst.expense : TransactionTypeConst.income)
-                        }
-                      >
-                        <Text style={[text.label, { color: typeColor }]}>{isIncome ? "INCOME" : "EXPENSE"}</Text>
-                      </TouchableOpacity>
+                  <View style={styles.draftHeaderRow}>
+                    <View style={{ flex: 1 }}>
+                      <TypeToggle value={draft.type} onChange={(v) => updateDraft(i, "type", v)} />
                     </View>
-                    <TouchableOpacity onPress={() => removeDraft(i)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                    <TouchableOpacity
+                      onPress={() => removeDraft(i)}
+                      hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                      style={styles.draftDeleteBtn}
+                    >
                       <MaterialCommunityIcons name="close" size={18} color={C.textMuted} />
                     </TouchableOpacity>
                   </View>
-                  <TextInput
+
+                  <FormField
+                    label="Title"
                     value={draft.title}
                     onChangeText={(v) => updateDraft(i, "title", v)}
-                    style={[styles.draftInput, text.bodyMd, { color: C.text, borderBottomColor: C.divider }]}
                   />
-                  <View style={styles.draftAmountRow}>
-                    <Text style={[text.caption, { color: C.textSecondary }]}>৳</Text>
-                    <TextInput
-                      value={String(draft.amount)}
-                      onChangeText={(v) => updateDraft(i, "amount", parseFloat(v.replace(/[^0-9.]/g, "")) || 0)}
-                      keyboardType="decimal-pad"
-                      style={[text.h3, { color: typeColor, flex: 1 }]}
-                    />
-                  </View>
-                  <TextInput
+
+                  <FormField
+                    label="Amount (৳)"
+                    value={String(draft.amount)}
+                    onChangeText={(v) => updateDraft(i, "amount", parseFloat(v.replace(/[^0-9.]/g, "")) || 0)}
+                    keyboardType="decimal-pad"
+                  />
+
+                  <FormField
+                    label="Note"
                     value={draft.description ?? ""}
                     onChangeText={(v) => updateDraft(i, "description", v)}
                     placeholder="Add note…"
-                    placeholderTextColor={C.placeholder}
-                    style={[text.caption, { color: C.textSecondary, marginTop: 4 }]}
                   />
                 </View>
               );
@@ -286,10 +283,7 @@ const styles = StyleSheet.create({
   textarea: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, minHeight: 96, marginBottom: spacing.md, textAlignVertical: "top" },
   resultsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
   countBadge: { borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  draftCard: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, marginBottom: spacing.sm, gap: 10 },
-  draftTypeRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  draftTypeLeft: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  dot: { width: 8, height: 8, borderRadius: 999 },
-  draftInput: { borderBottomWidth: 1, paddingVertical: 6, fontSize: 15 },
-  draftAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 4 },
+  draftCard: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, marginBottom: spacing.sm },
+  draftHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.md },
+  draftDeleteBtn: { marginLeft: spacing.sm, padding: 4 },
 });
