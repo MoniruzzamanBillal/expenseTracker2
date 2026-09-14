@@ -5,6 +5,7 @@ Status: 📝 Drafted — awaiting review before implementation starts. **Depends
 ## Cross-repo context
 
 Client side of a 2-spec feature:
+
 - `server/ai context/specs/12-budgets.md` — the `Budget` model, CRUD endpoints, and the spend-vs-limit computation this screen consumes. **Build/deploy that spec first.**
 - **This doc** — the dedicated Budgets screen: one progress bar per budgeted category, red when over limit, reached via a button on Settings.
 
@@ -19,16 +20,18 @@ Give the user one screen showing, per category with a budget set, how much they'
 ## Scope
 
 **In scope:**
+
 - A new hidden route, `app/(tabs)/budgets.tsx` (`href: null`, same technique as Smart Add/Requests — reached only via the button below, not shown in the tab bar).
 - A "Budgets" button on `SettingsPage.tsx` (spec 14), next to or below the existing Categories section, navigating to `/budgets`. If spec 14 hasn't been implemented yet when this is built, add the button as part of that implementation; if it already has, this is a small follow-up edit to that file.
 - `BudgetsPage.tsx`: one row per budget — category icon + name, a progress bar, `spent` vs `monthlyLimit` text, and a pencil/trash action pair (same visual language as `CategoryManager.tsx`'s rows from spec 12).
-- **Progress bar coloring**: under/at limit → the app's existing "income" green (`C.income`); over limit → the app's existing "expense" red (`C.expense`) — reusing tokens already used throughout the app for exactly this good/bad semantic, not inventing a new color. Bar *fill width* is capped at 100% even when spend is, say, 150% of the limit (the track can't overflow its own container) — the color change and the numeric "over by ৳X" text are what communicate the overage, not an overflowing bar.
+- **Progress bar coloring**: under/at limit → the app's existing "income" green (`C.income`); over limit → the app's existing "expense" red (`C.expense`) — reusing tokens already used throughout the app for exactly this good/bad semantic, not inventing a new color. Bar _fill width_ is capped at 100% even when spend is, say, 150% of the limit (the track can't overflow its own container) — the color change and the numeric "over by ৳X" text are what communicate the overage, not an overflowing bar.
 - Create: a "+ Set Budget" button opening `BudgetFormModal` with a category picker (only categories that don't already have a budget) + a limit input.
 - Edit: tapping a row's pencil opens the same modal with the category locked (read-only — category is immutable once a budget exists, per server spec 12) and only the limit editable.
 - Delete: tapping a row's trash icon confirms (`Alert.alert`, same pre-existing `UX-3` web caveat as everywhere else in the app) then calls `DELETE /budgets/:id` — the app's **first real use of `useDeleteData`/`apiDelete`** (`hooks/useApi.ts`), which until now had zero call sites (`known-issues.md#FETCH-2`); noted as a side effect of this spec's design, not a deliberate fix of that entry.
 - Empty states: zero budgets yet ("No budgets yet — set a limit for a category to track it here"); zero categories at all (a different hint pointing at Settings' Categories section first, since there's nothing to budget).
 
 **Explicitly, permanently out of scope:**
+
 - **Any blocking or warning on the transaction side.** `AddTransactionPage.tsx`, `UpdateTransactionModal.tsx`, and `PendingTransactionEditModal.tsx` (all touched by spec 13) are **not touched again by this spec** — no "you're about to exceed your budget" dialog, no disabled state, nothing. A transaction that blows past a limit saves exactly as it would with no budget at all; the only place that shows is this screen, after the fact.
 - Any notification/badge (tab bar dot, push, in-app banner) when a budget goes over — the progress bar's color is the entire feedback mechanism, checked only when the user opens this screen.
 - Charts/trends over time for budget history — this screen shows the current month only, matching the server's month-scoped `GET /budgets`.
@@ -52,7 +55,8 @@ export type TBudget = {
 ### 2. Hook — `client/hooks/useBudgets.ts` (new)
 
 ```ts
-export const useBudgets = () => useFetchData<TBudget[]>(["budgets"], "/budgets");
+export const useBudgets = () =>
+  useFetchData<TBudget[]>(["budgets"], "/budgets");
 export const useCreateBudget = () => usePost([["budgets"]]);
 export const useUpdateBudget = () => usePatch([["budgets"]]);
 export const useDeleteBudget = () => useDeleteData([["budgets"]]);
@@ -63,9 +67,19 @@ export const useDeleteBudget = () => useDeleteData([["budgets"]]);
 ### 3. `BudgetProgressBar` — `client/components/main/Budgets/BudgetProgressBar.tsx` (new)
 
 ```tsx
-type TProps = { spent: number; limit: number; percentage: number; isOverLimit: boolean };
+type TProps = {
+  spent: number;
+  limit: number;
+  percentage: number;
+  isOverLimit: boolean;
+};
 
-export default function BudgetProgressBar({ spent, limit, percentage, isOverLimit }: TProps) {
+export default function BudgetProgressBar({
+  spent,
+  limit,
+  percentage,
+  isOverLimit,
+}: TProps) {
   const C = useTheme();
   const barColor = isOverLimit ? C.expense : C.income;
   const width = Math.min(percentage, 100);
@@ -73,18 +87,30 @@ export default function BudgetProgressBar({ spent, limit, percentage, isOverLimi
   return (
     <View>
       <View style={[styles.track, { backgroundColor: C.divider }]}>
-        <View style={[styles.fill, { width: `${width}%`, backgroundColor: barColor }]} />
+        <View
+          style={[
+            styles.fill,
+            { width: `${width}%`, backgroundColor: barColor },
+          ]}
+        />
       </View>
       <View style={styles.labelRow}>
         <Text style={[text.caption, { color: C.textSecondary }]}>
           ৳{fmt(spent)} of ৳{fmt(limit)}
         </Text>
         {isOverLimit ? (
-          <Text style={[text.caption, { color: C.expense, fontFamily: fontFamily.medium }]}>
+          <Text
+            style={[
+              text.caption,
+              { color: C.expense, fontFamily: fontFamily.medium },
+            ]}
+          >
             ৳{fmt(spent - limit)} over
           </Text>
         ) : (
-          <Text style={[text.caption, { color: C.textMuted }]}>{Math.round(percentage)}%</Text>
+          <Text style={[text.caption, { color: C.textMuted }]}>
+            {Math.round(percentage)}%
+          </Text>
         )}
       </View>
     </View>
@@ -105,6 +131,7 @@ export default function BudgetProgressBar({ spent, limit, percentage, isOverLimi
 ### 5. `BudgetFormModal.tsx` — `client/components/main/Budgets/BudgetFormModal.tsx` (new)
 
 Same `Portal`/`Modal`/`FormField` shape as `CategoryFormModal.tsx` (spec 12):
+
 ```tsx
 type TProps = {
   open: boolean;
@@ -113,6 +140,7 @@ type TProps = {
   availableCategories: TCategory[]; // only relevant in create mode
 };
 ```
+
 - Create mode: a category picker (reuse `CategoryPicker`'s chip-grid visual from spec 13, but sourced from `availableCategories` instead of the full list) + a numeric `FormField` for the limit (same `decimal-pad` keyboard + regex pattern already used for `amount` in `AddTransactionPage.tsx`).
 - Edit mode: category shown read-only (icon + name, no picker), only the limit `FormField` editable.
 - Submit: create → `POST /budgets` with `{ categoryId, monthlyLimit: parseFloat(limit) }`; edit → `PATCH /budgets/:id` with `{ monthlyLimit }`. On the server's `409` (category already budgeted — shouldn't normally happen since create mode's picker already excludes budgeted categories, but a second device/tab could race), show the server's message via `Toast` rather than a generic error.
@@ -132,6 +160,7 @@ type TProps = {
 ## Implementation notes
 
 Files touched/added:
+
 - `client/types/Budget.types.ts` (new)
 - `client/hooks/useBudgets.ts` (new)
 - `client/components/main/Budgets/BudgetProgressBar.tsx` (new)

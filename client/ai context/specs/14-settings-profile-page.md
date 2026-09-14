@@ -5,6 +5,7 @@ Status: 📝 Drafted — awaiting review before implementation starts. **Depends
 ## Cross-repo context
 
 Third of three client specs implementing categories + a settings page:
+
 1. `12-category-management-ui.md` — the `CategoryManager`/`CategoryFormModal` components this doc mounts as a section.
 2. `13-wire-category-to-transaction-ui.md` — unrelated to this doc's own changes, same overall ask.
 3. **This doc** — the new Settings screen: a permanent, discoverable place to view/edit profile info and manage categories.
@@ -15,7 +16,9 @@ Source: user's explicit new ask (not in the original `feature-plan-proposals.md`
 
 ## Prior art in this repo
 
-`client/ai context/specs/08-discoverable-logout.md` considered and explicitly **declined** a "Dedicated Account screen" (its Option C) as more than a minimal, already-shipped-and-working app needed at the time, choosing a simple header icon instead. That decision is superseded by this spec — the user is now explicitly asking for exactly that dedicated screen, expanded to also host category management. Home's existing logout icon (spec 08) is **not removed** by this spec (see Scope/Design below) — it stays as a quick one-tap path; Settings gains its own Logout entry too, which spec 08's own text already anticipated as "redundant but harmless."
+`client/ai context/specs/08-discoverable-logout.md` considered and explicitly **declined** a "Dedicated Account screen" (its Option C) as more than a minimal, already-shipped-and-working app needed at the time, choosing a simple header icon instead. That decision is superseded by this spec — the user is now explicitly asking for exactly that dedicated screen, expanded to also host category management.
+
+**Home's header icon is repurposed, not left alongside the new screen** — per direct user instruction (2026-09-14): Home's existing `"logout"` icon+confirm button (spec 08) is replaced by a `"cog"`/`"cog-outline"` (gear/settings) icon that navigates to this new Settings screen; it no longer confirms-and-logs-out directly. Logout itself isn't lost — it now lives as its own row inside Settings (see Design §4 below), which is also reachable via the new 5th tab. So there end up being two paths into Settings (Home's gear icon, and the tab) but only one path to actually log out (the Settings row) — spec 08's confirm-dialog logout logic (including its `Platform.OS === "web"` fix) is reused as-is inside that row, just no longer wired to Home's header.
 
 ## Goal
 
@@ -24,15 +27,18 @@ One permanent, always-reachable screen where the user can see their name/email, 
 ## Scope
 
 **In scope:**
+
 - A new 5th tab, **Settings**, added to the tab bar (`app/(tabs)/_layout.tsx`) — a permanent entry point, not a hidden route reached via a button on another screen (unlike Smart Add/Requests) — because unlike those two, this is account-level and should be discoverable the same way Home/Monthly/History already are.
 - `SettingsPage.tsx`: a **Profile section** (name, email — read-only, avatar-less per spec 08's "currently i dont need the avatar" decision — an edit affordance for `name` only, per server spec `10`'s scope) and a **Categories section** embedding `CategoryManager` (spec 12) directly on the page (not a further sub-navigation — the category list is short enough not to need its own screen).
-- A **Logout** entry at the bottom of Settings, calling the existing `logoutFunction` from `context/user.context.tsx` — same confirm-dialog pattern as Home's existing icon (including the same `Platform.OS === "web"` → `window.confirm` branch spec 08 already added, since `Alert.alert` no-ops on web).
+- A **Logout** entry at the bottom of Settings, calling the existing `logoutFunction` from `context/user.context.tsx` — same confirm-dialog pattern Home's icon used to trigger directly (including the same `Platform.OS === "web"` → `window.confirm` branch spec 08 already added, since `Alert.alert` no-ops on web). This becomes the **only** place logout is triggered from, per the Home icon change below.
+- **`HomePage.tsx`'s header icon changes from logout to settings**, per direct user instruction (2026-09-14): swap the `"logout"` `MaterialCommunityIcons` icon (spec 08) for a `"cog"`/`"cog-outline"` one, same bordered-square styling/slot. `onPress` no longer shows the confirm dialog or calls `logoutFunction` — it navigates to the Settings tab instead (`router.push("/settings")`, same `expo-router` pattern used elsewhere in the app). The confirm-then-`logoutFunction()` code that used to live in `handleLogoutPress` moves to Settings' Logout row (§4) rather than being duplicated.
 - On successful profile update, call `handleSetUser` (not just `setUser`) so the new name is also persisted to `AsyncStorage` — otherwise a killed-and-reopened app would show the stale cached name again (`context/user.context.tsx`'s existing `handleSetUser` already does exactly this).
 
 **Out of scope:**
-- Removing Home's existing logout icon (spec 08) — left as-is, per the "prior art" note above; not touched as a side effect of this unrelated screen.
+
 - Email/password editing, profile picture upload — same reasons as `server/ai context/specs/10-user-profile-endpoints.md`'s scope section (identity/sync risk, security-sensitivity, no upload infra decided yet, respectively).
 - Any app-level settings (theme toggle, notification prefs, etc.) — nothing like that exists yet in this app; inventing settings nobody asked for is exactly the kind of scope creep this project's own conventions warn against. This page is named "Settings" but its actual content, per the user's ask, is profile + categories only.
+- A confirm-before-navigating step on Home's new gear icon — tapping it is a plain navigation (no destructive action happens), so it needs no `Alert`/`confirm`, unlike the logout button it replaces.
 
 ## Design
 
@@ -76,18 +82,30 @@ const updateProfileMutation = usePatch([["profile"]]);
 - **Profile card**: display `profile?.data?.name` and `.email` (email shown but not editable — no `TextInput`, just text, to make the read-only-ness visually obvious rather than a disabled-looking input). A pencil icon next to the name opens an inline edit (a single `FormField` + save/cancel, matching the compactness of e.g. `TransactionRequestEditModal`'s inline-edit-then-confirm pattern from client spec 11, not a separate full modal for a one-field edit).
 - On save: `updateProfileMutation.mutateAsync({ url: "/auth/update-profile", payload: { name } })`, then on success call `handleSetUser({ ...user, name })` from `useUserContext()` so the header/cached copy stays in sync immediately, plus invalidate `["profile"]`.
 - **Categories section**: a section header ("Categories") followed directly by `<CategoryManager />` (spec 12) — no extra wrapping/navigation.
-- **Logout section**: a bordered row with a "logout" icon + "Log Out" label, `onPress` → same confirm-then-`logoutFunction()` flow as `HomePage.tsx`'s existing button (`Platform.OS === "web"` branch included, per spec 08's follow-up fix).
+- **Logout section**: a bordered row with a "logout" icon + "Log Out" label, `onPress` → the same confirm-then-`logoutFunction()` flow `HomePage.tsx`'s button used to trigger directly before this spec (`Platform.OS === "web"` branch included, per spec 08's follow-up fix) — this row is now the **only** place that flow is wired up.
 
-### 5. Layout
+### 5. Home's header icon — `client/components/main/Home/HomePage.tsx` (edit)
+
+Replace the existing `"logout"` icon button (spec 08) with a `"cog-outline"` one, same bordered-square styling and header slot. Replace its `handleLogoutPress` handler (the `Alert.alert`/`window.confirm` → `logoutFunction()` flow) with a plain navigation:
+
+```tsx
+const handleSettingsPress = () => router.push("/settings");
+```
+
+No confirm step — navigating to Settings isn't destructive, unlike the logout it replaces. `logoutFunction`'s call site moves to `SettingsPage.tsx`'s Logout row (§4) instead of staying duplicated in both places.
+
+### 6. Layout
 
 Single `ScrollView` (like `MonthlyTransactionPage.tsx`/`HistoryPage.tsx`), sections separated by the existing `spacing`/`radius` tokens and `C.surface`/`C.border` card styling already used throughout (`SummaryPills`, `TotalBalanceCard`) — no new visual language invented for this page.
 
 ## Implementation notes
 
 Files touched/added:
+
 - `client/app/(tabs)/settings.tsx` (new)
 - `client/app/(tabs)/_layout.tsx` (edit — register visible 5th tab)
 - `client/components/main/Settings/SettingsPage.tsx` (new)
+- `client/components/main/Home/HomePage.tsx` (edit — swap logout icon for settings/gear icon + navigation, move logout flow to `SettingsPage.tsx`)
 - (from spec 12, embedded here) `client/components/main/Settings/CategoryManager.tsx`, `CategoryFormModal.tsx`
 
 ## Verify when done
@@ -97,5 +115,6 @@ Files touched/added:
 - [ ] Profile section shows the real logged-in user's name and email.
 - [ ] Editing name, saving, then killing and reopening the app (or hard-refreshing on web) shows the new name — confirms `handleSetUser`'s `AsyncStorage` persistence is actually wired, not just in-memory state.
 - [ ] Categories section shows/creates/edits/deletes categories correctly (re-verifies spec 12's component works correctly once actually mounted on a real screen, not just in isolation).
-- [ ] Logout from Settings clears session and redirects to `/auth`, same as Home's existing icon.
-- [ ] Home's existing logout icon (spec 08) still works, unchanged — confirms it wasn't touched as a side effect.
+- [ ] Logout from Settings clears session and redirects to `/auth`, reusing spec 08's confirm-dialog logic unchanged (including the web `window.confirm` branch).
+- [ ] Home's header now shows a gear/settings icon, not a logout icon, and tapping it navigates straight to Settings with no confirm dialog.
+- [ ] Logout is no longer reachable directly from Home — it's only in Settings' Logout row — confirming the flow moved rather than got duplicated.

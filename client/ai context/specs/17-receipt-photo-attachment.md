@@ -5,6 +5,7 @@ Status: 📝 Drafted — awaiting review before implementation starts. **Depends
 ## Cross-repo context
 
 Client side of a 2-spec feature:
+
 - `server/ai context/specs/13-receipt-photo-upload.md` — the `receiptImageUrl`/`receiptImagePublicId` columns, Cloudinary plumbing, and `PUT`/`DELETE /transactions/receipt-image/:transactionId` endpoints this screen calls.
 - **This doc** — the picker (attach/replace/remove) and full-screen viewer.
 
@@ -17,12 +18,14 @@ Let the user attach a receipt photo to a transaction they've already saved, repl
 ## Scope
 
 **In scope:**
+
 - A `ReceiptImagePicker` component (single-image variant, modeled on Bike Log's `ImagePickerField.tsx`) added to `UpdateTransactionModal.tsx` — the existing "edit a transaction" surface, reached by swiping a `TransactionCard` right. Uploading/replacing/removing the photo is its **own** immediate mutation, independent of the modal's "Update Transaction" button (which still only ever saves title/amount/description/type) — there's no multipart-vs-JSON payload to reconcile this way, and it matches Bike Log's own precedent of each image action being self-contained.
 - A small receipt indicator on `TransactionCard.tsx`'s normal (non-`compact`, non-`pending`) row, visible only when `receiptImageUrl` is set, opening a full-screen `ReceiptViewerModal` on tap.
 - `ReceiptViewerModal` — single-image full-screen viewer (simpler than Bike Log's multi-image paging version: one receipt per transaction, no index/chevrons needed), reusing the tap-anywhere-to-dismiss fix Bike Log's spec 21 already had to debug (see Design).
 - New dependency: `expo-image-picker` (not currently installed — confirmed via `package.json`; `expo-image` is already installed but has zero import sites anywhere in this app today, same gap Bike Log had before its own spec 20).
 
 **Explicitly, permanently out of scope:**
+
 - **`AddTransactionPage.tsx` and `SmartAdd.tsx`** — no image field at create time, per the user's own instruction. This is the entire point of the feature's shape, not an oversight to "improve" later.
 - **`PendingTransactionEditModal.tsx`** (offline queue) — a queued-but-not-yet-synced transaction has no server `transactionId` to attach an image to yet; receipt attachment only becomes possible once an item has synced and become a real `TransactionCard` row. Not solved here, same class of "offline item, server-dependent feature" boundary as spec 13's client-side counterpart already draws around categories.
 - **`TransactionRequestEditModal.tsx`** (Bike Log inbox items, spec 07/11) — unchanged, mirrors server spec 13's own exclusion of `TransactionRequest`.
@@ -35,6 +38,7 @@ Let the user attach a receipt photo to a transaction they've already saved, repl
 ### New dependency
 
 `npx expo install expo-image-picker`. Add to `app.json`'s `plugins` array (currently just `expo-router` and `expo-splash-screen`):
+
 ```json
 [
   "expo-image-picker",
@@ -44,6 +48,7 @@ Let the user attach a receipt photo to a transaction they've already saved, repl
   }
 ]
 ```
+
 Generates the iOS `NSPhotoLibraryUsageDescription`/`NSCameraUsageDescription` strings and the equivalent Android permissions — neither exists in `app.json` today.
 
 ### New hook — `usePut`, added alongside the existing (differently-shaped) `useUpdateData`
@@ -54,9 +59,12 @@ Generates the iOS `NSPhotoLibraryUsageDescription`/`NSCameraUsageDescription` st
 export const usePut = (invalidateQueriesKeys?: string[][]) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { url: string; payload: FormData }) => apiPut(params.url, params.payload),
+    mutationFn: (params: { url: string; payload: FormData }) =>
+      apiPut(params.url, params.payload),
     onSuccess: () => {
-      invalidateQueriesKeys?.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
+      invalidateQueriesKeys?.forEach((key) =>
+        queryClient.invalidateQueries({ queryKey: key }),
+      );
     },
     onError: (error) => {
       throw error;
@@ -85,7 +93,11 @@ type TProps = {
   invalidateKeys: string[][];
 };
 
-export default function ReceiptImagePicker({ transactionId, value, invalidateKeys }: TProps) {
+export default function ReceiptImagePicker({
+  transactionId,
+  value,
+  invalidateKeys,
+}: TProps) {
   const C = useTheme();
   const [viewerOpen, setViewerOpen] = useState(false);
   const putMutation = usePut(invalidateKeys);
@@ -117,14 +129,23 @@ export default function ReceiptImagePicker({ transactionId, value, invalidateKey
   const upload = async (file: { uri: string; name: string; type: string }) => {
     const formData = new FormData();
     formData.append("image", file as any);
-    await putMutation.mutateAsync({ url: `/transactions/receipt-image/${transactionId}`, payload: formData });
+    await putMutation.mutateAsync({
+      url: `/transactions/receipt-image/${transactionId}`,
+      payload: formData,
+    });
   };
 
   const handleRemove = () => {
     Alert.alert("Remove receipt?", undefined, [
       { text: "Cancel", style: "cancel" },
-      { text: "Remove", style: "destructive", onPress: async () =>
-          deleteMutation.mutateAsync({ url: `/transactions/receipt-image/${transactionId}` }) },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () =>
+          deleteMutation.mutateAsync({
+            url: `/transactions/receipt-image/${transactionId}`,
+          }),
+      },
     ]);
   };
 
@@ -158,6 +179,7 @@ In the normal (non-`pending`) branch, when `!compact && transactionData?.receipt
 ## Implementation notes
 
 Files touched/added:
+
 - `client/types/Transaction.tyes.ts` (edit — add `receiptImageUrl`/`receiptImagePublicId`)
 - `client/hooks/useApi.ts` (edit — add `usePut`, `useUpdateData` left untouched)
 - `client/components/main/shared/ReceiptImagePicker.tsx` (new)
@@ -179,4 +201,4 @@ Files touched/added:
 - [ ] The receipt icon does **not** appear on `compact` rows (Monthly/Weekly's nested accordion) even when the transaction has a receipt — confirms the deliberate scope boundary, not a missed case.
 - [ ] `AddTransactionPage.tsx`, `SmartAdd.tsx`, and `PendingTransactionEditModal.tsx` are confirmed unchanged (diff review) — no receipt UI leaked into transaction creation or the offline queue.
 - [ ] An offline-queued (pending) transaction shows no receipt affordance at all until after it syncs and becomes a normal card.
-- [ ] *(Explicit caveat, matching this project's standing limitation)* If no physical device/simulator is available at implementation time, the action sheet/permission prompts/picker UI and tap-through are code-reviewed against the confirmed `expo-image-picker` API and Bike Log's already-verified equivalent, not visually confirmed — same caveat as `client/ai context/specs/10-pre-production-manual-checklist.md`.
+- [ ] _(Explicit caveat, matching this project's standing limitation)_ If no physical device/simulator is available at implementation time, the action sheet/permission prompts/picker UI and tap-through are code-reviewed against the confirmed `expo-image-picker` API and Bike Log's already-verified equivalent, not visually confirmed — same caveat as `client/ai context/specs/10-pre-production-manual-checklist.md`.
