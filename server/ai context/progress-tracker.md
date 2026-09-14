@@ -8,15 +8,22 @@ Core API surface is built and working: auth (register/login), transaction CRUD, 
 
 ## Spec status
 
-| Spec                                               | Status                                                                                      |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `01-mongodb-to-postgres-migration.md`              | Decisions/background record + Prisma config — done. Execution split into `02` and `03`.     |
-| `02-migrate-user-transaction-modules-to-prisma.md` | Completed 2026-09-02, with 2 flagged exceptions — see spec's "Verify when done" note below. |
-| `03-migrate-mongodb-data-to-postgresql.md`         | Completed through verification 2026-09-03 — **cutover not yet done**, see below.            |
-| `04-openrouter-resilient-ai-integration.md`        | Completed 2026-09-03 — see `05` for a follow-up fix hit during its own verification.        |
-| `05-fix-stale-free-model-list.md`                  | Completed 2026-09-03, same session as `04`.                                                 |
-| `06-fix-free-model-list-latency-and-broken-entry.md` | Completed 2026-09-03 — found during a full-backend regression pass, after the model list was manually edited to 8 entries. |
-| `07-bikelog-transaction-request-sync.md`             | Completed 2026-09-09 — server side of the 3-spec cross-repo feature; see spec's "Verify when done" note below. |
+| Spec                                                                        | Status                                                                                                                                                          |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `01-mongodb-to-postgres-migration.md`                                       | Decisions/background record + Prisma config — done. Execution split into `02` and `03`.                                                                         |
+| `02-migrate-user-transaction-modules-to-prisma.md`                          | Completed 2026-09-02, with 2 flagged exceptions — see spec's "Verify when done" note below.                                                                     |
+| `03-migrate-mongodb-data-to-postgresql.md`                                  | Completed through verification 2026-09-03 — **cutover not yet done**, see below.                                                                                |
+| `04-openrouter-resilient-ai-integration.md`                                 | Completed 2026-09-03 — see `05` for a follow-up fix hit during its own verification.                                                                            |
+| `05-fix-stale-free-model-list.md`                                           | Completed 2026-09-03, same session as `04`.                                                                                                                     |
+| `06-fix-free-model-list-latency-and-broken-entry.md`                        | Completed 2026-09-03 — found during a full-backend regression pass, after the model list was manually edited to 8 entries.                                      |
+| `07-bikelog-transaction-request-sync.md`                                    | Completed 2026-09-09 — server side of the 3-spec cross-repo feature; see spec's "Verify when done" note below.                                                  |
+| [08-category-management](specs/08-category-management.md)                   | Drafted 2026-09-14, renumbered from `09` same day per user's requested build order. Awaiting review before implementation starts. Companion: `client/ai context/specs/12-category-management-ui.md`.                |
+| [09-wire-category-to-transaction](specs/09-wire-category-to-transaction.md) | Drafted 2026-09-14, renumbered from `10` same day. Awaiting review; depends on `08`. Companion: `client/ai context/specs/13-wire-category-to-transaction-ui.md`.                                                     |
+| [10-user-profile-endpoints](specs/10-user-profile-endpoints.md)             | Drafted 2026-09-14, renumbered from `11` same day. Awaiting review before implementation starts. Companion: `client/ai context/specs/14-settings-profile-page.md`.                                                   |
+| [11-transaction-categories-superseded](specs/11-transaction-categories-superseded.md) | ⛔ Superseded 2026-09-14 — originally drafted as spec `08`; user redirected before implementation started (categories must be user-created, not a hardcoded enum). Renumbered to `11` to free up `08`-`10` for the replacement specs above, in the user's requested build order. |
+| [12-budgets](specs/12-budgets.md) | Drafted 2026-09-14 — awaiting review before implementation starts; depends on `08` and `09`. Companion: `client/ai context/specs/16-budgets-screen.md`. |
+| [13-receipt-photo-upload](specs/13-receipt-photo-upload.md) | Drafted 2026-09-14 — awaiting review before implementation starts; resolves `known-issues.md#CFG-3` as a side effect of wiring the feature it describes. Companion: `client/ai context/specs/17-receipt-photo-attachment.md`. |
+| [14-trend-summary-endpoint](specs/14-trend-summary-endpoint.md) | Drafted 2026-09-14 — awaiting review before implementation starts; category-breakdown half depends on `09`. Companion: `client/ai context/specs/18-trend-charts.md`. |
 
 ## Spec 02 — Verify when done (checked against the empty Postgres tables, via local `yarn dev` + curl)
 
