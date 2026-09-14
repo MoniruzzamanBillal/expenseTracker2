@@ -5,6 +5,7 @@ import { useFetchData, usePatch } from "@/hooks/useApi";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { IUser } from "@/types/global.types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
@@ -20,6 +21,7 @@ import Toast from "react-native-toast-message";
 
 export default function SettingsPage() {
   const C = useTheme();
+  const router = useRouter();
   const { user, handleSetUser, logoutFunction } = useUserContext();
 
   const [editingName, setEditingName] = useState(false);
@@ -181,11 +183,32 @@ export default function SettingsPage() {
         <CategoryManager />
 
         <TouchableOpacity
-          onPress={handleLogoutPress}
+          onPress={() => router.push("/budgets")}
           activeOpacity={0.8}
           style={[
             styles.navRow,
             { backgroundColor: C.surface, borderColor: C.border, marginTop: spacing.xl },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="chart-donut"
+            size={18}
+            color={C.textSecondary}
+          />
+          <Text style={[text.bodyMd, { color: C.text, flex: 1 }]}>Budgets</Text>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={18}
+            color={C.textMuted}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleLogoutPress}
+          activeOpacity={0.8}
+          style={[
+            styles.navRow,
+            { backgroundColor: C.surface, borderColor: C.border, marginTop: spacing.md },
           ]}
         >
           <MaterialCommunityIcons name="logout" size={18} color={C.expense} />

@@ -126,6 +126,9 @@ export default function TabLayout() {
 
         {/* Reached only via the "Requests" button on Add Transaction — not shown in the tab bar. */}
         <Tabs.Screen name="transaction-requests" options={{ href: null }} />
+
+        {/* Reached only via the "Budgets" button on Settings — not shown in the tab bar. */}
+        <Tabs.Screen name="budgets" options={{ href: null }} />
       </Tabs>
     </AuthGuard>
   );
