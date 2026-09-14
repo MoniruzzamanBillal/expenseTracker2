@@ -1,10 +1,11 @@
 # 12: Per-category budgets (soft limits, no enforcement)
 
-Status: 📝 Drafted — awaiting review before implementation starts. **Depends on `08-category-management.md` and `09-wire-category-to-transaction.md`** — a budget is meaningless without categories, and computing spend-vs-limit needs transactions actually carrying a `categoryId`.
+Status: ✅ Completed 2026-09-14
 
 ## Cross-repo context
 
 Server side of a 2-spec feature:
+
 - **This doc** — the `Budget` model, its CRUD endpoints, and the spend-vs-limit computation.
 - `client/ai context/specs/16-budgets-screen.md` — the dedicated Budgets screen (progress bars, red-when-over styling), reached via a button on the Settings page (spec 14).
 
@@ -17,6 +18,7 @@ Let the user set a monthly spending limit per category and see how much of it th
 ## Scope
 
 **In scope:**
+
 - New `Budget` model: one row per (user, category), holding a `monthlyLimit`.
 - `POST /budgets` — set a limit for a category that doesn't have one yet.
 - `GET /budgets` — list the user's budgets, each enriched with this month's actual spend for that category, a percentage, and an over-limit flag.
@@ -24,6 +26,7 @@ Let the user set a monthly spending limit per category and see how much of it th
 - `DELETE /budgets/:id` — remove a budget for a category (a real hard delete — see Design for why this one deviates from `Transaction`/`Category`'s soft-delete convention).
 
 **Explicitly, permanently out of scope (not "later," per the user's own framing):**
+
 - **Any enforcement.** Nothing in `transaction.service.ts`'s create/update path (spec 09) is touched by this spec. There is no check anywhere that a transaction would push a category over budget, and no such check should ever be added silently in a future spec without the user asking for it again — this is a deliberate, explicit product decision, not an oversight.
 - **Any notification/alert mechanism** — no cron job, no email, no push infra, no in-app "you're at 80%" banner beyond the progress bar itself changing color when read. The original proposal's alert wording is fully superseded by this instruction.
 - **Budgets for income categories** — a "budget" only makes sense against spending; this spec computes spend using `type: "expense"` transactions only, regardless of what type of transactions exist in a budgeted category.
@@ -51,6 +54,7 @@ model Budget {
 ```
 
 Add inverse relations:
+
 ```prisma
 model User {
   // ...existing fields...
@@ -65,7 +69,7 @@ model Category {
 
 **Why `categoryId` is `@unique`, enforcing one budget per category** — matches the feature's own shape (a category has at most one monthly limit); simpler than a compound `[userId, categoryId]` unique, since `categoryId` already belongs to exactly one user (a category can't be shared across users, per spec 08).
 
-**Why hard `DELETE`, not soft delete like `Transaction`/`Category`** — a budget is a current *setting*, not a historical record worth preserving after removal (unlike a transaction or even a category, which past transactions may still reference by name). If `Budget` used soft delete, the `@unique` constraint on `categoryId` would permanently block ever setting a new budget for that category again after the first one was "deleted" — a real usability trap (delete a budget, then can't recreate one for the same category). A real `DELETE` avoids that entirely. This is a deliberate deviation from the codebase's usual soft-delete convention, called out explicitly so it isn't "corrected" back to soft-delete in a later pass without re-deriving this reasoning.
+**Why hard `DELETE`, not soft delete like `Transaction`/`Category`** — a budget is a current _setting_, not a historical record worth preserving after removal (unlike a transaction or even a category, which past transactions may still reference by name). If `Budget` used soft delete, the `@unique` constraint on `categoryId` would permanently block ever setting a new budget for that category again after the first one was "deleted" — a real usability trap (delete a budget, then can't recreate one for the same category). A real `DELETE` avoids that entirely. This is a deliberate deviation from the codebase's usual soft-delete convention, called out explicitly so it isn't "corrected" back to soft-delete in a later pass without re-deriving this reasoning.
 
 Migration: `npx prisma migrate dev --name add_budget`.
 
@@ -74,6 +78,7 @@ Migration: `npx prisma migrate dev --name add_budget`.
 Mirrors the `category` module's layout (interface, validation, service, controller, route).
 
 **2.1 Validation** (`budget.validation.ts`):
+
 ```ts
 const createBudgetSchema = z.object({
   body: z.object({
@@ -104,14 +109,26 @@ const updateBudgetSchema = z.object({
 **2.3 Controller** (`budget.controller.ts`) — thin `catchAsync` wrappers, `req.user.userId` for ownership on every call, same shape as `category.controller.ts`.
 
 **2.4 Route** (`budget.route.ts`):
+
 ```ts
-router.post("/", authCheck, validateRequest(budgetValidations.createBudgetSchema), budgetController.createBudget);
+router.post(
+  "/",
+  authCheck,
+  validateRequest(budgetValidations.createBudgetSchema),
+  budgetController.createBudget,
+);
 router.get("/", authCheck, budgetController.getBudgets);
-router.patch("/:id", authCheck, validateRequest(budgetValidations.updateBudgetSchema), budgetController.updateBudget);
+router.patch(
+  "/:id",
+  authCheck,
+  validateRequest(budgetValidations.updateBudgetSchema),
+  budgetController.updateBudget,
+);
 router.delete("/:id", authCheck, budgetController.deleteBudget);
 ```
 
 Mount in `server/src/app/router/index.ts` at `/budgets`. Resulting endpoints:
+
 - `POST /api/budgets`
 - `GET /api/budgets`
 - `PATCH /api/budgets/:id`
@@ -122,20 +139,23 @@ Mount in `server/src/app/router/index.ts` at `/budgets`. Resulting endpoints:
 ## Implementation notes
 
 Files touched/added:
+
 - `server/prisma/schema.prisma` (edit — new `Budget` model + relations on `User`/`Category`)
 - `server/src/app/modules/budget/*` (new module: interface, validation, service, controller, route)
 - `server/src/app/router/index.ts` (edit — mount new router)
 
 ## Verify when done
 
-- [ ] `npx prisma migrate dev --name add_budget` runs clean.
-- [ ] `POST /api/budgets` with a valid `categoryId` + `monthlyLimit` returns `201`.
-- [ ] `POST /api/budgets` for a category that already has a budget returns `409`, not a duplicate row.
-- [ ] `POST /api/budgets` with a `categoryId` belonging to another user, or a nonexistent one, returns `400`.
-- [ ] `GET /api/budgets` returns each budget with a correct `spent` figure matching a manual sum of that category's expense transactions for the current calendar month.
-- [ ] **Create transactions that push a category's spend past its `monthlyLimit` — the create call succeeds normally (no error, no block), and `GET /api/budgets` then shows `isOverLimit: true` and `percentage > 100`.** This is the core behavioral requirement of the whole spec — confirm it explicitly, not just assume it from the absence of a check.
-- [ ] `PATCH /api/budgets/:id` changes `monthlyLimit` and `GET /api/budgets` reflects it immediately.
-- [ ] `DELETE /api/budgets/:id` removes the row entirely (confirmed via direct DB check, not just the list endpoint).
-- [ ] After deleting a budget, `POST /api/budgets` for that same `categoryId` succeeds (confirms the hard-delete design choice actually avoids the unique-constraint trap it was meant to avoid).
-- [ ] Soft-deleting a category (via spec 08's `PATCH /categories/:id/delete`) that has a budget makes that budget disappear from `GET /api/budgets`, without deleting the `Budget` row itself.
-- [ ] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.
+- [x] `npx prisma migrate dev --name add_budget` runs clean.
+- [x] `POST /api/budgets` with a valid `categoryId` + `monthlyLimit` returns `201`.
+- [x] `POST /api/budgets` for a category that already has a budget returns `409`, not a duplicate row.
+- [x] `POST /api/budgets` with a `categoryId` belonging to another user, or a nonexistent one, returns `400`.
+- [x] `GET /api/budgets` returns each budget with a correct `spent` figure matching a manual sum of that category's expense transactions for the current calendar month.
+- [x] **Create transactions that push a category's spend past its `monthlyLimit` — the create call succeeds normally (no error, no block), and `GET /api/budgets` then shows `isOverLimit: true` and `percentage > 100`.** This is the core behavioral requirement of the whole spec — confirm it explicitly, not just assume it from the absence of a check.
+- [x] `PATCH /api/budgets/:id` changes `monthlyLimit` and `GET /api/budgets` reflects it immediately.
+- [x] `DELETE /api/budgets/:id` removes the row entirely (confirmed via direct DB check, not just the list endpoint).
+- [x] After deleting a budget, `POST /api/budgets` for that same `categoryId` succeeds (confirms the hard-delete design choice actually avoids the unique-constraint trap it was meant to avoid).
+- [x] Soft-deleting a category (via spec 08's `PATCH /categories/:id/delete`) that has a budget makes that budget disappear from `GET /api/budgets`, without deleting the `Budget` row itself.
+- [x] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.
+
+Exercised live against the real dev Neon database via `yarn dev` + curl, same throwaway user/fixtures as specs 08-10. The two direct-DB checks (row actually removed after `DELETE`; row survives a soft-deleted category) used a temporary in-tree script (`src/scripts/__tmpSpec12Verify.ts`, reusing the app's own `prisma` client, deleted immediately after running) — same pattern as spec 07's own cleanup convention.

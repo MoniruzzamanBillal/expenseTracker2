@@ -1,10 +1,11 @@
 # 08: Category management (CRUD)
 
-Status: 📝 Drafted — awaiting review before implementation starts
+Status: ✅ Completed 2026-09-14
 
 ## Cross-repo context
 
 First of three specs implementing categories + a settings page, in build order:
+
 1. **This doc** — the `Category` model and its create/list/update/delete endpoints. Standalone, no dependency on `Transaction`.
 2. `09-wire-category-to-transaction.md` — adds `categoryId` to `Transaction` and per-category breakdown to the summary endpoints. **Depends on this doc.**
 3. `10-user-profile-endpoints.md` — profile view/update, independent of 1-2 but shipped as part of the same overall Settings-page ask.
@@ -22,6 +23,7 @@ Let a user create, rename, re-icon, and delete their own categories — a real p
 ## Scope
 
 **In scope:**
+
 - New `Category` Prisma model, owned by a user (`userId`), with a `name` and optional `icon`.
 - `POST /categories` — create.
 - `GET /categories` — list the logged-in user's own non-deleted categories.
@@ -29,6 +31,7 @@ Let a user create, rename, re-icon, and delete their own categories — a real p
 - `PATCH /categories/:id/delete` — soft delete (matches `Transaction`'s existing soft-delete convention, not a hard `DELETE`).
 
 **Out of scope:**
+
 - Anything on `Transaction` — that's `09-wire-category-to-transaction.md`.
 - Seeding default categories (Food, Bills, ...) for a new user automatically. **Open decision, flagged for the user**: ship with zero categories out of the box (matches the literal "user creates their own" instruction, but Add Transaction's category picker will be empty until the user visits Settings first) vs. seed a small starter set on registration that the user can then rename/delete freely (friendlier first-run, but is itself a small hardcoded list, which is the exact thing being moved away from). Recommend **no auto-seed** for this spec — call it out again in `13`/`14`'s empty-state UX — but this is a one-line change if the user prefers seeding.
 - Category ordering/reordering, colors, or any icon beyond a plain string field — not asked for.
@@ -66,7 +69,7 @@ model User {
 }
 ```
 
-**Why `icon` is a plain optional string, not an enum** (opposite call from the discarded spec `08`'s category-*name* enum): the client will offer a curated icon picker (a fixed list of `MaterialCommunityIcons` names), but that list can grow on the client without a server migration — same reasoning already used for `TransactionRequest.sourceType` in spec 07. Server validation only checks it's a non-empty string when present; it doesn't need to know the exact icon set.
+**Why `icon` is a plain optional string, not an enum** (opposite call from the discarded spec `08`'s category-_name_ enum): the client will offer a curated icon picker (a fixed list of `MaterialCommunityIcons` names), but that list can grow on the client without a server migration — same reasoning already used for `TransactionRequest.sourceType` in spec 07. Server validation only checks it's a non-empty string when present; it doesn't need to know the exact icon set.
 
 **Why `@@unique([userId, name])`**: prevents a user from accidentally creating two "Food" categories; scoped per-user so two different users can each have their own "Food".
 
@@ -79,6 +82,7 @@ Migration: `npx prisma migrate dev --name add_category`.
 Mirror the existing module layout (interface, validation, service, controller, route) used by `transaction`/`transactionRequest`.
 
 **2.1 Interface** (`category.interface.ts`):
+
 ```ts
 export type TCategory = {
   userId?: string;
@@ -89,6 +93,7 @@ export type TCategory = {
 ```
 
 **2.2 Validation** (`category.validation.ts`):
+
 ```ts
 const createCategorySchema = z.object({
   body: z.object({
@@ -106,6 +111,7 @@ const updateCategorySchema = z.object({
 ```
 
 **2.3 Service** (`category.service.ts`):
+
 - `createCategory(payload, userId)` — `generateObjectId()` + `prisma.category.create(...)`. Catch `P2002` (the `[userId, name]` unique violation) and throw a clear `AppError(httpStatus.CONFLICT, "A category with this name already exists")` instead of letting the raw Prisma error surface.
 - `getCategories(userId)` — `findMany({ where: { userId, isDeleted: false }, orderBy: { createdAt: "asc" } })`.
 - `updateCategory(id, userId, payload)` — same ownership-guard shape as `transaction.service.ts`'s `updateTransaction`: `findFirst({ where: { id, userId, isDeleted: false } })`, throw 404-ish `AppError(httpStatus.BAD_REQUEST, "Invalid category id !!!")` if missing (matching this codebase's existing wording/status choice for that case, not introducing a new convention), then `update`. Catch `P2002` here too (renaming into a collision with another existing category).
@@ -114,16 +120,28 @@ const updateCategorySchema = z.object({
 **2.4 Controller** (`category.controller.ts`) — thin `catchAsync` wrappers, `req.user.userId` for ownership on every call, same shape as `transaction.controller.ts`.
 
 **2.5 Route** (`category.route.ts`):
+
 ```ts
-router.post("/", authCheck, validateRequest(categoryValidations.createCategorySchema), categoryController.createCategory);
+router.post(
+  "/",
+  authCheck,
+  validateRequest(categoryValidations.createCategorySchema),
+  categoryController.createCategory,
+);
 router.get("/", authCheck, categoryController.getCategories);
-router.patch("/:id", authCheck, validateRequest(categoryValidations.updateCategorySchema), categoryController.updateCategory);
+router.patch(
+  "/:id",
+  authCheck,
+  validateRequest(categoryValidations.updateCategorySchema),
+  categoryController.updateCategory,
+);
 router.patch("/:id/delete", authCheck, categoryController.deleteCategory);
 ```
 
 Mount in `server/src/app/router/index.ts` at `/categories`, alongside the existing `/transactions` and `/transaction-requests` entries.
 
 Resulting endpoints:
+
 - `POST /api/categories`
 - `GET /api/categories`
 - `PATCH /api/categories/:id`
@@ -132,18 +150,21 @@ Resulting endpoints:
 ## Implementation notes
 
 Files touched/added:
+
 - `server/prisma/schema.prisma` (edit — new `Category` model + `User.categories` relation)
 - `server/src/app/modules/category/*` (new module: interface, validation, service, controller, route)
 - `server/src/app/router/index.ts` (edit — mount new router)
 
 ## Verify when done
 
-- [ ] `npx prisma migrate dev --name add_category` runs clean.
-- [ ] `POST /api/categories` with `{ name: "Food", icon: "food" }` returns `201` with the created row.
-- [ ] Creating a second category with the same `name` for the same user returns a clear `409`, not a raw Prisma error.
-- [ ] The same `name` succeeds for a *different* user (per-user uniqueness, not global).
-- [ ] `GET /api/categories` returns only the logged-in user's own non-deleted categories.
-- [ ] `PATCH /api/categories/:id` can rename and/or change `icon` independently (partial update).
-- [ ] `PATCH /api/categories/:id` on another user's category returns the same not-found-style error as an invalid id (no cross-user leakage or edit).
-- [ ] `PATCH /api/categories/:id/delete` soft-deletes — the row disappears from `GET /api/categories` but still exists in the DB with `isDeleted: true`.
-- [ ] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean, no new errors beyond the existing pre-existing baseline.
+- [x] `npx prisma migrate dev --name add_category` runs clean.
+- [x] `POST /api/categories` with `{ name: "Food", icon: "food" }` returns `201` with the created row.
+- [x] Creating a second category with the same `name` for the same user returns a clear `409`, not a raw Prisma error.
+- [x] The same `name` succeeds for a _different_ user (per-user uniqueness, not global).
+- [x] `GET /api/categories` returns only the logged-in user's own non-deleted categories.
+- [x] `PATCH /api/categories/:id` can rename and/or change `icon` independently (partial update).
+- [x] `PATCH /api/categories/:id` on another user's category returns the same not-found-style error as an invalid id (no cross-user leakage or edit).
+- [x] `PATCH /api/categories/:id/delete` soft-deletes — the row disappears from `GET /api/categories` but still exists in the DB with `isDeleted: true`.
+- [x] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean, no new errors beyond the existing pre-existing baseline.
+
+Exercised live against the real dev Neon database via `yarn dev` + curl, using two throwaway registered users (`spec08091012test@example.com`, `spec08091012test2@example.com`). Test fixtures left in the DB for spec 09/12's own manual verification in the same session; cleaned up at the end of this build (see progress-tracker.md).

@@ -12,17 +12,74 @@ const toApiShape = <T extends { id: string; amount: unknown }>(t: T) => ({
   amount: Number(t.amount),
 });
 
+// ! ownership check for a user-supplied categoryId — never trust a bare id without verifying it
+const assertCategoryOwnership = async (
+  categoryId: string | null | undefined,
+  userId: string,
+) => {
+  if (!categoryId) return;
+
+  const category = await prisma.category.findFirst({
+    where: { id: categoryId, userId, isDeleted: false },
+  });
+
+  if (!category) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid category id !!!");
+  }
+};
+
+// ! groups a transaction set by category (dynamic per-user categories, no fixed universe)
+const buildCategoryBreakdown = (
+  transactions: Array<{
+    type: string;
+    amount: number;
+    category: { id: string; name: string; icon: string | null } | null;
+  }>,
+) => {
+  const buckets: Record<
+    string,
+    {
+      categoryId: string | null;
+      name: string;
+      icon: string | null;
+      income: number;
+      expense: number;
+    }
+  > = {};
+
+  for (const t of transactions) {
+    const key = t.category?.id ?? "uncategorized";
+    if (!buckets[key]) {
+      buckets[key] = {
+        categoryId: t.category?.id ?? null,
+        name: t.category?.name ?? "Uncategorized",
+        icon: t.category?.icon ?? null,
+        income: 0,
+        expense: 0,
+      };
+    }
+    if (t.type === transactionConstants.income) buckets[key].income += t.amount;
+    else if (t.type === transactionConstants.expense)
+      buckets[key].expense += t.amount;
+  }
+
+  return Object.values(buckets);
+};
+
 // ! for adding new transaction
 const addNewTransaction = async (
   payload: TTransaction,
   userId: string,
   client: Pick<typeof prisma, "transaction"> = prisma,
 ) => {
+  await assertCategoryOwnership(payload.categoryId, userId);
+
   const result = await client.transaction.create({
     data: {
       id: generateObjectId(),
       userId,
       type: payload.type,
+      categoryId: payload.categoryId,
       title: payload.title,
       description: payload.description,
       amount: payload.amount,
@@ -34,10 +91,15 @@ const addNewTransaction = async (
 
 // ! for adding tranaction as array
 const addManyTransaction = async (payload: TTransaction[], userId: string) => {
+  await Promise.all(
+    payload.map((data) => assertCategoryOwnership(data.categoryId, userId)),
+  );
+
   const formattedPayload = payload?.map((data) => ({
     id: generateObjectId(),
     userId,
     type: data.type,
+    categoryId: data.categoryId,
     title: data.title,
     description: data.description,
     amount: data.amount,
@@ -73,6 +135,7 @@ const getMonthlyTransactions = async (
       isDeleted: false,
     },
     orderBy: { createdAt: "desc" },
+    include: { category: true },
   });
 
   const transactions = transactionsRaw.map(toApiShape);
@@ -84,6 +147,8 @@ const getMonthlyTransactions = async (
   const expense = transactions
     .filter((t) => t?.type === transactionConstants?.expense)
     .reduce((acc, curr) => acc + curr?.amount, 0);
+
+  const categoryBreakdown = buildCategoryBreakdown(transactions);
 
   const dailyDate: {
     [day: string]: {
@@ -118,7 +183,7 @@ const getMonthlyTransactions = async (
     transactions: value?.transactions,
   }));
 
-  return { income, expense, transactionData: updatedData };
+  return { income, expense, transactionData: updatedData, categoryBreakdown };
 };
 
 // ! for getting the daily transaction
@@ -152,6 +217,7 @@ const getDailyTransactions = async (userId: string) => {
       isDeleted: false,
     },
     orderBy: { createdAt: "desc" },
+    include: { category: true },
   });
 
   const transactions = transactionsRaw.map(toApiShape);
@@ -164,7 +230,9 @@ const getDailyTransactions = async (userId: string) => {
     .filter((t) => t.type === transactionConstants?.expense)
     .reduce((acc, curr) => acc + curr.amount, 0);
 
-  return { income, expense, transactions };
+  const categoryBreakdown = buildCategoryBreakdown(transactions);
+
+  return { income, expense, transactions, categoryBreakdown };
 
   //
 };
@@ -245,6 +313,10 @@ const updateTransaction = async (
 
   if (!transactionData) {
     throw new AppError(httpStatus.BAD_REQUEST, "Invalid transaction id !!!");
+  }
+
+  if ("categoryId" in payload) {
+    await assertCategoryOwnership(payload.categoryId, userId);
   }
 
   const result = await prisma.transaction.update({
@@ -412,6 +484,7 @@ const getWeeklySummary = async (userId: string) => {
       createdAt: { gte: start, lt: end },
       isDeleted: false,
     },
+    include: { category: true },
   });
 
   const transactions = transactionsRaw.map(toApiShape);
@@ -423,6 +496,8 @@ const getWeeklySummary = async (userId: string) => {
   const totalExpense = transactions
     .filter((t) => t.type === transactionConstants.expense)
     .reduce((acc, cur) => acc + cur.amount, 0);
+
+  const categoryBreakdown = buildCategoryBreakdown(transactions);
 
   const dailyData: {
     [date: string]: {
@@ -473,6 +548,7 @@ const getWeeklySummary = async (userId: string) => {
     income: totalIncome,
     expense: totalExpense,
     transactionData,
+    categoryBreakdown,
   };
 };
 

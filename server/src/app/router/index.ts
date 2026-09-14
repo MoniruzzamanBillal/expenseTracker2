@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { budgetRouter } from "../modules/budget/budget.route";
+import { categoryRouter } from "../modules/category/category.route";
 import { transactionRouter } from "../modules/transaction/transaction.route";
 import { transactionRequestRouter } from "../modules/transactionRequest/transactionRequest.route";
 import { userRouter } from "../modules/user/user.route";
@@ -17,6 +19,14 @@ const routeArray = [
   {
     path: "/auth",
     route: userRouter,
+  },
+  {
+    path: "/categories",
+    route: categoryRouter,
+  },
+  {
+    path: "/budgets",
+    route: budgetRouter,
   },
 ];
 

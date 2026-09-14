@@ -1,10 +1,11 @@
 # 09: Wire category to transaction
 
-Status: 📝 Drafted — awaiting review before implementation starts. **Depends on `08-category-management.md` being implemented first** — this doc assumes the `Category` model/endpoints already exist.
+Status: ✅ Completed 2026-09-14
 
 ## Cross-repo context
 
 Second of three specs implementing categories + a settings page:
+
 1. `08-category-management.md` — the `Category` model + CRUD endpoints. **Build this first.**
 2. **This doc** — adds `categoryId` to `Transaction`, lets create/update accept it, and adds a per-category breakdown to the summary endpoints.
 3. `10-user-profile-endpoints.md` — unrelated to this doc, same overall Settings-page ask.
@@ -20,15 +21,17 @@ Let a transaction optionally reference one of the user's own categories (from sp
 ## Scope
 
 **In scope:**
+
 - `categoryId` (nullable) added to `Transaction`, pointing at `Category`.
 - `categoryId` accepted (optional) on create/update validation and both create paths (`addNewTransaction`, `addManyTransaction`). **Never required**: `createTransactionSchema` has no `.min(1)`/required check on `categoryId` the way it does on `title`/`amount` — a transaction is valid with no category at all, confirmed by user instruction (2026-09-14): category selection on the Add Transaction page must stay optional, not a required field.
 - Ownership check: a `categoryId` passed in must belong to the same user creating/updating the transaction — never trust a bare id from the request body without verifying it.
 - `categoryBreakdown` added to the **daily**, **monthly**, and **weekly** summary endpoints, now grouped by real category rows (id/name/icon) instead of the discarded fixed-enum design, plus an `"uncategorized"` bucket for transactions with no `categoryId`.
 
 **Out of scope:**
+
 - `getYearlySummary` — same boundary as the discarded spec `08`: no UI consumes a per-month breakdown yet.
 - Any AI inference of category (Smart Add) or bikelog `TransactionRequest` category mapping — both keep creating transactions with `categoryId: null` ("Uncategorized"), same reasoning as `08`.
-- Deleting a category's effect on existing transactions beyond "keeps working" — covered by spec 08's soft-delete design (the FK still resolves, the category just won't be offered for *new* picks once removed from `GET /categories`).
+- Deleting a category's effect on existing transactions beyond "keeps working" — covered by spec 08's soft-delete design (the FK still resolves, the category just won't be offered for _new_ picks once removed from `GET /categories`).
 
 ## Design
 
@@ -102,7 +105,10 @@ Add `categoryId?: string | null` to `TTransaction`.
 **Ownership check helper** (new, private to the module) — used by both create and update, since a `categoryId` is user-supplied input that must be verified before trusting it:
 
 ```ts
-const assertCategoryOwnership = async (categoryId: string | null | undefined, userId: string) => {
+const assertCategoryOwnership = async (
+  categoryId: string | null | undefined,
+  userId: string,
+) => {
   if (!categoryId) return;
   const category = await prisma.category.findFirst({
     where: { id: categoryId, userId, isDeleted: false },
@@ -122,9 +128,22 @@ const assertCategoryOwnership = async (categoryId: string | null | undefined, us
 
 ```ts
 const buildCategoryBreakdown = (
-  transactions: Array<ReturnType<typeof toApiShape> & { category: { id: string; name: string; icon: string | null } | null }>,
+  transactions: Array<
+    ReturnType<typeof toApiShape> & {
+      category: { id: string; name: string; icon: string | null } | null;
+    }
+  >,
 ) => {
-  const buckets: Record<string, { categoryId: string | null; name: string; icon: string | null; income: number; expense: number }> = {};
+  const buckets: Record<
+    string,
+    {
+      categoryId: string | null;
+      name: string;
+      icon: string | null;
+      income: number;
+      expense: number;
+    }
+  > = {};
 
   for (const t of transactions) {
     const key = t.category?.id ?? "uncategorized";
@@ -138,7 +157,8 @@ const buildCategoryBreakdown = (
       };
     }
     if (t.type === transactionConstants.income) buckets[key].income += t.amount;
-    else if (t.type === transactionConstants.expense) buckets[key].expense += t.amount;
+    else if (t.type === transactionConstants.expense)
+      buckets[key].expense += t.amount;
   }
 
   return Object.values(buckets);
@@ -155,6 +175,7 @@ No new endpoints, no route changes — all four existing summary routes are reus
 ## Implementation notes
 
 Files touched:
+
 - `server/prisma/schema.prisma` (edit — `categoryId` + relation on `Transaction`, inverse relation on `Category`)
 - `server/src/app/modules/transaction/transaction.interface.ts` (edit — add `categoryId`)
 - `server/src/app/modules/transaction/transaction.validation.ts` (edit — add `categoryId` to both schemas)
@@ -162,12 +183,14 @@ Files touched:
 
 ## Verify when done
 
-- [ ] `npx prisma migrate dev --name add_category_to_transaction` runs clean; existing rows read back with `categoryId: null`.
-- [ ] Creating a transaction with a `categoryId` that belongs to the logged-in user succeeds and the response includes it.
-- [ ] Creating a transaction with a `categoryId` belonging to a *different* user (or a nonexistent id) returns a `400`, not silently accepted.
-- [ ] Creating a transaction with no `categoryId` succeeds with `categoryId: null`.
-- [ ] `PATCH update-transaction` can change `categoryId` to another owned category, or explicitly to `null` to clear it.
-- [ ] `GET daily-transaction` / `monthly-transaction` / `weekly-transaction` each return a `categoryBreakdown` array whose entries' `income`/`expense` sums match a manual check, including an `"Uncategorized"` bucket when at least one transaction has `categoryId: null`.
-- [ ] A category with zero transactions this period does **not** appear in `categoryBreakdown` (confirms the dynamic-bucket behavior, distinct from `08`'s discarded always-7-buckets design).
-- [ ] `GET yearly-transaction` response shape is unchanged — confirms the scope boundary held.
-- [ ] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.
+- [x] `npx prisma migrate dev --name add_category_to_transaction` runs clean; existing rows read back with `categoryId: null`.
+- [x] Creating a transaction with a `categoryId` that belongs to the logged-in user succeeds and the response includes it.
+- [x] Creating a transaction with a `categoryId` belonging to a _different_ user (or a nonexistent id) returns a `400`, not silently accepted.
+- [x] Creating a transaction with no `categoryId` succeeds with `categoryId: null`.
+- [x] `PATCH update-transaction` can change `categoryId` to another owned category, or explicitly to `null` to clear it.
+- [x] `GET daily-transaction` / `monthly-transaction` / `weekly-transaction` each return a `categoryBreakdown` array whose entries' `income`/`expense` sums match a manual check, including an `"Uncategorized"` bucket when at least one transaction has `categoryId: null`.
+- [x] A category with zero transactions this period does **not** appear in `categoryBreakdown` (confirms the dynamic-bucket behavior, distinct from `08`'s discarded always-7-buckets design).
+- [x] `GET yearly-transaction` response shape is unchanged — confirms the scope boundary held.
+- [x] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.
+
+Exercised live against the real dev Neon database via `yarn dev` + curl, same throwaway users/fixtures as spec 08. One implementation-time type fix: `buildCategoryBreakdown`'s parameter type was initially written as `ReturnType<typeof toApiShape> & {...}` per the spec's sample code, but `toApiShape` is generic and `ReturnType` on an unapplied generic collapses to the constraint type (losing `type`) — fixed by typing the parameter inline as `{ type: string; amount: number; category: {...} | null }`.

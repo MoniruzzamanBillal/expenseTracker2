@@ -1,10 +1,11 @@
 # 10: User profile endpoints (view + update name)
 
-Status: 📝 Drafted — awaiting review before implementation starts
+Status: ✅ Completed 2026-09-14
 
 ## Cross-repo context
 
 Third of three specs implementing categories + a settings page — independent of the other two (`08`/`09`), grouped here only because it's the server-side counterpart to the same new Settings page:
+
 - `08-category-management.md` / `09-wire-category-to-transaction.md` — categories, unrelated to this doc.
 - `client/ai context/specs/15-settings-profile-page.md` — the new Settings screen that displays/edits the profile this doc exposes, and also houses category management (`13-category-management-ui.md`).
 
@@ -17,14 +18,16 @@ Give the client a way to fetch the logged-in user's own profile and update their
 ## Scope
 
 **In scope:**
+
 - `GET /auth/me` — returns the logged-in user's own profile (name, email, createdAt), **excluding the password hash**.
 - `PATCH /auth/update-profile` — updates `name` only.
 
 **Out of scope, with reasons:**
+
 - **Email change** — `email` doubles as the user's login identity and (per `server/ai context/specs/07-bikelog-transaction-request-sync.md`) the matching key bikelog uses to route incoming `TransactionRequest`s to the right account. Changing it has real consequences beyond a simple field edit (uniqueness, re-verification, breaking that cross-repo match) and deserves its own dedicated spec if actually wanted, not a rider on this one.
 - **Password change** — security-sensitive (should require re-entering the current password, and arguably session invalidation elsewhere); bundling it into a generic "update profile" endpoint risks doing it hastily. Separate spec if wanted.
 - **Profile picture upload** — `User.profilePicture` exists as a bare `String?` column but there's currently no upload path anywhere in the app (registration's own validation schema doesn't even accept it today) and no image storage decision has been made yet — the trimmed feature-plan's "Receipt/photo attachment" item already flags that a cloud storage account/bucket needs picking. Adding a raw "paste an image URL" field here would be a half-built UX nobody asked for; proper photo upload is a follow-up once that storage decision is made.
-- Fixing `AUTH-3` (password hash returned by *register*/*login*) — not touched here. This spec's own new `GET /me` endpoint is written to exclude the password from the start (see below), but the older endpoints are left as they are; "fix a known issue as a side effect of unrelated work" is explicitly against this project's own convention.
+- Fixing `AUTH-3` (password hash returned by _register_/_login_) — not touched here. This spec's own new `GET /me` endpoint is written to exclude the password from the start (see below), but the older endpoints are left as they are; "fix a known issue as a side effect of unrelated work" is explicitly against this project's own convention.
 
 ## Design
 
@@ -87,12 +90,22 @@ const updateProfileSchema = z.object({
 ```ts
 const getMe = catchAsync(async (req, res) => {
   const result = await userServices.getMe(req.user.userId);
-  sendResponse(res, { status: httpStatus.OK, success: true, message: "Profile retrieved successfully", data: result });
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Profile retrieved successfully",
+    data: result,
+  });
 });
 
 const updateProfile = catchAsync(async (req, res) => {
   const result = await userServices.updateProfile(req.user.userId, req.body);
-  sendResponse(res, { status: httpStatus.OK, success: true, message: "Profile updated successfully", data: result });
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Profile updated successfully",
+    data: result,
+  });
 });
 ```
 
@@ -100,16 +113,23 @@ const updateProfile = catchAsync(async (req, res) => {
 
 ```ts
 router.get("/me", authCheck, userController.getMe);
-router.patch("/update-profile", authCheck, validateRequest(userValidations.updateProfileSchema), userController.updateProfile);
+router.patch(
+  "/update-profile",
+  authCheck,
+  validateRequest(userValidations.updateProfileSchema),
+  userController.updateProfile,
+);
 ```
 
 Mounted under the existing `/auth` prefix (`server/src/app/router/index.ts` already maps `userRouter` there) — resulting endpoints:
+
 - `GET /api/auth/me`
 - `PATCH /api/auth/update-profile`
 
 ## Implementation notes
 
 Files touched:
+
 - `server/src/app/modules/user/user.services.ts` (edit — add `getMe`, `updateProfile`)
 - `server/src/app/modules/user/user.validation.ts` (edit — add `updateProfileSchema`)
 - `server/src/app/modules/user/user.controller.ts` (edit — add `getMe`, `updateProfile` controllers)
@@ -117,9 +137,11 @@ Files touched:
 
 ## Verify when done
 
-- [ ] `GET /api/auth/me` with a valid JWT returns the user's profile with **no `password` field present at all** (not just blanked — absent from the JSON).
-- [ ] `GET /api/auth/me` without a token returns `401` (via existing `authCheck`).
-- [ ] `PATCH /api/auth/update-profile` with `{ name: "New Name" }` updates and returns the new name.
-- [ ] `PATCH /api/auth/update-profile` with an empty `name` is rejected by validation with `400`.
-- [ ] `PATCH /api/auth/update-profile` does not accept/change `email` even if included in the body (validation schema doesn't allow the field, so it's silently ignored, not applied).
-- [ ] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.
+- [x] `GET /api/auth/me` with a valid JWT returns the user's profile with **no `password` field present at all** (not just blanked — absent from the JSON).
+- [x] `GET /api/auth/me` without a token returns `401` (via existing `authCheck`).
+- [x] `PATCH /api/auth/update-profile` with `{ name: "New Name" }` updates and returns the new name.
+- [x] `PATCH /api/auth/update-profile` with an empty `name` is rejected by validation with `400`.
+- [x] `PATCH /api/auth/update-profile` does not accept/change `email` even if included in the body (validation schema doesn't allow the field, so it's silently ignored, not applied).
+- [x] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.
+
+Exercised live against the real dev Neon database via `yarn dev` + curl, same throwaway user as specs 08/09.
