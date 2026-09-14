@@ -129,7 +129,8 @@ export default function TransactionCard({
               style={[text.caption, { color: C.textSecondary, marginTop: 2 }]}
               numberOfLines={1}
             >
-              Pending sync ·{" "}
+              <MaterialCommunityIcons name="tag-outline" size={11} />{" "}
+              Uncategorized · Pending sync ·{" "}
               {format(new Date(transactionData?.createdAt as string), "d MMM")}
             </Text>
           </View>
@@ -337,6 +338,11 @@ export default function TransactionCard({
               ]}
               numberOfLines={1}
             >
+              <MaterialCommunityIcons
+                name={(transactionData?.category?.icon as any) ?? "tag-outline"}
+                size={11}
+              />{" "}
+              {transactionData?.category?.name ?? "Uncategorized"} ·{" "}
               {compact
                 ? time
                 : transactionData?.description

@@ -1,4 +1,5 @@
 import { TransactionTypeConst } from "@/constants/TransactionType.constant";
+import { TCategory } from "./Category.types";
 
 export type TTransaction = {
   _id?: string;
@@ -10,6 +11,13 @@ export type TTransaction = {
   updatedAt?: string;
 
   user?: string;
+
+  // categoryId is the source of truth for editing; category is an optional
+  // denormalized read-convenience field present when the endpoint `include`s
+  // the related row (summary endpoints) but absent on plain create/update
+  // responses (spec 13).
+  categoryId?: string | null;
+  category?: TCategory | null;
 };
 
 export type TTransactionHistory = {

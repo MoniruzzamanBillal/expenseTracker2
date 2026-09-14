@@ -1,3 +1,4 @@
+import CategoryPicker from "@/components/main/shared/CategoryPicker";
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import TypeToggle from "@/components/main/shared/TypeToggle";
@@ -32,6 +33,7 @@ export default function AddTransactionPage() {
   const [amount, setAmount] = useState<string | null>(null);
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const accentColor =
@@ -81,7 +83,9 @@ export default function AddTransactionPage() {
     }
 
     try {
-      const payload = {
+      // categoryId is included in the online payload only — the offline queue
+      // never carries a category (per direct user instruction, spec 13's Scope).
+      const basePayload = {
         type,
         amount: parseFloat(amount!),
         title: title!,
@@ -90,7 +94,7 @@ export default function AddTransactionPage() {
 
       const result = await addTransactionMutation.mutateAsync({
         url: "/transactions/new-transaction",
-        payload,
+        payload: { ...basePayload, categoryId },
       });
 
       if (result?.success) {
@@ -99,6 +103,7 @@ export default function AddTransactionPage() {
         setDescription("");
         setAmount(null);
         setType(TransactionTypeConst.income);
+        setCategoryId(null);
 
         Toast.show({
           type: "success",
@@ -113,12 +118,15 @@ export default function AddTransactionPage() {
         // The save didn't reach the server (offline or a server-side failure —
         // both resolve here rather than throwing, see known-issues.md#FETCH-1).
         // Queue it locally instead of losing it.
-        await enqueuePendingTransactions([{ payload, origin: "manual" }]);
+        await enqueuePendingTransactions([
+          { payload: basePayload, origin: "manual" },
+        ]);
 
         setTitle("");
         setDescription("");
         setAmount(null);
         setType(TransactionTypeConst.income);
+        setCategoryId(null);
 
         Toast.show({
           type: "success",
@@ -189,6 +197,8 @@ export default function AddTransactionPage() {
         </View>
 
         <TypeToggle value={type} onChange={setType} />
+
+        <CategoryPicker value={categoryId} onChange={setCategoryId} />
 
         <View style={[styles.amountBlock, { borderBottomColor: accentColor }]}>
           <Text
