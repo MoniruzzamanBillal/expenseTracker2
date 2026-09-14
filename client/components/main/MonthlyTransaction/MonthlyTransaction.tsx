@@ -21,8 +21,9 @@ import EmptyState from "../shared/EmptyState";
 import SummaryPills from "../shared/SummaryPills";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
 import TransactionAccordion from "./TransactionAccordion";
+import TrendTab from "./TrendTab";
 
-type TView = "monthly" | "weekly";
+type TView = "monthly" | "weekly" | "trend";
 
 type TDailyData = {
   date: string;
@@ -220,7 +221,7 @@ export default function MonthlyTransactionPage() {
             { backgroundColor: C.surface2, borderColor: C.border },
           ]}
         >
-          {(["monthly", "weekly"] as TView[]).map((v) => {
+          {(["monthly", "weekly", "trend"] as TView[]).map((v) => {
             const active = view === v;
             return (
               <TouchableOpacity
@@ -241,7 +242,11 @@ export default function MonthlyTransactionPage() {
                     { color: active ? C.accent : C.textSecondary },
                   ]}
                 >
-                  {v === "monthly" ? "Monthly" : "Weekly"}
+                  {v === "monthly"
+                    ? "Monthly"
+                    : v === "weekly"
+                      ? "Weekly"
+                      : "Trend"}
                 </Text>
               </TouchableOpacity>
             );
@@ -358,7 +363,7 @@ export default function MonthlyTransactionPage() {
               <EmptyState title="No transactions this month" />
             )}
           </>
-        ) : (
+        ) : view === "weekly" ? (
           <>
             {weeklyTransaction?.data?.weekStart &&
             weeklyTransaction?.data?.weekEnd ? (
@@ -417,6 +422,8 @@ export default function MonthlyTransactionPage() {
               />
             )}
           </>
+        ) : (
+          <TrendTab />
         )}
       </ScrollView>
     </SafeAreaView>

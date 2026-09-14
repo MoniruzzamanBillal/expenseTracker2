@@ -31,3 +31,23 @@ export type TTransactionHistory = {
   month: number;
   transactionCount: number;
 };
+
+export type TTrendMonth = {
+  targetMonth: string;
+  income: number;
+  expense: number;
+};
+
+export type TCategoryBreakdownEntry = {
+  categoryId: string | null;
+  name: string;
+  icon: string | null;
+  income: number;
+  expense: number;
+};
+
+export type TTrendSummary = {
+  months: number;
+  monthlySummary: TTrendMonth[];
+  categoryBreakdown: TCategoryBreakdownEntry[];
+};
