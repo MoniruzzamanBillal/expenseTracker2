@@ -34,6 +34,40 @@ const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return Object.assign(Object.assign({}, result), { _id: result.id });
 });
+// ! for getting the logged-in user's own profile (password intentionally excluded)
+const getMe = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield prisma_1.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            profilePicture: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+    });
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    return Object.assign(Object.assign({}, user), { _id: user.id });
+});
+// ! for updating the logged-in user's own display name
+const updateProfile = (userId, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield prisma_1.prisma.user.update({
+        where: { id: userId },
+        data: { name: payload.name },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            profilePicture: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+    });
+    return Object.assign(Object.assign({}, result), { _id: result.id });
+});
 const loginFromDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = yield prisma_1.prisma.user.findUnique({
         where: { email: payload.email },
@@ -57,4 +91,4 @@ const loginFromDb = (payload) => __awaiter(void 0, void 0, void 0, function* () 
         token,
     };
 });
-exports.userServices = { createUser, loginFromDb };
+exports.userServices = { createUser, loginFromDb, getMe, updateProfile };

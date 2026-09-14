@@ -21,8 +21,15 @@ const loginValidationSchema = zod_1.z.object({
         password: zod_1.z.string().min(1, { message: "Password cannot be empty" }),
     }),
 });
+// Validation schema for updating the logged-in user's profile
+const updateProfileSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        name: zod_1.z.string().min(1, "Name is required"),
+    }),
+});
 //
 exports.userValidations = {
     createUserSchema,
     loginValidationSchema,
+    updateProfileSchema,
 };

@@ -105,6 +105,39 @@ const deleteTransactionData = (0, catchAsync_1.default)((req, res) => __awaiter(
         data: result,
     });
 }));
+// ! for attaching/replacing a transaction's receipt file
+const uploadReceiptFile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const result = yield transaction_service_1.transactionServices.uploadReceiptFile((_a = req.params) === null || _a === void 0 ? void 0 : _a.transactionId, (_b = req === null || req === void 0 ? void 0 : req.user) === null || _b === void 0 ? void 0 : _b.userId, req.file);
+    (0, sendResponse_1.default)(res, {
+        status: http_status_1.default.OK,
+        success: true,
+        message: "Receipt file uploaded successfully",
+        data: result,
+    });
+}));
+// ! for removing a transaction's receipt file
+const deleteReceiptFile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const result = yield transaction_service_1.transactionServices.deleteReceiptFile((_a = req.params) === null || _a === void 0 ? void 0 : _a.transactionId, (_b = req === null || req === void 0 ? void 0 : req.user) === null || _b === void 0 ? void 0 : _b.userId);
+    (0, sendResponse_1.default)(res, {
+        status: http_status_1.default.OK,
+        success: true,
+        message: "Receipt file deleted successfully",
+        data: result,
+    });
+}));
+// ! for getting the rolling N-month trend summary
+const getTrendSummary = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const result = yield transaction_service_1.transactionServices.getTrendSummary((_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.userId, req === null || req === void 0 ? void 0 : req.query);
+    (0, sendResponse_1.default)(res, {
+        status: http_status_1.default.OK,
+        success: true,
+        message: "Trend summary retrived successfully !!!",
+        data: result,
+    });
+}));
 // ! for money management
 const moneyManagement = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -127,4 +160,7 @@ exports.transactionControllers = {
     moneyManagement,
     addManyTransaction,
     getWeeklySummary,
+    uploadReceiptFile,
+    deleteReceiptFile,
+    getTrendSummary,
 };

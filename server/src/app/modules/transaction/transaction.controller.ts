@@ -116,6 +116,51 @@ const deleteTransactionData = catchAsync(async (req, res) => {
   });
 });
 
+// ! for attaching/replacing a transaction's receipt file
+const uploadReceiptFile = catchAsync(async (req, res) => {
+  const result = await transactionServices.uploadReceiptFile(
+    req.params?.transactionId,
+    req?.user?.userId,
+    req.file as Express.Multer.File,
+  );
+
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Receipt file uploaded successfully",
+    data: result,
+  });
+});
+
+// ! for removing a transaction's receipt file
+const deleteReceiptFile = catchAsync(async (req, res) => {
+  const result = await transactionServices.deleteReceiptFile(
+    req.params?.transactionId,
+    req?.user?.userId,
+  );
+
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Receipt file deleted successfully",
+    data: result,
+  });
+});
+
+// ! for getting the rolling N-month trend summary
+const getTrendSummary = catchAsync(async (req, res) => {
+  const result = await transactionServices.getTrendSummary(
+    req?.user?.userId,
+    req?.query,
+  );
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Trend summary retrived successfully !!!",
+    data: result,
+  });
+});
+
 // ! for money management
 const moneyManagement = catchAsync(async (req, res) => {
   const result = await transactionServices.moneyManagement(req.body?.prompt);
@@ -140,4 +185,7 @@ export const transactionControllers = {
   moneyManagement,
   addManyTransaction,
   getWeeklySummary,
+  uploadReceiptFile,
+  deleteReceiptFile,
+  getTrendSummary,
 };

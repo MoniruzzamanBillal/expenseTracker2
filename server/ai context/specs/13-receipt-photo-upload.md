@@ -1,6 +1,6 @@
 # 13: Receipt image/file upload (Cloudinary), attached after transaction creation
 
-Status: 📝 Drafted — awaiting review before implementation starts.
+Status: ✅ Completed 2026-09-14 — see `progress-tracker.md`'s "Specs 13/14" section for implementation summary and the build-blocking `@types/multer`/`@types/express` fix hit along the way.
 
 ## Cross-repo context
 
@@ -242,14 +242,14 @@ No new npm packages — `cloudinary`, `multer`, `@types/multer` are already inst
 
 ## Verify when done
 
-- [ ] `npx prisma migrate dev --name add_transaction_receipt_file` runs clean.
-- [ ] With real `CLOUDINARY_CLOUD_NAME`/`CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` set, `PUT /api/transactions/receipt-file/:id` with an image file returns `200` and the response's `data.receiptFileUrl`/`receiptFilePublicId`/`receiptFileResourceType` (`"image"`)/`receiptFileOriginalName` are populated.
-- [ ] `PUT /api/transactions/receipt-file/:id` with a PDF file returns `200`, `receiptFileResourceType` is `"raw"`, and the returned `receiptFileUrl` is fetchable (not a broken `image`-typed URL for a raw asset).
-- [ ] Re-uploading (`PUT` again, either type) to the same transaction replaces the file — the old Cloudinary asset is destroyed with the correct `resource_type` (verify via a direct request to the old URL, now 404), the fields hold only the new file, never both.
-- [ ] `DELETE /api/transactions/receipt-file/:id` unsets all four fields and destroys the Cloudinary asset (correct `resource_type` for whichever kind was stored).
-- [ ] `DELETE` on a transaction with no receipt file returns `400` with "No receipt file to delete", not a silent no-op.
-- [ ] Both routes 400 on a `transactionId` belonging to another user, a soft-deleted transaction, or a nonexistent id — matching `updateTransaction`'s existing "Invalid transaction id !!!" behavior exactly.
-- [ ] A non-image/non-PDF file upload is rejected by `fileFilter` with a clean `400` before ever reaching Cloudinary, not a `500`.
-- [ ] A file exceeding the 10MB limit triggers `multer.MulterError`, caught by `handleReceiptFileUpload` and surfaced as a clean `400`, not a `500`.
-- [ ] `POST /api/transactions/new-transaction` is confirmed unchanged (diff review) — no file field accepted or required at create time.
-- [ ] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.
+- [x] `npx prisma migrate dev --name add_transaction_receipt_file` runs clean.
+- [x] With real `CLOUDINARY_CLOUD_NAME`/`CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` set, `PUT /api/transactions/receipt-file/:id` with an image file returns `200` and the response's `data.receiptFileUrl`/`receiptFilePublicId`/`receiptFileResourceType` (`"image"`)/`receiptFileOriginalName` are populated.
+- [x] `PUT /api/transactions/receipt-file/:id` with a PDF file returns `200`, `receiptFileResourceType` is `"raw"`, and the returned `receiptFileUrl` is fetchable (not a broken `image`-typed URL for a raw asset).
+- [x] Re-uploading (`PUT` again, either type) to the same transaction replaces the file — the old Cloudinary asset is destroyed with the correct `resource_type` (confirmed via Cloudinary's Admin API `resources` lookup, since the CDN URL itself kept returning a stale cached `200` for a bit — expected edge-cache behavior without `invalidate: true`, not a bug), the fields hold only the new file, never both.
+- [x] `DELETE /api/transactions/receipt-file/:id` unsets all four fields and destroys the Cloudinary asset (correct `resource_type` for whichever kind was stored) — confirmed via Admin API lookup.
+- [x] `DELETE` on a transaction with no receipt file returns `400` with "No receipt file to delete", not a silent no-op.
+- [x] Both routes 400 on a `transactionId` belonging to another user, a soft-deleted transaction, or a nonexistent id — matching `updateTransaction`'s existing "Invalid transaction id !!!" behavior exactly.
+- [x] A non-image/non-PDF file upload is rejected by `fileFilter` with a clean `400` before ever reaching Cloudinary, not a `500`.
+- [x] A file exceeding the 10MB limit triggers `multer.MulterError`, caught by `handleReceiptFileUpload` and surfaced as a clean `400`, not a `500`.
+- [x] `POST /api/transactions/new-transaction` is confirmed unchanged (diff review) — no file field accepted or required at create time.
+- [x] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.

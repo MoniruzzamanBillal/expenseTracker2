@@ -17,16 +17,52 @@ const http_status_1 = __importDefault(require("http-status"));
 const AppError_1 = __importDefault(require("../../Error/AppError"));
 const openRouter_1 = require("../../helper/openRouter");
 const prisma_1 = require("../../lib/prisma");
+const cloudinary_1 = require("../../util/cloudinary");
 const generateObjectId_1 = require("../../util/generateObjectId");
 const transaction_constant_1 = require("./transaction.constant");
 const toApiShape = (t) => (Object.assign(Object.assign({}, t), { _id: t.id, amount: Number(t.amount) }));
+// ! ownership check for a user-supplied categoryId — never trust a bare id without verifying it
+const assertCategoryOwnership = (categoryId, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!categoryId)
+        return;
+    const category = yield prisma_1.prisma.category.findFirst({
+        where: { id: categoryId, userId, isDeleted: false },
+    });
+    if (!category) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid category id !!!");
+    }
+});
+// ! groups a transaction set by category (dynamic per-user categories, no fixed universe)
+const buildCategoryBreakdown = (transactions) => {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const buckets = {};
+    for (const t of transactions) {
+        const key = (_b = (_a = t.category) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : "uncategorized";
+        if (!buckets[key]) {
+            buckets[key] = {
+                categoryId: (_d = (_c = t.category) === null || _c === void 0 ? void 0 : _c.id) !== null && _d !== void 0 ? _d : null,
+                name: (_f = (_e = t.category) === null || _e === void 0 ? void 0 : _e.name) !== null && _f !== void 0 ? _f : "Uncategorized",
+                icon: (_h = (_g = t.category) === null || _g === void 0 ? void 0 : _g.icon) !== null && _h !== void 0 ? _h : null,
+                income: 0,
+                expense: 0,
+            };
+        }
+        if (t.type === transaction_constant_1.transactionConstants.income)
+            buckets[key].income += t.amount;
+        else if (t.type === transaction_constant_1.transactionConstants.expense)
+            buckets[key].expense += t.amount;
+    }
+    return Object.values(buckets);
+};
 // ! for adding new transaction
 const addNewTransaction = (payload_1, userId_1, ...args_1) => __awaiter(void 0, [payload_1, userId_1, ...args_1], void 0, function* (payload, userId, client = prisma_1.prisma) {
+    yield assertCategoryOwnership(payload.categoryId, userId);
     const result = yield client.transaction.create({
         data: {
             id: (0, generateObjectId_1.generateObjectId)(),
             userId,
             type: payload.type,
+            categoryId: payload.categoryId,
             title: payload.title,
             description: payload.description,
             amount: payload.amount,
@@ -36,10 +72,12 @@ const addNewTransaction = (payload_1, userId_1, ...args_1) => __awaiter(void 0, 
 });
 // ! for adding tranaction as array
 const addManyTransaction = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    yield Promise.all(payload.map((data) => assertCategoryOwnership(data.categoryId, userId)));
     const formattedPayload = payload === null || payload === void 0 ? void 0 : payload.map((data) => ({
         id: (0, generateObjectId_1.generateObjectId)(),
         userId,
         type: data.type,
+        categoryId: data.categoryId,
         title: data.title,
         description: data.description,
         amount: data.amount,
@@ -64,6 +102,7 @@ const getMonthlyTransactions = (userId, query) => __awaiter(void 0, void 0, void
             isDeleted: false,
         },
         orderBy: { createdAt: "desc" },
+        include: { category: true },
     });
     const transactions = transactionsRaw.map(toApiShape);
     const income = transactions
@@ -72,6 +111,7 @@ const getMonthlyTransactions = (userId, query) => __awaiter(void 0, void 0, void
     const expense = transactions
         .filter((t) => (t === null || t === void 0 ? void 0 : t.type) === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.expense))
         .reduce((acc, curr) => acc + (curr === null || curr === void 0 ? void 0 : curr.amount), 0);
+    const categoryBreakdown = buildCategoryBreakdown(transactions);
     const dailyDate = {};
     transactions === null || transactions === void 0 ? void 0 : transactions.forEach((tran) => {
         var _a;
@@ -94,7 +134,7 @@ const getMonthlyTransactions = (userId, query) => __awaiter(void 0, void 0, void
         expense: value === null || value === void 0 ? void 0 : value.expense,
         transactions: value === null || value === void 0 ? void 0 : value.transactions,
     }));
-    return { income, expense, transactionData: updatedData };
+    return { income, expense, transactionData: updatedData, categoryBreakdown };
 });
 // ! for getting the daily transaction
 const getDailyTransactions = (userId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -108,6 +148,7 @@ const getDailyTransactions = (userId) => __awaiter(void 0, void 0, void 0, funct
             isDeleted: false,
         },
         orderBy: { createdAt: "desc" },
+        include: { category: true },
     });
     const transactions = transactionsRaw.map(toApiShape);
     const income = transactions
@@ -116,7 +157,8 @@ const getDailyTransactions = (userId) => __awaiter(void 0, void 0, void 0, funct
     const expense = transactions
         .filter((t) => t.type === (transaction_constant_1.transactionConstants === null || transaction_constant_1.transactionConstants === void 0 ? void 0 : transaction_constant_1.transactionConstants.expense))
         .reduce((acc, curr) => acc + curr.amount, 0);
-    return { income, expense, transactions };
+    const categoryBreakdown = buildCategoryBreakdown(transactions);
+    return { income, expense, transactions, categoryBreakdown };
     //
 });
 // ! for getting the yearly transaction summary
@@ -171,6 +213,9 @@ const updateTransaction = (transactionId, userId, payload) => __awaiter(void 0, 
     if (!transactionData) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid transaction id !!!");
     }
+    if ("categoryId" in payload) {
+        yield assertCategoryOwnership(payload.categoryId, userId);
+    }
     const result = yield prisma_1.prisma.transaction.update({
         where: { id: transactionId },
         data: payload,
@@ -188,6 +233,55 @@ const deleteTransactionData = (transactionId, userId) => __awaiter(void 0, void 
     const result = yield prisma_1.prisma.transaction.update({
         where: { id: transactionId },
         data: { isDeleted: true },
+    });
+    return toApiShape(result);
+});
+// ! for attaching/replacing a transaction's receipt file (image or PDF) — never at create time
+const uploadReceiptFile = (transactionId, userId, file) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const existing = yield prisma_1.prisma.transaction.findFirst({
+        where: { id: transactionId, userId, isDeleted: false },
+    });
+    if (!existing) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid transaction id !!!");
+    }
+    if (existing.receiptFilePublicId) {
+        // best-effort, replaces old asset — resourceType must match what it was uploaded with
+        yield (0, cloudinary_1.deleteCloudinaryImage)(existing.receiptFilePublicId, (_a = existing.receiptFileResourceType) !== null && _a !== void 0 ? _a : "image");
+    }
+    const { url, publicId, resourceType } = yield (0, cloudinary_1.uploadDocumentBuffer)(file.buffer, file.mimetype);
+    const result = yield prisma_1.prisma.transaction.update({
+        where: { id: transactionId },
+        data: {
+            receiptFileUrl: url,
+            receiptFilePublicId: publicId,
+            receiptFileResourceType: resourceType,
+            receiptFileOriginalName: file.originalname,
+        },
+    });
+    return toApiShape(result);
+});
+// ! for removing a transaction's receipt file
+const deleteReceiptFile = (transactionId, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const existing = yield prisma_1.prisma.transaction.findFirst({
+        where: { id: transactionId, userId, isDeleted: false },
+    });
+    if (!existing) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid transaction id !!!");
+    }
+    if (!existing.receiptFilePublicId) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "No receipt file to delete");
+    }
+    yield (0, cloudinary_1.deleteCloudinaryImage)(existing.receiptFilePublicId, (_a = existing.receiptFileResourceType) !== null && _a !== void 0 ? _a : "image");
+    const result = yield prisma_1.prisma.transaction.update({
+        where: { id: transactionId },
+        data: {
+            receiptFileUrl: null,
+            receiptFilePublicId: null,
+            receiptFileResourceType: null,
+            receiptFileOriginalName: null,
+        },
     });
     return toApiShape(result);
 });
@@ -306,6 +400,7 @@ const getWeeklySummary = (userId) => __awaiter(void 0, void 0, void 0, function*
             createdAt: { gte: start, lt: end },
             isDeleted: false,
         },
+        include: { category: true },
     });
     const transactions = transactionsRaw.map(toApiShape);
     const totalIncome = transactions
@@ -314,6 +409,7 @@ const getWeeklySummary = (userId) => __awaiter(void 0, void 0, void 0, function*
     const totalExpense = transactions
         .filter((t) => t.type === transaction_constant_1.transactionConstants.expense)
         .reduce((acc, cur) => acc + cur.amount, 0);
+    const categoryBreakdown = buildCategoryBreakdown(transactions);
     const dailyData = {};
     transactions.forEach((tran) => {
         const txDate = new Date(tran.createdAt);
@@ -350,6 +446,59 @@ const getWeeklySummary = (userId) => __awaiter(void 0, void 0, void 0, function*
         income: totalIncome,
         expense: totalExpense,
         transactionData,
+        categoryBreakdown,
+    };
+});
+// ! rolling N-month income/expense totals + latest month's category breakdown
+const getTrendSummary = (userId, query) => __awaiter(void 0, void 0, void 0, function* () {
+    const months = Math.min(24, Math.max(1, Number(query === null || query === void 0 ? void 0 : query.months) || 6));
+    const now = new Date();
+    // Window: [start, end) — start is the 1st of the oldest included month,
+    // end is the 1st of the month *after* the current one (exclusive upper bound).
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1));
+    const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+    const transactionsRaw = yield prisma_1.prisma.transaction.findMany({
+        where: { userId, isDeleted: false, createdAt: { gte: start, lt: end } },
+        include: { category: true },
+    });
+    const transactions = transactionsRaw.map(toApiShape);
+    // Pre-seed one zero-valued bucket per month in the window, oldest first — same
+    // "never drop a quiet month" discipline getYearlySummary already applies per-year,
+    // generalized here to an arbitrary rolling window that can cross a year boundary.
+    const monthKey = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    const buckets = {};
+    for (let i = 0; i < months; i++) {
+        const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1) + i, 1));
+        buckets[monthKey(d)] = {
+            targetMonth: monthKey(d),
+            income: 0,
+            expense: 0,
+            transactions: [],
+        };
+    }
+    for (const t of transactions) {
+        const key = monthKey(new Date(t.createdAt));
+        if (!buckets[key])
+            continue; // defensive — shouldn't happen given the query's own range
+        if (t.type === transaction_constant_1.transactionConstants.income)
+            buckets[key].income += t.amount;
+        else if (t.type === transaction_constant_1.transactionConstants.expense)
+            buckets[key].expense += t.amount;
+        buckets[key].transactions.push(t);
+    }
+    // Object.values preserves insertion order here since every key is a "YYYY-MM" string,
+    // never a bare-integer-like key JS would otherwise reorder — buckets stay oldest→newest.
+    const monthlyBuckets = Object.values(buckets);
+    const latest = monthlyBuckets[monthlyBuckets.length - 1];
+    const latestExpenseTransactions = latest.transactions.filter((t) => t.type === transaction_constant_1.transactionConstants.expense);
+    return {
+        months,
+        monthlySummary: monthlyBuckets.map(({ targetMonth, income, expense }) => ({
+            targetMonth,
+            income,
+            expense,
+        })),
+        categoryBreakdown: buildCategoryBreakdown(latestExpenseTransactions),
     };
 });
 //
@@ -363,4 +512,7 @@ exports.transactionServices = {
     getMonthlyTransactions,
     moneyManagement,
     getWeeklySummary,
+    uploadReceiptFile,
+    deleteReceiptFile,
+    getTrendSummary,
 };

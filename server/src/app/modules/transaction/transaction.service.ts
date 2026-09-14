@@ -2,6 +2,10 @@ import httpStatus from "http-status";
 import AppError from "../../Error/AppError";
 import { askOpenRouter } from "../../helper/openRouter";
 import { prisma } from "../../lib/prisma";
+import {
+  deleteCloudinaryImage,
+  uploadDocumentBuffer,
+} from "../../util/cloudinary";
 import { generateObjectId } from "../../util/generateObjectId";
 import { transactionConstants } from "./transaction.constant";
 import { TTransaction } from "./transaction.interface";
@@ -348,6 +352,75 @@ const deleteTransactionData = async (
   return toApiShape(result);
 };
 
+// ! for attaching/replacing a transaction's receipt file (image or PDF) — never at create time
+const uploadReceiptFile = async (
+  transactionId: string,
+  userId: string,
+  file: Express.Multer.File, // memoryStorage — file.buffer is populated, file.path/filename are not
+) => {
+  const existing = await prisma.transaction.findFirst({
+    where: { id: transactionId, userId, isDeleted: false },
+  });
+  if (!existing) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid transaction id !!!");
+  }
+
+  if (existing.receiptFilePublicId) {
+    // best-effort, replaces old asset — resourceType must match what it was uploaded with
+    await deleteCloudinaryImage(
+      existing.receiptFilePublicId,
+      (existing.receiptFileResourceType as "image" | "raw" | null) ?? "image",
+    );
+  }
+
+  const { url, publicId, resourceType } = await uploadDocumentBuffer(
+    file.buffer,
+    file.mimetype,
+  );
+
+  const result = await prisma.transaction.update({
+    where: { id: transactionId },
+    data: {
+      receiptFileUrl: url,
+      receiptFilePublicId: publicId,
+      receiptFileResourceType: resourceType,
+      receiptFileOriginalName: file.originalname,
+    },
+  });
+
+  return toApiShape(result);
+};
+
+// ! for removing a transaction's receipt file
+const deleteReceiptFile = async (transactionId: string, userId: string) => {
+  const existing = await prisma.transaction.findFirst({
+    where: { id: transactionId, userId, isDeleted: false },
+  });
+  if (!existing) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid transaction id !!!");
+  }
+  if (!existing.receiptFilePublicId) {
+    throw new AppError(httpStatus.BAD_REQUEST, "No receipt file to delete");
+  }
+
+  await deleteCloudinaryImage(
+    existing.receiptFilePublicId,
+    (existing.receiptFileResourceType as "image" | "raw" | null) ?? "image",
+  );
+
+  const result = await prisma.transaction.update({
+    where: { id: transactionId },
+    data: {
+      receiptFileUrl: null,
+      receiptFilePublicId: null,
+      receiptFileResourceType: null,
+      receiptFileOriginalName: null,
+    },
+  });
+
+  return toApiShape(result);
+};
+
 // ! for moneyManagement (prompt with ai)
 const moneyManagement = async (prompt: string) => {
   const systemPrompt = `
@@ -552,6 +625,82 @@ const getWeeklySummary = async (userId: string) => {
   };
 };
 
+type TTrendPayload = {
+  months?: string;
+};
+
+// ! rolling N-month income/expense totals + latest month's category breakdown
+const getTrendSummary = async (userId: string, query: TTrendPayload) => {
+  const months = Math.min(24, Math.max(1, Number(query?.months) || 6));
+
+  const now = new Date();
+  // Window: [start, end) — start is the 1st of the oldest included month,
+  // end is the 1st of the month *after* the current one (exclusive upper bound).
+  const start = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1),
+  );
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+
+  const transactionsRaw = await prisma.transaction.findMany({
+    where: { userId, isDeleted: false, createdAt: { gte: start, lt: end } },
+    include: { category: true },
+  });
+  const transactions = transactionsRaw.map(toApiShape);
+
+  // Pre-seed one zero-valued bucket per month in the window, oldest first — same
+  // "never drop a quiet month" discipline getYearlySummary already applies per-year,
+  // generalized here to an arbitrary rolling window that can cross a year boundary.
+  const monthKey = (d: Date) =>
+    `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  const buckets: Record<
+    string,
+    {
+      targetMonth: string;
+      income: number;
+      expense: number;
+      transactions: typeof transactions;
+    }
+  > = {};
+  for (let i = 0; i < months; i++) {
+    const d = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1) + i, 1),
+    );
+    buckets[monthKey(d)] = {
+      targetMonth: monthKey(d),
+      income: 0,
+      expense: 0,
+      transactions: [],
+    };
+  }
+
+  for (const t of transactions) {
+    const key = monthKey(new Date(t.createdAt as Date));
+    if (!buckets[key]) continue; // defensive — shouldn't happen given the query's own range
+    if (t.type === transactionConstants.income) buckets[key].income += t.amount;
+    else if (t.type === transactionConstants.expense)
+      buckets[key].expense += t.amount;
+    buckets[key].transactions.push(t);
+  }
+
+  // Object.values preserves insertion order here since every key is a "YYYY-MM" string,
+  // never a bare-integer-like key JS would otherwise reorder — buckets stay oldest→newest.
+  const monthlyBuckets = Object.values(buckets);
+  const latest = monthlyBuckets[monthlyBuckets.length - 1];
+  const latestExpenseTransactions = latest.transactions.filter(
+    (t) => t.type === transactionConstants.expense,
+  );
+
+  return {
+    months,
+    monthlySummary: monthlyBuckets.map(({ targetMonth, income, expense }) => ({
+      targetMonth,
+      income,
+      expense,
+    })),
+    categoryBreakdown: buildCategoryBreakdown(latestExpenseTransactions),
+  };
+};
+
 //
 export const transactionServices = {
   addNewTransaction,
@@ -564,4 +713,7 @@ export const transactionServices = {
   getMonthlyTransactions,
   moneyManagement,
   getWeeklySummary,
+  uploadReceiptFile,
+  deleteReceiptFile,
+  getTrendSummary,
 };

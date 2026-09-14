@@ -9,6 +9,11 @@ export interface TTransaction {
   amount: number;
   isDeleted: boolean;
 
+  receiptFileUrl?: string | null;
+  receiptFilePublicId?: string | null;
+  receiptFileResourceType?: string | null;
+  receiptFileOriginalName?: string | null;
+
   createdAt?: Date;
   updatedAt?: Date;
 }

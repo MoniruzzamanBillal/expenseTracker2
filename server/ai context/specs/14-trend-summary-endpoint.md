@@ -1,6 +1,6 @@
 # 14: Trend summary endpoint (rolling N-month totals + latest-month category breakdown)
 
-Status: 📝 Drafted — awaiting review before implementation starts. **The category-breakdown half depends on `09-wire-category-to-transaction.md`'s `buildCategoryBreakdown` helper existing — see Scope.**
+Status: ✅ Completed 2026-09-14 — see `progress-tracker.md`'s "Specs 13/14" section for implementation summary. `09`'s `buildCategoryBreakdown` helper already existed in the codebase, reused verbatim as planned.
 
 ## Cross-repo context
 
@@ -123,11 +123,11 @@ No new npm packages, no Prisma migration — reads existing `Transaction`/`Categ
 
 ## Verify when done
 
-- [ ] `GET /api/transactions/trend-transaction` with no query param returns exactly 6 months, ending at the current month.
-- [ ] `?months=3` and `?months=12` return exactly that many months; `?months=0`, `?months=999`, and `?months=abc` all clamp/fall back sanely (`1`, `24`, and the `6` default respectively) rather than erroring or returning an empty/huge array.
-- [ ] A month in the window with zero transactions still appears in `monthlySummary` as `{ income: 0, expense: 0 }`, not omitted.
-- [ ] The window correctly spans a calendar-year boundary (e.g. requested in January with `months=6` includes the previous August–December) — confirmed by checking `monthlySummary[0].targetMonth` against a manual calculation, not just trusting the code.
-- [ ] `categoryBreakdown` reflects only the **latest** month's **expense**-type transactions — a large income transaction in the latest month, or any transaction (income or expense) in an earlier month in the window, does not appear in it.
-- [ ] `categoryBreakdown` includes an "Uncategorized" bucket when the latest month has at least one expense transaction with `categoryId: null`, matching spec 09's existing convention.
-- [ ] Two different users' data never mixes — verified against a second throwaway user's transactions.
-- [ ] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.
+- [x] `GET /api/transactions/trend-transaction` with no query param returns exactly 6 months, ending at the current month.
+- [x] `?months=3` and `?months=12` return exactly that many months; `?months=0`, `?months=999`, and `?months=abc` all clamp/fall back sanely (`1`, `24`, and the `6` default respectively) rather than erroring or returning an empty/huge array.
+- [x] A month in the window with zero transactions still appears in `monthlySummary` as `{ income: 0, expense: 0 }`, not omitted.
+- [x] The window correctly spans a calendar-year boundary — verified with `?months=12` requested in September 2026, which correctly returned `2025-10` through `2026-09`, confirmed against a manual calculation, not just trusting the code.
+- [x] `categoryBreakdown` reflects only the **latest** month's **expense**-type transactions — verified with a second user whose only transaction was a large income (`9999`) in the latest month: `categoryBreakdown` came back as `[]`, and `monthlySummary`'s latest-month `income` correctly showed `9999`/`expense: 0`.
+- [x] `categoryBreakdown` includes an "Uncategorized" bucket when the latest month has at least one expense transaction with `categoryId: null`, matching spec 09's existing convention.
+- [x] Two different users' data never mixes — verified against a second throwaway user's transactions.
+- [x] `yarn build` / `npx tsc --noEmit` / `yarn lint` clean.

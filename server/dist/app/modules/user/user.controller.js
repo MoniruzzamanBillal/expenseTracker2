@@ -39,8 +39,30 @@ const signIn = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0,
         token: token,
     });
 }));
+// ! for getting the logged-in user's own profile
+const getMe = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_services_1.userServices.getMe(req.user.userId);
+    (0, sendResponse_1.default)(res, {
+        status: http_status_1.default.OK,
+        success: true,
+        message: "Profile retrieved successfully",
+        data: result,
+    });
+}));
+// ! for updating the logged-in user's own profile
+const updateProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_services_1.userServices.updateProfile(req.user.userId, req.body);
+    (0, sendResponse_1.default)(res, {
+        status: http_status_1.default.OK,
+        success: true,
+        message: "Profile updated successfully",
+        data: result,
+    });
+}));
 //
 exports.userController = {
     crateUser,
     signIn,
+    getMe,
+    updateProfile,
 };
