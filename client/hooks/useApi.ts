@@ -68,6 +68,29 @@ export const useUpdateData = (key: string[], endPoint: string) => {
   });
 };
 
+// Identical in shape to usePatch, sitting alongside the existing (differently
+// shaped, fixed key/endPoint) useUpdateData without changing it — useUpdateData
+// still has zero call sites (known-issues.md#FETCH-2), untouched by this addition.
+export const usePut = (invalidateQueriesKeys?: string[][]) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: { url: string; payload: FormData }) => {
+      return apiPut(params.url, params.payload);
+    },
+    onSuccess: () => {
+      if (invalidateQueriesKeys) {
+        invalidateQueriesKeys.forEach((key) => {
+          queryClient.invalidateQueries({ queryKey: key });
+        });
+      }
+    },
+    onError: (error) => {
+      throw error;
+    },
+  });
+};
+
 export const usePatch = (invalidateQueriesKeys?: string[][]) => {
   const queryClient = useQueryClient();
 

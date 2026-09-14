@@ -17,6 +17,7 @@ import {
 import { Swipeable } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import PendingTransactionEditModal from "./PendingTransactionEditModal";
+import ReceiptViewerModal from "./ReceiptViewerModal";
 import UpdateTransactionModal from "./UpdateTransactionModal";
 
 const INVALIDATE_KEYS = [
@@ -49,6 +50,7 @@ export default function TransactionCard({
 }: TProps) {
   const C = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
+  const [receiptViewerOpen, setReceiptViewerOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
   const isIncome = transactionData?.type === TransactionTypeConst.income;
 
@@ -350,6 +352,18 @@ export default function TransactionCard({
                   : time}
             </Text>
           </View>
+          {!compact && transactionData?.receiptFileUrl ? (
+            <TouchableOpacity
+              onPress={() => setReceiptViewerOpen(true)}
+              style={styles.receiptIconBtn}
+            >
+              <MaterialCommunityIcons
+                name="paperclip"
+                size={16}
+                color={C.textSecondary}
+              />
+            </TouchableOpacity>
+          ) : null}
           <Text
             style={[
               compact ? text.amountXs : text.amountSm,
@@ -360,6 +374,14 @@ export default function TransactionCard({
           </Text>
         </View>
       </Swipeable>
+
+      {!compact && transactionData?.receiptFileUrl ? (
+        <ReceiptViewerModal
+          visible={receiptViewerOpen}
+          imageUrl={transactionData.receiptFileUrl}
+          onDismiss={() => setReceiptViewerOpen(false)}
+        />
+      ) : null}
 
       {modalOpen && (
         <UpdateTransactionModal
@@ -378,6 +400,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
   },
+  receiptIconBtn: { padding: 2 },
   pendingRow: {
     paddingVertical: 12,
     paddingHorizontal: spacing.md,

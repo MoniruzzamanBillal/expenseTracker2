@@ -10,7 +10,15 @@ import Toast from "react-native-toast-message";
 import CategoryPicker from "./CategoryPicker";
 import FormField from "./FormField";
 import PrimaryButton from "./PrimaryButton";
+import ReceiptImagePicker from "./ReceiptImagePicker";
 import TypeToggle from "./TypeToggle";
+
+const INVALIDATE_KEYS = [
+  ["daily-transaction"],
+  ["monthly-transaction"],
+  ["weekly-transaction"],
+  ["yearly-transaction"],
+];
 
 type TPageProps = {
   open: boolean;
@@ -42,12 +50,7 @@ export default function UpdateTransactionModal({
     initialValue?.categoryId ?? null,
   );
 
-  const patchMutation = usePatch([
-    ["daily-transaction"],
-    ["monthly-transaction"],
-    ["weekly-transaction"],
-    ["yearly-transaction"],
-  ]);
+  const patchMutation = usePatch(INVALIDATE_KEYS);
 
   const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
 
@@ -182,6 +185,14 @@ export default function UpdateTransactionModal({
                 inputStyle={{ height: 70, textAlignVertical: "top", paddingTop: 12 }}
               />
             </View>
+
+            {initialValue?._id ? (
+              <ReceiptImagePicker
+                transactionId={initialValue._id}
+                value={initialValue?.receiptFileUrl}
+                invalidateKeys={INVALIDATE_KEYS}
+              />
+            ) : null}
 
             <PrimaryButton
               label={patchMutation?.isPending ? "Updating..." : "Update Transaction"}
