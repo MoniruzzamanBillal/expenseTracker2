@@ -19,7 +19,11 @@ type TProps = {
 
 const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
-export default function CategoryBreakdown({ data, selected, onSelect }: TProps) {
+export default function CategoryBreakdown({
+  data,
+  selected,
+  onSelect,
+}: TProps) {
   const C = useTheme();
 
   const sorted = useMemo(
@@ -53,23 +57,15 @@ export default function CategoryBreakdown({ data, selected, onSelect }: TProps) 
             <MaterialCommunityIcons
               name={(entry.icon as any) ?? "tag-outline"}
               size={14}
-              color={active ? C.accent : C.textSecondary}
+              color={C.expense}
             />
             <Text
-              style={[
-                text.caption,
-                { color: active ? C.accent : C.text },
-              ]}
+              style={[text.caption, { color: active ? C.accent : C.text }]}
               numberOfLines={1}
             >
               {entry.name}
             </Text>
-            <Text
-              style={[
-                text.caption,
-                { color: active ? C.accent : C.textSecondary },
-              ]}
-            >
+            <Text style={[text.caption, { color: C.expense }]}>
               ৳{fmt(entry.expense)}
             </Text>
           </TouchableOpacity>
