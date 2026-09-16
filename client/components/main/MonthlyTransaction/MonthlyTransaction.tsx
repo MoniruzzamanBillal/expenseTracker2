@@ -76,9 +76,9 @@ export default function MonthlyTransactionPage() {
   const C = useTheme();
   const [view, setView] = useState<TView>("monthly");
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCategoryKey, setSelectedCategoryKey] = useState<
-    string | null
-  >(null);
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(
+    null,
+  );
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();

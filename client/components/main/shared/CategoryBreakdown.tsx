@@ -56,16 +56,22 @@ export default function CategoryBreakdown({
           >
             <MaterialCommunityIcons
               name={(entry.icon as any) ?? "tag-outline"}
-              size={14}
+              size={13}
               color={C.expense}
             />
             <Text
-              style={[text.caption, { color: active ? C.accent : C.text }]}
+              style={[
+                text.caption,
+                styles.tightLine,
+                { color: active ? C.accent : C.text },
+              ]}
               numberOfLines={1}
             >
               {entry.name}
             </Text>
-            <Text style={[text.caption, { color: C.expense }]}>
+            <Text
+              style={[text.caption, styles.tightLine, { color: C.expense }]}
+            >
               ৳{fmt(entry.expense)}
             </Text>
           </TouchableOpacity>
@@ -78,15 +84,19 @@ export default function CategoryBreakdown({
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: 0.5,
+  },
+  tightLine: {
+    lineHeight: 14,
+    includeFontPadding: false,
   },
 });

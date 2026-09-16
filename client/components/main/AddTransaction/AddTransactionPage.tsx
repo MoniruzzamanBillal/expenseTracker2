@@ -1,4 +1,4 @@
-import CategoryPicker from "@/components/main/shared/CategoryPicker";
+import CategorySelectField from "@/components/main/shared/CategorySelectField";
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import TypeToggle from "@/components/main/shared/TypeToggle";
@@ -198,8 +198,6 @@ export default function AddTransactionPage() {
 
         <TypeToggle value={type} onChange={setType} />
 
-        <CategoryPicker value={categoryId} onChange={setCategoryId} />
-
         <View style={[styles.amountBlock, { borderBottomColor: accentColor }]}>
           <Text
             style={[
@@ -236,6 +234,9 @@ export default function AddTransactionPage() {
           error={errors.title}
           placeholder="e.g. Groceries"
         />
+
+        <CategorySelectField value={categoryId} onChange={setCategoryId} />
+
         <FormField
           label="Description"
           value={description || ""}
@@ -278,11 +279,11 @@ const styles = StyleSheet.create({
   smartAddBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    borderWidth: 1,
+    gap: 3,
+    borderWidth: 0.5,
     borderRadius: 999,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
   amountBlock: {
     borderBottomWidth: 2,
