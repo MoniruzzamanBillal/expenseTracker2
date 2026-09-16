@@ -4,6 +4,7 @@ import { TransactionTypeConst } from "@/constants/TransactionType.constant";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { createBatchId } from "@/utils/transactionQueue";
 import { useTheme, text, spacing, radius } from "@/theme";
+import CategoryPicker from "@/components/main/shared/CategoryPicker";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import FormField from "@/components/main/shared/FormField";
 import TypeToggle from "@/components/main/shared/TypeToggle";
@@ -81,7 +82,7 @@ export default function SmartAddPage() {
     }
   };
 
-  const updateDraft = (i: number, key: keyof TDraftTransaction, value: string | number) => {
+  const updateDraft = (i: number, key: keyof TDraftTransaction, value: string | number | null) => {
     setDrafts((prev) => (prev ? prev.map((d, idx) => (idx === i ? { ...d, [key]: value } : d)) : prev));
   };
 
@@ -107,6 +108,7 @@ export default function SmartAddPage() {
     }
 
     try {
+      // spec 22 / G2 — include categoryId in the online save payload
       const result = await saveMutation.mutateAsync({
         url: "/transactions/many-transaction",
         payload: drafts.map((d) => ({
@@ -114,6 +116,7 @@ export default function SmartAddPage() {
           title: d.title,
           amount: d.amount,
           description: d.description ?? " ",
+          categoryId: d.categoryId ?? null,
         })),
       });
 
@@ -129,10 +132,7 @@ export default function SmartAddPage() {
 
         setTimeout(() => router.push("/"), 100);
       } else {
-        // Didn't reach the server (offline or a server-side failure — both
-        // resolve here rather than throwing, see known-issues.md#FETCH-1).
-        // Queue every item individually, sharing one batchId for display
-        // grouping only — sync still syncs each one separately (spec 02).
+        // Offline-queue path intentionally omits categoryId (spec 13 scope / spec 22 scope).
         const batchId = createBatchId();
 
         await enqueuePendingTransactions(
@@ -237,6 +237,12 @@ export default function SmartAddPage() {
                       <MaterialCommunityIcons name="close" size={18} color={C.textMuted} />
                     </TouchableOpacity>
                   </View>
+
+                  {/* spec 22 / G2 — category picker on each draft card */}
+                  <CategoryPicker
+                    value={draft.categoryId ?? null}
+                    onChange={(v) => updateDraft(i, "categoryId", v)}
+                  />
 
                   <FormField
                     label="Title"

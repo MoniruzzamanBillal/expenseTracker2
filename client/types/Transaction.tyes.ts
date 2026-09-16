@@ -23,6 +23,10 @@ export type TTransaction = {
   // contract — see ai context/specs/20-fix-receipt-endpoint-contract-mismatch.md.
   receiptFileUrl?: string | null;
   receiptFilePublicId?: string | null;
+  receiptFileOriginalName?: string | null; // spec 24 / G4
+  receiptFileResourceType?: string | null; // spec 24 / G4
+
+  isDeleted?: boolean; // spec 24 / G6 — filtered server-side, additive only
 };
 
 export type TTransactionHistory = {

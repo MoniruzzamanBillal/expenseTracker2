@@ -380,6 +380,7 @@ export default function TransactionCard({
           visible={receiptViewerOpen}
           imageUrl={transactionData.receiptFileUrl}
           onDismiss={() => setReceiptViewerOpen(false)}
+          fileName={transactionData.receiptFileOriginalName}
         />
       ) : null}
 

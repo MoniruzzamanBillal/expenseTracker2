@@ -4,16 +4,24 @@ import { useFetchData } from "@/hooks/useApi";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { TTrendSummary } from "@/types/Transaction.tyes";
 import { format, parse } from "date-fns";
+import { useState } from "react";
 import { BarChart, PieChart } from "react-native-gifted-charts";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
+const MONTH_OPTIONS = [3, 6, 12] as const;
+type TMonths = (typeof MONTH_OPTIONS)[number];
+
 export default function TrendTab() {
   const C = useTheme();
+
+  // spec 23 / G3 — user-selectable lookback window; server default is 6
+  const [months, setMonths] = useState<TMonths>(6);
+
   const { data, isLoading } = useFetchData<TTrendSummary>(
-    ["trend-transaction"],
-    "/transactions/trend-transaction",
+    ["trend-transaction", String(months)],
+    `/transactions/trend-transaction?months=${months}`,
   );
 
   const trend = data?.data;
@@ -43,6 +51,41 @@ export default function TrendTab() {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
+      {/* spec 23 / G3 — months segmented control */}
+      <View
+        style={[
+          styles.segmentTrack,
+          { backgroundColor: C.surface2, borderColor: C.border },
+        ]}
+      >
+        {MONTH_OPTIONS.map((m) => {
+          const active = months === m;
+          return (
+            <TouchableOpacity
+              key={m}
+              onPress={() => setMonths(m)}
+              activeOpacity={0.8}
+              style={[
+                styles.segmentOpt,
+                {
+                  borderColor: active ? C.accent : "transparent",
+                  backgroundColor: active ? C.accentDim : "transparent",
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  text.bodyMd,
+                  { color: active ? C.accent : C.textSecondary },
+                ]}
+              >
+                {m}mo
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
       <View
         style={[
           styles.chartCard,
@@ -55,7 +98,7 @@ export default function TrendTab() {
             { color: C.textSecondary, marginBottom: spacing.md },
           ]}
         >
-          NET TOTAL, LAST {trend?.months ?? 6} MONTHS
+          NET TOTAL, LAST {trend?.months ?? months} MONTHS
         </Text>
         <BarChart
           data={barData}
@@ -131,6 +174,21 @@ export default function TrendTab() {
 }
 
 const styles = StyleSheet.create({
+  segmentTrack: {
+    flexDirection: "row",
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: 4,
+    gap: 4,
+    marginBottom: spacing.base,
+  },
+  segmentOpt: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+    alignItems: "center",
+    borderWidth: 1,
+  },
   chartCard: {
     borderWidth: 1,
     borderRadius: radius.md,

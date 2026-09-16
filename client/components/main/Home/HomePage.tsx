@@ -16,6 +16,9 @@ import {
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import CategoryBreakdown, {
+  TBreakdownEntry,
+} from "../shared/CategoryBreakdown";
 import EmptyState from "../shared/EmptyState";
 import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TotalBalanceCard from "../shared/TotalBalanceCard";
@@ -26,6 +29,7 @@ type TData = {
   expense: number;
   income: number;
   transactions: TTransaction[];
+  categoryBreakdown: TBreakdownEntry[]; // spec 21 / G1
 };
 
 export default function HomePage() {
@@ -46,8 +50,6 @@ export default function HomePage() {
 
   const { data: pendingTransactions } = usePendingTransactions();
 
-  // Not-yet-synced items shaped like TTransaction so they can render through
-  // the same TransactionCard (with pending=true) as normal transactions.
   const pendingAsTransactions: TTransaction[] = (pendingTransactions ?? []).map(
     (item) => ({
       _id: item.localId,
@@ -60,6 +62,7 @@ export default function HomePage() {
   );
 
   const transactions = dailyTransaction?.data?.transactions ?? [];
+  const categoryBreakdown = dailyTransaction?.data?.categoryBreakdown ?? [];
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
@@ -133,6 +136,15 @@ export default function HomePage() {
           expense={dailyTransaction?.data?.expense ?? 0}
           label="Today's Balance"
         />
+
+        {/* spec 21 / G1 — category breakdown for today, read-only (no filter on Home) */}
+        {categoryBreakdown.length > 0 && (
+          <CategoryBreakdown
+            data={categoryBreakdown}
+            selected={null}
+            onSelect={() => {}}
+          />
+        )}
 
         <PendingSyncBanner />
 
