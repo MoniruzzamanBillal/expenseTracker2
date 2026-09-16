@@ -18,6 +18,7 @@ const INVALIDATE_KEYS = [
   ["monthly-transaction"],
   ["weekly-transaction"],
   ["yearly-transaction"],
+  ["budgets"],
 ];
 
 type TPageProps = {

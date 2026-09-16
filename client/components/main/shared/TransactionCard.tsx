@@ -25,6 +25,7 @@ const INVALIDATE_KEYS = [
   ["monthly-transaction"],
   ["weekly-transaction"],
   ["yearly-transaction"],
+  ["budgets"],
 ];
 
 const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");

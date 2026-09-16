@@ -4,7 +4,12 @@ import { radius, spacing, useTheme } from "@/theme";
 import { TCategory } from "@/types/Category.types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Modal, Portal } from "react-native-paper";
 import Toast from "react-native-toast-message";
@@ -24,9 +29,16 @@ export default function CategoryFormModal({
 }: TProps) {
   const C = useTheme();
   const isEdit = !!initialValue;
+  const { width } = useWindowDimensions();
 
   const [name, setName] = useState(initialValue?.name ?? "");
   const [icon, setIcon] = useState<string | undefined>(initialValue?.icon);
+
+  const ICON_COLUMNS = 6;
+  const modalInnerWidth =
+    width - spacing.xl * 2 - spacing.lg * 2 - StyleSheet.hairlineWidth * 2;
+  const chipSize =
+    (modalInnerWidth - spacing.sm * (ICON_COLUMNS - 1)) / ICON_COLUMNS;
 
   useEffect(() => {
     if (open) {
@@ -114,6 +126,8 @@ export default function CategoryFormModal({
                       style={[
                         styles.chip,
                         {
+                          width: chipSize,
+                          height: chipSize,
                           borderColor: active ? C.accent : C.border,
                           backgroundColor: active
                             ? C.accentDim
@@ -166,8 +180,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   chip: {
-    width: 44,
-    height: 44,
     borderRadius: radius.md,
     borderWidth: 1,
     alignItems: "center",

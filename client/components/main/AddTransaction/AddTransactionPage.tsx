@@ -44,6 +44,7 @@ export default function AddTransactionPage() {
     ["monthly-transaction"],
     ["weekly-transaction"],
     ["yearly-transaction"],
+    ["budgets"],
   ]);
 
   const enqueuePendingTransactions = useEnqueuePendingTransactions();

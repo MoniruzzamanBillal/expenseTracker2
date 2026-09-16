@@ -1,6 +1,5 @@
 import EmptyState from "@/components/main/shared/EmptyState";
-import { useFetchData } from "@/hooks/useApi";
-import { useBudgets, useDeleteBudget } from "@/hooks/useBudgets";
+import { useDeleteData, useFetchData } from "@/hooks/useApi";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { TBudget } from "@/types/Budget.types";
 import { TCategory } from "@/types/Category.types";
@@ -9,6 +8,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,18 +24,26 @@ export default function BudgetsPage() {
   const C = useTheme();
   const router = useRouter();
   const [formOpen, setFormOpen] = useState(false);
-  const [editBudget, setEditBudget] = useState<TBudget | undefined>(
-    undefined,
-  );
+  const [editBudget, setEditBudget] = useState<TBudget | undefined>(undefined);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data: budgetsData, isLoading } = useBudgets();
+  const {
+    data: budgetsData,
+    isLoading,
+    refetch: refetchBudgets,
+  } = useFetchData<TBudget[]>(["budgets"], "/budgets");
   // No dedicated useCategories hook per spec 12/13's own decision — see
   // ai context/specs/19-fix-stale-usecategories-reference-in-budgets-spec.md.
-  const { data: categoriesData } = useFetchData<TCategory[]>(
-    ["categories"],
-    "/categories",
-  );
-  const deleteMutation = useDeleteBudget();
+  const { data: categoriesData, refetch: refetchCategories } = useFetchData<
+    TCategory[]
+  >(["categories"], "/categories");
+  const deleteMutation = useDeleteData([["budgets"]]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchBudgets(), refetchCategories()]);
+    setRefreshing(false);
+  };
 
   const budgets = budgetsData?.data ?? [];
   const categories = categoriesData?.data ?? [];
@@ -87,9 +95,19 @@ export default function BudgetsPage() {
           { paddingHorizontal: spacing.screenPad },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={C.accent}
+          />
+        }
       >
         <View style={styles.nav}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
             <MaterialCommunityIcons
               name="chevron-left"
               size={22}

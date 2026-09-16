@@ -40,6 +40,7 @@ export default function SmartAddPage() {
     ["monthly-transaction"],
     ["weekly-transaction"],
     ["yearly-transaction"],
+    ["budgets"],
   ]);
 
   const enqueuePendingTransactions = useEnqueuePendingTransactions();

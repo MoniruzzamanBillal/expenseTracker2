@@ -1,6 +1,6 @@
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
-import { useCreateBudget, useUpdateBudget } from "@/hooks/useBudgets";
+import { usePatch, usePost } from "@/hooks/useApi";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { TBudget } from "@/types/Budget.types";
 import { TCategory } from "@/types/Category.types";
@@ -41,8 +41,8 @@ export default function BudgetFormModal({
     }
   }, [open, initialValue]);
 
-  const createMutation = useCreateBudget();
-  const updateMutation = useUpdateBudget();
+  const createMutation = usePost([["budgets"]]);
+  const updateMutation = usePatch([["budgets"]]);
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   const hideModal = () => setOpen(false);
