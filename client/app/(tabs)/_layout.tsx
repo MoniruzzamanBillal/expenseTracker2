@@ -111,15 +111,8 @@ export default function TabLayout() {
           }}
         />
 
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: "Settings",
-            tabBarIcon: ({ color }) => (
-              <TabIcon name="cog-outline" color={color} />
-            ),
-          }}
-        />
+        {/* Reached only via the gear icon on Home — not shown in the tab bar. */}
+        <Tabs.Screen name="settings" options={{ href: null }} />
 
         {/* Reached only via the "Smart Add" button on Add Transaction — not shown in the tab bar. */}
         <Tabs.Screen name="smart-add" options={{ href: null }} />
