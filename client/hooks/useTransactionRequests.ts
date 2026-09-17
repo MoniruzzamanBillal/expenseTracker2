@@ -9,6 +9,7 @@ const ACCEPT_INVALIDATE_KEYS = [
   ["monthly-transaction"],
   ["weekly-transaction"],
   ["yearly-transaction"],
+  ["budgets"],
 ];
 
 // ! server-side pending sync requests from bikelog — unrelated to usePendingTransactions.ts's

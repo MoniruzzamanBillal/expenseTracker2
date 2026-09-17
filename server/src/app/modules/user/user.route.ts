@@ -1,4 +1,5 @@
 import { Router } from "express";
+import authCheck from "../../middleware/authCheck";
 import validateRequest from "../../middleware/validateRequest";
 import { userController } from "./user.controller";
 import { userValidations } from "./user.validation";
@@ -17,6 +18,17 @@ router.post(
   "/login",
   validateRequest(userValidations.loginValidationSchema),
   userController.signIn,
+);
+
+// ! for getting the logged-in user's own profile
+router.get("/me", authCheck, userController.getMe);
+
+// ! for updating the logged-in user's own profile
+router.patch(
+  "/update-profile",
+  authCheck,
+  validateRequest(userValidations.updateProfileSchema),
+  userController.updateProfile,
 );
 
 //

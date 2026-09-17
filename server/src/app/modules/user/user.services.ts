@@ -30,6 +30,45 @@ type Tlogin = {
   password: string;
 };
 
+// ! for getting the logged-in user's own profile (password intentionally excluded)
+const getMe = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      profilePicture: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  return { ...user, _id: user.id };
+};
+
+// ! for updating the logged-in user's own display name
+const updateProfile = async (userId: string, payload: { name: string }) => {
+  const result = await prisma.user.update({
+    where: { id: userId },
+    data: { name: payload.name },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      profilePicture: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return { ...result, _id: result.id };
+};
+
 const loginFromDb = async (payload: Tlogin) => {
   const userData = await prisma.user.findUnique({
     where: { email: payload.email },
@@ -66,4 +105,4 @@ const loginFromDb = async (payload: Tlogin) => {
   };
 };
 
-export const userServices = { createUser, loginFromDb };
+export const userServices = { createUser, loginFromDb, getMe, updateProfile };

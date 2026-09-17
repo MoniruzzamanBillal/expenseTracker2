@@ -111,9 +111,13 @@ export default function HistoryPage() {
                 <>
                   <View style={styles.rowBetween}>
                     <Text style={[text.bodyMd, { color: C.text }]}>{MONTHS[m.month]}</Text>
-                    <Text style={[text.amountXs, { color: barColor }]}>
-                      {isPositive ? "+" : "−"}৳{fmt(net)}
-                    </Text>
+                    <View style={styles.rowRight}>
+                      {/* spec 24 / G5 — transaction count */}
+                      <Text style={[text.caption, { color: C.textMuted }]}>{m.transactionCount} tx</Text>
+                      <Text style={[text.amountXs, { color: barColor }]}>
+                        {isPositive ? "+" : "−"}৳{fmt(net)}
+                      </Text>
+                    </View>
                   </View>
                   <View style={[styles.barTrack, { backgroundColor: C.divider }]}>
                     <View style={[styles.barFill, { width: `${barWidth}%`, backgroundColor: barColor }]} />
@@ -133,6 +137,10 @@ export default function HistoryPage() {
                       <View style={[styles.barFill, { width: `${barWidth}%`, backgroundColor: barColor, opacity: 0.7 }]} />
                     </View>
                   </View>
+                  {/* spec 24 / G5 — transaction count in compact row */}
+                  <Text style={[text.caption, { color: C.textMuted, width: 28, textAlign: "right" }]}>
+                    {m.transactionCount}
+                  </Text>
                   <Text style={[text.amountXs, { color: barColor, width: 76, textAlign: "right" }]}>
                     {isPositive ? "+" : "−"}৳{fmt(net)}
                   </Text>
@@ -153,9 +161,10 @@ const styles = StyleSheet.create({
   navBtn: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   monthCard: { borderRadius: radius.md, borderWidth: 1, padding: spacing.md, marginBottom: 4 },
   rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.sm },
+  rowRight: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   barTrack: { height: 4, borderRadius: 2, overflow: "hidden" },
   barTrackSm: { height: 3, borderRadius: 2, overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 2 },
-  compactRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  compactRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   compactBarWrap: { flex: 1 },
 });

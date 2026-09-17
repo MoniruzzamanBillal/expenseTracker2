@@ -30,8 +30,32 @@ const signIn = catchAsync(async (req, res) => {
   });
 });
 
+// ! for getting the logged-in user's own profile
+const getMe = catchAsync(async (req, res) => {
+  const result = await userServices.getMe(req.user.userId);
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Profile retrieved successfully",
+    data: result,
+  });
+});
+
+// ! for updating the logged-in user's own profile
+const updateProfile = catchAsync(async (req, res) => {
+  const result = await userServices.updateProfile(req.user.userId, req.body);
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Profile updated successfully",
+    data: result,
+  });
+});
+
 //
 export const userController = {
   crateUser,
   signIn,
+  getMe,
+  updateProfile,
 };

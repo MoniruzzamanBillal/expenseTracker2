@@ -7,9 +7,19 @@ import { View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Modal, Portal } from "react-native-paper";
 import Toast from "react-native-toast-message";
+import CategoryPicker from "./CategoryPicker";
 import FormField from "./FormField";
 import PrimaryButton from "./PrimaryButton";
+import ReceiptImagePicker from "./ReceiptImagePicker";
 import TypeToggle from "./TypeToggle";
+
+const INVALIDATE_KEYS = [
+  ["daily-transaction"],
+  ["monthly-transaction"],
+  ["weekly-transaction"],
+  ["yearly-transaction"],
+  ["budgets"],
+];
 
 type TPageProps = {
   open: boolean;
@@ -37,13 +47,11 @@ export default function UpdateTransactionModal({
   const [description, setDescription] = useState<string | null>(
     initialValue?.description || null,
   );
+  const [categoryId, setCategoryId] = useState<string | null>(
+    initialValue?.categoryId ?? null,
+  );
 
-  const patchMutation = usePatch([
-    ["daily-transaction"],
-    ["monthly-transaction"],
-    ["weekly-transaction"],
-    ["yearly-transaction"],
-  ]);
+  const patchMutation = usePatch(INVALIDATE_KEYS);
 
   const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
 
@@ -70,6 +78,7 @@ export default function UpdateTransactionModal({
       setTitle(initialValue?.title);
       setDescription(initialValue?.description ?? " ");
       setType(initialValue?.type || TransactionTypeConst.income);
+      setCategoryId(initialValue?.categoryId ?? null);
     }
   }, [initialValue]);
 
@@ -103,6 +112,7 @@ export default function UpdateTransactionModal({
         amount: parseFloat(amount!),
         title,
         description: description ?? " ",
+        categoryId,
       };
 
       const result = await patchMutation.mutateAsync({
@@ -116,6 +126,7 @@ export default function UpdateTransactionModal({
         setDescription("");
         setAmount(null);
         setType(TransactionTypeConst.income);
+        setCategoryId(null);
 
         Toast.show({
           type: "success",
@@ -153,6 +164,10 @@ export default function UpdateTransactionModal({
             <TypeToggle value={type} onChange={setType} />
 
             <View style={{ marginTop: spacing.lg }}>
+              <CategoryPicker value={categoryId} onChange={setCategoryId} />
+            </View>
+
+            <View style={{ marginTop: spacing.lg }}>
               <FormField
                 label="Amount"
                 value={amount || ""}
@@ -171,6 +186,14 @@ export default function UpdateTransactionModal({
                 inputStyle={{ height: 70, textAlignVertical: "top", paddingTop: 12 }}
               />
             </View>
+
+            {initialValue?._id ? (
+              <ReceiptImagePicker
+                transactionId={initialValue._id}
+                value={initialValue?.receiptFileUrl}
+                invalidateKeys={INVALIDATE_KEYS}
+              />
+            ) : null}
 
             <PrimaryButton
               label={patchMutation?.isPending ? "Updating..." : "Update Transaction"}

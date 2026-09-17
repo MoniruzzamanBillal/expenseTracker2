@@ -21,8 +21,16 @@ const loginValidationSchema = z.object({
   }),
 });
 
+// Validation schema for updating the logged-in user's profile
+const updateProfileSchema = z.object({
+  body: z.object({
+    name: z.string().min(1, "Name is required"),
+  }),
+});
+
 //
 export const userValidations = {
   createUserSchema,
   loginValidationSchema,
+  updateProfileSchema,
 };

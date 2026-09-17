@@ -1,3 +1,4 @@
+import CategorySelectField from "@/components/main/shared/CategorySelectField";
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import TypeToggle from "@/components/main/shared/TypeToggle";
@@ -32,6 +33,7 @@ export default function AddTransactionPage() {
   const [amount, setAmount] = useState<string | null>(null);
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const accentColor =
@@ -42,6 +44,7 @@ export default function AddTransactionPage() {
     ["monthly-transaction"],
     ["weekly-transaction"],
     ["yearly-transaction"],
+    ["budgets"],
   ]);
 
   const enqueuePendingTransactions = useEnqueuePendingTransactions();
@@ -81,7 +84,9 @@ export default function AddTransactionPage() {
     }
 
     try {
-      const payload = {
+      // categoryId is included in the online payload only — the offline queue
+      // never carries a category (per direct user instruction, spec 13's Scope).
+      const basePayload = {
         type,
         amount: parseFloat(amount!),
         title: title!,
@@ -90,7 +95,7 @@ export default function AddTransactionPage() {
 
       const result = await addTransactionMutation.mutateAsync({
         url: "/transactions/new-transaction",
-        payload,
+        payload: { ...basePayload, categoryId },
       });
 
       if (result?.success) {
@@ -99,6 +104,7 @@ export default function AddTransactionPage() {
         setDescription("");
         setAmount(null);
         setType(TransactionTypeConst.income);
+        setCategoryId(null);
 
         Toast.show({
           type: "success",
@@ -113,12 +119,15 @@ export default function AddTransactionPage() {
         // The save didn't reach the server (offline or a server-side failure —
         // both resolve here rather than throwing, see known-issues.md#FETCH-1).
         // Queue it locally instead of losing it.
-        await enqueuePendingTransactions([{ payload, origin: "manual" }]);
+        await enqueuePendingTransactions([
+          { payload: basePayload, origin: "manual" },
+        ]);
 
         setTitle("");
         setDescription("");
         setAmount(null);
         setType(TransactionTypeConst.income);
+        setCategoryId(null);
 
         Toast.show({
           type: "success",
@@ -226,6 +235,9 @@ export default function AddTransactionPage() {
           error={errors.title}
           placeholder="e.g. Groceries"
         />
+
+        <CategorySelectField value={categoryId} onChange={setCategoryId} />
+
         <FormField
           label="Description"
           value={description || ""}
@@ -268,11 +280,11 @@ const styles = StyleSheet.create({
   smartAddBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    borderWidth: 1,
+    gap: 3,
+    borderWidth: 0.5,
     borderRadius: 999,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
   amountBlock: {
     borderBottomWidth: 2,

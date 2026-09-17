@@ -111,11 +111,17 @@ export default function TabLayout() {
           }}
         />
 
+        {/* Reached only via the gear icon on Home — not shown in the tab bar. */}
+        <Tabs.Screen name="settings" options={{ href: null }} />
+
         {/* Reached only via the "Smart Add" button on Add Transaction — not shown in the tab bar. */}
         <Tabs.Screen name="smart-add" options={{ href: null }} />
 
         {/* Reached only via the "Requests" button on Add Transaction — not shown in the tab bar. */}
         <Tabs.Screen name="transaction-requests" options={{ href: null }} />
+
+        {/* Reached only via the "Budgets" button on Settings — not shown in the tab bar. */}
+        <Tabs.Screen name="budgets" options={{ href: null }} />
       </Tabs>
     </AuthGuard>
   );

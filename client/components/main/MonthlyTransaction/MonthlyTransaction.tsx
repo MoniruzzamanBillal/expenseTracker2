@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   RefreshControl,
   ScrollView,
@@ -14,12 +14,16 @@ import { radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getDaysInMonth } from "date-fns";
+import CategoryBreakdown, {
+  TBreakdownEntry,
+} from "../shared/CategoryBreakdown";
 import EmptyState from "../shared/EmptyState";
 import SummaryPills from "../shared/SummaryPills";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
 import TransactionAccordion from "./TransactionAccordion";
+import TrendTab from "./TrendTab";
 
-type TView = "monthly" | "weekly";
+type TView = "monthly" | "weekly" | "trend";
 
 type TDailyData = {
   date: string;
@@ -32,6 +36,7 @@ type TMonthlyData = {
   expense: number;
   income: number;
   transactionData: TDailyData[];
+  categoryBreakdown: TBreakdownEntry[];
 };
 
 type TWeeklyData = {
@@ -40,6 +45,7 @@ type TWeeklyData = {
   expense: number;
   income: number;
   transactionData: TDailyData[];
+  categoryBreakdown: TBreakdownEntry[];
 };
 
 const monthChangeDirection = { prev: "prev", next: "next" } as const;
@@ -70,10 +76,19 @@ export default function MonthlyTransactionPage() {
   const C = useTheme();
   const [view, setView] = useState<TView>("monthly");
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(
+    null,
+  );
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+  // A stale filter silently hiding data after navigating is worse than always
+  // resetting it (spec 13).
+  useEffect(() => {
+    setSelectedCategoryKey(null);
+  }, [view, selectedMonth]);
 
   const {
     data: monthlyTransaction,
@@ -132,12 +147,39 @@ export default function MonthlyTransactionPage() {
   const monthlyBalance =
     (monthlyTransaction?.data?.income ?? 0) -
     (monthlyTransaction?.data?.expense ?? 0);
-  const monthlyBuckets = monthlyTransaction?.data?.transactionData ?? [];
+  const monthlyBuckets = useMemo(
+    () => monthlyTransaction?.data?.transactionData ?? [],
+    [monthlyTransaction?.data?.transactionData],
+  );
+  const monthlyCategoryBreakdown =
+    monthlyTransaction?.data?.categoryBreakdown ?? [];
+
+  const filteredMonthlyBuckets = useMemo(() => {
+    if (!selectedCategoryKey) return monthlyBuckets;
+    return monthlyBuckets.map((day) => ({
+      ...day,
+      transactions: day.transactions.filter(
+        (t) => (t.categoryId ?? "uncategorized") === selectedCategoryKey,
+      ),
+    }));
+  }, [monthlyBuckets, selectedCategoryKey]);
 
   const weeklyBuckets = useMemo(
     () => weeklyTransaction?.data?.transactionData ?? [],
     [weeklyTransaction?.data?.transactionData],
   );
+  const weeklyCategoryBreakdown =
+    weeklyTransaction?.data?.categoryBreakdown ?? [];
+
+  const filteredWeeklyBuckets = useMemo(() => {
+    if (!selectedCategoryKey) return weeklyBuckets;
+    return weeklyBuckets.map((day) => ({
+      ...day,
+      transactions: day.transactions.filter(
+        (t) => (t.categoryId ?? "uncategorized") === selectedCategoryKey,
+      ),
+    }));
+  }, [weeklyBuckets, selectedCategoryKey]);
   const daysWithExpense = weeklyBuckets.filter((d) => d.expense > 0).length;
   const weeklyAverageExpense =
     daysWithExpense > 0
@@ -179,7 +221,7 @@ export default function MonthlyTransactionPage() {
             { backgroundColor: C.surface2, borderColor: C.border },
           ]}
         >
-          {(["monthly", "weekly"] as TView[]).map((v) => {
+          {(["monthly", "weekly", "trend"] as TView[]).map((v) => {
             const active = view === v;
             return (
               <TouchableOpacity
@@ -200,7 +242,11 @@ export default function MonthlyTransactionPage() {
                     { color: active ? C.accent : C.textSecondary },
                   ]}
                 >
-                  {v === "monthly" ? "Monthly" : "Weekly"}
+                  {v === "monthly"
+                    ? "Monthly"
+                    : v === "weekly"
+                      ? "Weekly"
+                      : "Trend"}
                 </Text>
               </TouchableOpacity>
             );
@@ -303,15 +349,21 @@ export default function MonthlyTransactionPage() {
               ]}
             />
 
+            <CategoryBreakdown
+              data={monthlyCategoryBreakdown}
+              selected={selectedCategoryKey}
+              onSelect={setSelectedCategoryKey}
+            />
+
             {isLoading ? (
               <TransactionCardSkeleton />
             ) : monthlyBuckets.length > 0 ? (
-              <TransactionAccordion dailyData={monthlyBuckets} />
+              <TransactionAccordion dailyData={filteredMonthlyBuckets} />
             ) : (
               <EmptyState title="No transactions this month" />
             )}
           </>
-        ) : (
+        ) : view === "weekly" ? (
           <>
             {weeklyTransaction?.data?.weekStart &&
             weeklyTransaction?.data?.weekEnd ? (
@@ -349,11 +401,17 @@ export default function MonthlyTransactionPage() {
               ]}
             />
 
+            <CategoryBreakdown
+              data={weeklyCategoryBreakdown}
+              selected={selectedCategoryKey}
+              onSelect={setSelectedCategoryKey}
+            />
+
             {isLoading ? (
               <TransactionCardSkeleton />
             ) : weeklyBuckets.length > 0 ? (
               <TransactionAccordion
-                dailyData={weeklyBuckets}
+                dailyData={filteredWeeklyBuckets}
                 showBar
                 maxAbs={weeklyMaxAbs}
               />
@@ -364,6 +422,8 @@ export default function MonthlyTransactionPage() {
               />
             )}
           </>
+        ) : (
+          <TrendTab />
         )}
       </ScrollView>
     </SafeAreaView>

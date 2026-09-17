@@ -23,6 +23,10 @@ export interface ColorScheme {
   inputBg: string;
   placeholder: string;
   statusBarStyle: 'light' | 'dark';
+  // Distinct hues for per-category chart slices/legend — kept separate from
+  // income/expense/accent so a chart color is never confused with those
+  // meanings elsewhere in the UI (spec 18).
+  chartPalette: string[];
 }
 
 const dark: ColorScheme = {
@@ -47,6 +51,7 @@ const dark: ColorScheme = {
   inputBg: '#1e2033',
   placeholder: '#3e4060',
   statusBarStyle: 'light',
+  chartPalette: ['#7c9eff', '#52d48a', '#f0b95c', '#c792ea', '#f07272'],
 };
 
 const light: ColorScheme = {
@@ -71,6 +76,7 @@ const light: ColorScheme = {
   inputBg: '#eef0f8',
   placeholder: '#b0b2c8',
   statusBarStyle: 'dark',
+  chartPalette: ['#4a72d4', '#1fa861', '#c98a2e', '#8c5fc7', '#d94444'],
 };
 
 export const colors = { dark, light };

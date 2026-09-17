@@ -51,6 +51,10 @@ User reported "when I click the logout icon, nothing happens." Root cause: `reac
 
 Fix applied to `handleLogoutPress` only: branch on `Platform.OS === "web"` and use `window.confirm("Log out?")` there instead of `Alert.alert`, calling `logoutFunction()` if the user confirms; native platforms (iOS/Android) keep the original `Alert.alert` path unchanged, since it works correctly there. Verified via the headless-browser harness — clicking the logout button now fires a real `confirm` dialog, and accepting it correctly clears session and redirects to `/auth`.
 
+## Update 2026-09-14 — Home's icon repurposed as a Settings entry point
+
+This spec's Option A (a standalone icon-only button in Home's header) is **still the shape used**, but the icon and its behavior have since changed again, per direct user instruction: instead of a `"logout"` icon with an immediate confirm-and-log-out `onPress`, Home now shows a `"cog"`/`"cog-outline"` (gear/settings) icon that navigates to the new Settings screen — logout itself moves to a dedicated row inside Settings, alongside profile info and category management. The confirm-dialog logout flow described below (including the `Platform.OS === "web"` fix) still exists and still works exactly as documented, it's just no longer triggered directly from Home — it's now Settings' "Log Out" row. See `14-settings-profile-page.md` for the current, authoritative design of both the Home icon swap and where the logout row now lives; this doc is kept as-is below for historical record of what shipped for spec 08 itself, not as the current state of Home's header.
+
 ## Verify when done
 
 - [x] Logout is reachable from Home without prior knowledge that the avatar is tappable — it's now a standalone, clearly-iconed button, not the avatar

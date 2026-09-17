@@ -1,4 +1,5 @@
 import { TransactionTypeConst } from "@/constants/TransactionType.constant";
+import { TCategory } from "./Category.types";
 
 export type TTransaction = {
   _id?: string;
@@ -10,6 +11,22 @@ export type TTransaction = {
   updatedAt?: string;
 
   user?: string;
+
+  // categoryId is the source of truth for editing; category is an optional
+  // denormalized read-convenience field present when the endpoint `include`s
+  // the related row (summary endpoints) but absent on plain create/update
+  // responses (spec 13).
+  categoryId?: string | null;
+  category?: TCategory | null;
+
+  // Named receiptFile* (not receiptImage*) to match the server's actual
+  // contract — see ai context/specs/20-fix-receipt-endpoint-contract-mismatch.md.
+  receiptFileUrl?: string | null;
+  receiptFilePublicId?: string | null;
+  receiptFileOriginalName?: string | null; // spec 24 / G4
+  receiptFileResourceType?: string | null; // spec 24 / G4
+
+  isDeleted?: boolean; // spec 24 / G6 — filtered server-side, additive only
 };
 
 export type TTransactionHistory = {
@@ -17,4 +34,24 @@ export type TTransactionHistory = {
   income: number;
   month: number;
   transactionCount: number;
+};
+
+export type TTrendMonth = {
+  targetMonth: string;
+  income: number;
+  expense: number;
+};
+
+export type TCategoryBreakdownEntry = {
+  categoryId: string | null;
+  name: string;
+  icon: string | null;
+  income: number;
+  expense: number;
+};
+
+export type TTrendSummary = {
+  months: number;
+  monthlySummary: TTrendMonth[];
+  categoryBreakdown: TCategoryBreakdownEntry[];
 };
