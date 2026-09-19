@@ -432,7 +432,7 @@ export default function MonthlyTransactionPage() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { paddingTop: spacing.lg, paddingBottom: spacing.xxl },
+  content: { paddingTop: spacing.md, paddingBottom: spacing.lg },
   segmentTrack: {
     flexDirection: "row",
     borderRadius: radius.lg,

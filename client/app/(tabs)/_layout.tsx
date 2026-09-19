@@ -69,9 +69,9 @@ export default function TabLayout() {
           tabBarActiveTintColor: C.accent,
           tabBarInactiveTintColor: C.textMuted,
           tabBarLabelStyle: {
-            fontSize: 10,
+            fontSize: 9,
             fontFamily: fontFamily.medium,
-            letterSpacing: 0.3,
+            letterSpacing: 0.2,
           },
         }}
       >

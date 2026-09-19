@@ -27,7 +27,10 @@ const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
 const SOURCE_META: Record<
   TTransactionRequest["sourceType"],
-  { icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"]; label: string }
+  {
+    icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+    label: string;
+  }
 > = {
   fuel: { icon: "gas-station", label: "Fuel" },
   maintenance: { icon: "wrench", label: "Maintenance" },
@@ -40,12 +43,8 @@ export default function TransactionRequestsPage() {
     null,
   );
 
-  const {
-    data,
-    isLoading,
-    refetch,
-    isRefetching,
-  } = useFetchTransactionRequests();
+  const { data, isLoading, refetch, isRefetching } =
+    useFetchTransactionRequests();
 
   const acceptMutation = useAcceptTransactionRequest();
   const rejectMutation = useRejectTransactionRequest();
@@ -104,10 +103,14 @@ export default function TransactionRequestsPage() {
   };
 
   const handleAccept = (request: TTransactionRequest) => {
-    Alert.alert("Accept this request?", `${request.title} · ৳${fmt(request.amount)}`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Accept", onPress: () => acceptRequest(request._id) },
-    ]);
+    Alert.alert(
+      "Accept this request?",
+      `${request.title} · ৳${fmt(request.amount)}`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Accept", onPress: () => acceptRequest(request._id) },
+      ],
+    );
   };
 
   const handleReject = (request: TTransactionRequest) => {
@@ -147,7 +150,9 @@ export default function TransactionRequestsPage() {
           />
         }
       >
-        <Text style={[text.navTitle, { color: C.text, marginBottom: spacing.xl }]}>
+        <Text
+          style={[text.navTitle, { color: C.text, marginBottom: spacing.xl }]}
+        >
           Requests
         </Text>
 
@@ -169,9 +174,7 @@ export default function TransactionRequestsPage() {
                   { borderColor: C.border, backgroundColor: C.surface },
                 ]}
               >
-                <View
-                  style={[styles.icon, { backgroundColor: C.expenseBg }]}
-                >
+                <View style={[styles.icon, { backgroundColor: C.expenseBg }]}>
                   <MaterialCommunityIcons
                     name={meta.icon}
                     size={18}
@@ -200,7 +203,10 @@ export default function TransactionRequestsPage() {
                   <View style={styles.actions}>
                     <TouchableOpacity
                       onPress={() => setEditRequest(request)}
-                      style={[styles.actionButton, { backgroundColor: C.accentDim }]}
+                      style={[
+                        styles.actionButton,
+                        { backgroundColor: C.accentDim },
+                      ]}
                     >
                       <MaterialCommunityIcons
                         name="pencil-outline"
@@ -210,7 +216,10 @@ export default function TransactionRequestsPage() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleAccept(request)}
-                      style={[styles.actionButton, { backgroundColor: C.incomeBg }]}
+                      style={[
+                        styles.actionButton,
+                        { backgroundColor: C.incomeBg },
+                      ]}
                     >
                       <MaterialCommunityIcons
                         name="check"
@@ -220,7 +229,10 @@ export default function TransactionRequestsPage() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleReject(request)}
-                      style={[styles.actionButton, { backgroundColor: C.expenseBg }]}
+                      style={[
+                        styles.actionButton,
+                        { backgroundColor: C.expenseBg },
+                      ]}
                     >
                       <MaterialCommunityIcons
                         name="close"
