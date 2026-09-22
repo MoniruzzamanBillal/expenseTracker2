@@ -23,13 +23,17 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-export default function AddTransactionPage() {
+export default function AddTransactionPage({
+  initialType = TransactionTypeConst.income,
+}: {
+  // Lets a caller (e.g. the quick-add widget route) pre-select income/expense
+  // instead of always defaulting to income.
+  initialType?: TTransactionType;
+} = {}) {
   const C = useTheme();
   const router = useRouter();
 
-  const [type, setType] = useState<TTransactionType>(
-    TransactionTypeConst.income,
-  );
+  const [type, setType] = useState<TTransactionType>(initialType);
   const [amount, setAmount] = useState<string | null>(null);
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);

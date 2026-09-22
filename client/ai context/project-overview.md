@@ -14,7 +14,7 @@ The Expo/React Native mobile app for ExpenseTracker, a personal income/expense t
 | `monthlyTransactions.tsx` | Current month's daily breakdown **and** the current Friday–Thursday weekly summary, toggled via an in-page segmented control ("Monthly"/"Weekly") — the two were merged into one tab during the visual redesign (`specs/06-visual-redesign-xpnsapp-design-system.md`, Decision 8); there is no separate `weeklyTransactions.tsx` route anymore |
 | `smart-add.tsx` | Natural-language AI-assisted bulk entry (calls the server's `manage-money` endpoint, then lets the user review/edit before saving). Not shown in the tab bar (`href: null`) as of the same redesign (Decision 7) — reached via a button on Add Transaction's nav row instead |
 
-Plus `app/auth.tsx`/`app/register.tsx` outside the tab group.
+Plus `app/auth.tsx`/`app/register.tsx` outside the tab group, and `app/quick-add.tsx` (also outside the tab group, wrapped in its own `AuthGuard`) — a pared-down Add Transaction screen reached via deep link (`client://quick-add?type=expense|income`) from the Android home-screen widget added in `specs/26-android-quick-add-widget.md`, not from in-app navigation.
 
 ## Tech stack
 
