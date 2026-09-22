@@ -5,8 +5,14 @@ import { radius, spacing, text, useTheme } from "@/theme";
 import { TTrendSummary } from "@/types/Transaction.tyes";
 import { format, parse } from "date-fns";
 import { useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
