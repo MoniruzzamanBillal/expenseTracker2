@@ -1,3 +1,9 @@
+// Opt out of the React Compiler (app.json `reactCompiler: true`):
+// react-native-android-widget calls widget components as plain functions
+// outside React's renderer, so the compiler's injected memo-cache hook
+// throws "Invalid hook call" and the widget never renders (stays blank).
+"use no memo";
+
 import { FlexWidget, TextWidget } from "react-native-android-widget";
 
 // Hardcoded palette (not theme/colors.ts) — this renders outside the React
