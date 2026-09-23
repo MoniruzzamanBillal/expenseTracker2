@@ -46,6 +46,24 @@
           "photosPermission": "Allow ExpenseTracker to access your photos to attach a receipt.",
           "cameraPermission": "Allow ExpenseTracker to access your camera to take a receipt photo."
         }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "QuickAdd",
+              "label": "Quick Add Transaction",
+              "description": "Quickly add an expense or income transaction.",
+              "minWidth": "220dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 1,
+              "resizeMode": "horizontal",
+              "updatePeriodMillis": 0
+            }
+          ]
+        }
       ]
     ],
     "experiments": {
