@@ -191,8 +191,8 @@ export default function MonthlyTransactionPage() {
                   </View>
                   <View style={styles.netAmountRow}>
                     <Text style={[styles.netSign, { color: monthlyNet >= 0 ? C.income : C.expense }]}>{monthlyNet >= 0 ? "+" : "−"}</Text>
-                    <Text style={[styles.netCurrency, { color: C.textSecondary }]}>৳</Text>
-                    <Text style={[text.amountLg, { color: C.text }]}>{fmt(monthlyNet)}</Text>
+                    <Text style={[styles.netCurrency, { color: monthlyNet >= 0 ? C.income : C.expense }]}>৳</Text>
+                    <Text style={[text.amountLg, { color: monthlyNet >= 0 ? C.income : C.expense }]}>{fmt(monthlyNet)}</Text>
                   </View>
                   <View style={styles.splitBar}>
                     <View style={{ flex: monthlyIncome || 0.001, borderRadius: 3, backgroundColor: C.income }} />
@@ -235,8 +235,8 @@ export default function MonthlyTransactionPage() {
                   <Text style={[text.kicker, { color: C.textSecondary }]}>Net this week</Text>
                   <View style={styles.netAmountRow}>
                     <Text style={[styles.netSign, { color: weeklyNet >= 0 ? C.income : C.expense }]}>{weeklyNet >= 0 ? "+" : "−"}</Text>
-                    <Text style={[styles.netCurrency, { color: C.textSecondary }]}>৳</Text>
-                    <Text style={[text.amountLg, { color: C.text }]}>{fmt(weeklyNet)}</Text>
+                    <Text style={[styles.netCurrency, { color: weeklyNet >= 0 ? C.income : C.expense }]}>৳</Text>
+                    <Text style={[text.amountLg, { color: weeklyNet >= 0 ? C.income : C.expense }]}>{fmt(weeklyNet)}</Text>
                   </View>
                   <View style={styles.inOutRow}>
                     <Text style={[text.bodySm, { color: C.income }]}>In +৳{fmt(weeklyIncome)}</Text>

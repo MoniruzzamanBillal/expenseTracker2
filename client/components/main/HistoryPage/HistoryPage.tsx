@@ -133,8 +133,8 @@ export default function HistoryPage() {
                 <Text style={[text.kicker, { color: C.textSecondary }]}>Net · {selectedYear}{selectedYear === currentYear ? " so far" : ""}</Text>
                 <View style={styles.netAmountRow}>
                   <Text style={[styles.netSign, { color: net >= 0 ? C.income : C.expense }]}>{net >= 0 ? "+" : "−"}</Text>
-                  <Text style={[styles.netCurrency, { color: C.textSecondary }]}>৳</Text>
-                  <Text style={[text.amountLg, { color: C.text }]}>{fmt(net)}</Text>
+                  <Text style={[styles.netCurrency, { color: net >= 0 ? C.income : C.expense }]}>৳</Text>
+                  <Text style={[text.amountLg, { color: net >= 0 ? C.income : C.expense }]}>{fmt(net)}</Text>
                 </View>
                 <View style={styles.inOutRow}>
                   <Text style={[text.bodySm, { color: C.income }]}>In +৳{fmt(income)}</Text>

@@ -123,8 +123,8 @@ export default function HomePage() {
               </View>
               <View style={styles.netAmountRow}>
                 <Text style={[styles.netSign, { color: net === 0 ? C.textMuted : isPositive ? C.income : C.expense }]}>{net === 0 ? "" : isPositive ? "+" : "−"}</Text>
-                <Text style={[styles.netCurrency, { color: net === 0 ? C.textMuted : C.textSecondary }]}>৳</Text>
-                <Text style={[text.display, { color: net === 0 ? C.textMuted : C.text }]}>{fmt(net)}</Text>
+                <Text style={[styles.netCurrency, { color: net === 0 ? C.textMuted : isPositive ? C.income : C.expense }]}>৳</Text>
+                <Text style={[text.display, { color: net === 0 ? C.textMuted : isPositive ? C.income : C.expense }]}>{fmt(net)}</Text>
               </View>
               {income + expense > 0 ? (
                 <View style={styles.splitBar}>
