@@ -2,7 +2,6 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme, text, radius } from "@/theme";
 import { TransactionTypeConst, TTransactionType } from "@/constants/TransactionType.constant";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type TProps = {
   value: TTransactionType;
@@ -27,16 +26,9 @@ export default function TypeToggle({ value, onChange }: TProps) {
               { borderColor: active ? activeColor : "transparent", backgroundColor: active ? activeBg : "transparent" },
             ]}
           >
-            <View style={styles.optContent}>
-              <MaterialCommunityIcons
-                name={type === "income" ? "arrow-up" : "arrow-down"}
-                size={16}
-                color={active ? activeColor : C.textSecondary}
-              />
-              <Text style={[text.bodyMd, { color: active ? activeColor : C.textSecondary }]}>
-                {type === "income" ? "Income" : "Expense"}
-              </Text>
-            </View>
+            <Text style={[text.bodyMd, { color: active ? activeColor : C.textSecondary }]}>
+              {type === "income" ? "Income" : "Expense"}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -45,7 +37,6 @@ export default function TypeToggle({ value, onChange }: TProps) {
 }
 
 const styles = StyleSheet.create({
-  track: { flexDirection: "row", borderRadius: radius.sheet, borderWidth: 1, padding: 4, gap: 4 },
-  opt: { flex: 1, paddingVertical: 10, borderRadius: radius.md, alignItems: "center", borderWidth: 1 },
-  optContent: { flexDirection: "row", alignItems: "center", gap: 6 },
+  track: { flexDirection: "row", height: 40, padding: 3, borderRadius: radius.card, borderWidth: 1, gap: 4 },
+  opt: { flex: 1, borderRadius: radius.sm + 1, alignItems: "center", justifyContent: "center", borderWidth: 1 },
 });

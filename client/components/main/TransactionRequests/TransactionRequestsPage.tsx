@@ -6,6 +6,7 @@ import {
   useFetchTransactionRequests,
   useRejectTransactionRequest,
 } from "@/hooks/useTransactionRequests";
+import { usePatch } from "@/hooks/useApi";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { TTransactionRequest } from "@/types/TransactionRequest.types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -48,12 +49,20 @@ export default function TransactionRequestsPage() {
 
   const acceptMutation = useAcceptTransactionRequest();
   const rejectMutation = useRejectTransactionRequest();
+  const categoryPatchMutation = usePatch([
+    ["daily-transaction"],
+    ["monthly-transaction"],
+    ["weekly-transaction"],
+    ["yearly-transaction"],
+    ["budgets"],
+  ]);
 
   const requests = data?.data ?? [];
 
   const acceptRequest = async (
     id: string,
     payload: { title?: string; description?: string; amount?: number } = {},
+    categoryId: string | null = null,
   ) => {
     try {
       const result = await acceptMutation.mutateAsync({
@@ -62,6 +71,30 @@ export default function TransactionRequestsPage() {
       });
 
       if (result?.success) {
+        const createdTransactionId = result?.data?.transaction?._id;
+        // The accept endpoint always creates an uncategorized expense — a picked
+        // category is applied with a separate follow-up call. If this second
+        // call fails, the transaction from the first call still exists (now
+        // uncategorized), so the toast calls that out specifically rather than
+        // reporting the whole accept as failed.
+        if (categoryId && createdTransactionId) {
+          try {
+            await categoryPatchMutation.mutateAsync({
+              url: `/transactions/update-transaction/${createdTransactionId}`,
+              payload: { categoryId },
+            });
+          } catch (categoryError) {
+            console.log("category apply error = ", categoryError);
+            Toast.show({
+              type: "error",
+              text1: "Accepted, but category wasn't applied",
+              text2: "The entry was saved as Uncategorized — edit it from Today to fix.",
+              position: "top",
+            });
+            return;
+          }
+        }
+
         Toast.show({
           type: "success",
           text1: result?.message || "Request accepted",
@@ -128,9 +161,11 @@ export default function TransactionRequestsPage() {
     title: string;
     description: string;
     amount: number;
+    categoryId: string | null;
   }) => {
     if (!editRequest) return;
-    await acceptRequest(editRequest._id, edits);
+    const { categoryId, ...payload } = edits;
+    await acceptRequest(editRequest._id, payload, categoryId);
     setEditRequest(null);
   };
 

@@ -1,16 +1,17 @@
 import { usePatch } from "@/hooks/useApi";
 import { TransactionTypeConst, TTransactionType } from "@/constants/TransactionType.constant";
-import { useTheme, spacing, radius } from "@/theme";
+import { useTheme, spacing, text } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { Modal, Portal } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import CategoryPicker from "./CategoryPicker";
 import FormField from "./FormField";
 import PrimaryButton from "./PrimaryButton";
 import ReceiptImagePicker from "./ReceiptImagePicker";
+import Sheet from "./Sheet";
 import TypeToggle from "./TypeToggle";
 
 const INVALIDATE_KEYS = [
@@ -147,75 +148,97 @@ export default function UpdateTransactionModal({
     }
   };
 
+  const handleDeleteTransaction = async () => {
+    try {
+      const result = await patchMutation.mutateAsync({
+        url: `/transactions/delete-transaction/${initialValue?._id}`,
+        payload: initialValue ?? {},
+      });
+      if (result?.success) {
+        Toast.show({ type: "success", text1: result?.message, position: "top" });
+        hideModal();
+      }
+    } catch (error) {
+      console.log("error = ", error);
+      Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
+    }
+  };
+
+  const confirmDelete = () => {
+    Alert.alert("Delete transaction?", initialValue?.title, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: handleDeleteTransaction },
+    ]);
+  };
+
   return (
-    <Portal>
-      <Modal
-        visible={open}
-        onDismiss={hideModal}
-        contentContainerStyle={[styles.modalContent, { backgroundColor: C.surface, borderColor: C.border }]}
+    <Sheet visible={open} onDismiss={hideModal}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        bottomOffset={20}
+        extraKeyboardSpace={10}
+        showsVerticalScrollIndicator={false}
       >
-        <KeyboardAwareScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-          bottomOffset={20}
-          extraKeyboardSpace={10}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.pageWrapper}>
-            <TypeToggle value={type} onChange={setType} />
+        <View style={styles.headRow}>
+          <Text style={[text.h3, { color: C.text }]}>Edit entry</Text>
+          {initialValue?.createdAt ? (
+            <Text style={[text.caption, { color: C.textMuted }]}>Today · {format(new Date(initialValue.createdAt), "HH:mm")}</Text>
+          ) : null}
+        </View>
 
-            <View style={{ marginTop: spacing.lg }}>
-              <CategoryPicker value={categoryId} onChange={setCategoryId} />
-            </View>
+        <TypeToggle value={type} onChange={setType} />
 
-            <View style={{ marginTop: spacing.lg }}>
-              <FormField
-                label="Amount"
-                value={amount || ""}
-                onChangeText={handleTextChange}
-                keyboardType="decimal-pad"
-                placeholder="0.00"
-                inputStyle={{ fontSize: 24, textAlign: "center", color: accentColor }}
-              />
-              <FormField label="Title" value={title || ""} onChangeText={setTitle} placeholder="e.g. Groceries" />
-              <FormField
-                label="Description"
-                value={description || ""}
-                onChangeText={setDescription}
-                placeholder="Add a note… (optional)"
-                multiline
-                inputStyle={{ height: 70, textAlignVertical: "top", paddingTop: 12 }}
-              />
-            </View>
+        <View style={{ marginTop: spacing.lg }}>
+          <CategoryPicker value={categoryId} onChange={setCategoryId} />
+        </View>
 
-            {initialValue?._id ? (
-              <ReceiptImagePicker
-                transactionId={initialValue._id}
-                value={initialValue?.receiptFileUrl}
-                invalidateKeys={INVALIDATE_KEYS}
-              />
-            ) : null}
+        <View style={{ marginTop: spacing.lg }}>
+          <FormField
+            label="Amount"
+            value={amount || ""}
+            onChangeText={handleTextChange}
+            keyboardType="decimal-pad"
+            placeholder="0.00"
+            inSheet
+            inputStyle={{ fontSize: 20, fontWeight: "500", color: accentColor }}
+          />
+          <FormField label="Title" value={title || ""} onChangeText={setTitle} placeholder="e.g. Groceries" inSheet />
+          <FormField
+            label="Description"
+            value={description || ""}
+            onChangeText={setDescription}
+            placeholder="Add a note… (optional)"
+            multiline
+            inSheet
+            inputStyle={{ height: 70, textAlignVertical: "top", paddingTop: 12 }}
+          />
+        </View>
 
-            <PrimaryButton
-              label={patchMutation?.isPending ? "Updating..." : "Update Transaction"}
-              onPress={handleUpdateTransaction}
-              loading={patchMutation?.isPending}
-              color={accentColor}
-            />
-          </View>
-        </KeyboardAwareScrollView>
-      </Modal>
-    </Portal>
+        {initialValue?._id ? (
+          <ReceiptImagePicker
+            transactionId={initialValue._id}
+            value={initialValue?.receiptFileUrl}
+            fileName={initialValue?.receiptFileOriginalName}
+            invalidateKeys={INVALIDATE_KEYS}
+          />
+        ) : null}
+
+        <View style={styles.actionRow}>
+          <PrimaryButton label="Delete" onPress={confirmDelete} variant="destructive" style={{ flex: 0, paddingHorizontal: spacing.base }} height={spacing.field} />
+          <PrimaryButton
+            label={patchMutation?.isPending ? "Saving…" : "Save changes"}
+            onPress={handleUpdateTransaction}
+            loading={patchMutation?.isPending}
+            style={{ flex: 1 }}
+            height={spacing.field}
+          />
+        </View>
+      </KeyboardAwareScrollView>
+    </Sheet>
   );
 }
 
-const styles = {
-  modalContent: {
-    marginHorizontal: spacing.xl,
-    borderRadius: radius.sheet,
-    borderWidth: 1,
-    padding: spacing.lg,
-  },
-  pageWrapper: {
-    width: "100%" as const,
-  },
-};
+const styles = StyleSheet.create({
+  headRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.md },
+  actionRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs },
+});

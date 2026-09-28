@@ -141,7 +141,6 @@ export default function TransactionAccordion({
                     <TransactionCard
                       key={item?._id}
                       transactionData={item}
-                      compact
                       isLast={i === day.transactions.length - 1}
                       onSwipeOpen={(ref) => {
                         if (

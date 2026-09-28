@@ -3,10 +3,14 @@ import {
   useSyncPendingTransactions,
 } from "@/hooks/usePendingTransactions";
 import { useTheme, text, spacing, radius } from "@/theme";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 import PrimaryButton from "./PrimaryButton";
 
+// Nocturne's Today build notes say the offline queue merges into the entry
+// list as "waiting to sync" rows (TransactionCard's pending branch) instead
+// of a separate banner — this component is kept only for the Sync-now
+// action itself, which the new list design doesn't otherwise surface.
 export default function PendingSyncBanner() {
   const C = useTheme();
   const { data: pendingTransactions } = usePendingTransactions();
@@ -17,43 +21,35 @@ export default function PendingSyncBanner() {
   if (!pendingCount) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: C.accentDim, borderColor: C.accentBorder }]}>
+    <View style={[styles.container, { backgroundColor: C.warningBg }]}>
       <View style={styles.textRow}>
-        <MaterialCommunityIcons name="cloud-upload-outline" size={18} color={C.accent} />
-        <Text style={[text.bodySm, { color: C.text }]}>
-          {pendingCount} transaction{pendingCount === 1 ? "" : "s"} pending sync
+        <Ionicons name="cloud-offline-outline" size={19} color={C.warning} />
+        <Text style={[text.bodySm, { color: C.text, flex: 1 }]}>
+          {pendingCount} {pendingCount === 1 ? "entry is" : "entries are"} saved on this phone. They&apos;ll sync when you&apos;re back online.
         </Text>
       </View>
 
-      <PrimaryButton
-        label={isSyncing ? "Syncing..." : "Sync now"}
-        onPress={syncAll}
-        loading={isSyncing}
-        style={styles.syncBtn}
-      />
+      <PrimaryButton label={isSyncing ? "Syncing…" : "Sync now"} onPress={syncAll} loading={isSyncing} variant="outline" color={C.warning} style={styles.syncBtn} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: radius.md,
-    padding: spacing.sm,
+    borderRadius: radius.card,
+    padding: spacing.md,
+    paddingHorizontal: spacing.md + 2,
     marginBottom: spacing.base,
     gap: spacing.sm,
   },
   textRow: {
     flexDirection: "row",
-    alignItems: "center",
-    columnGap: 6,
-    flexShrink: 1,
+    alignItems: "flex-start",
+    gap: 10,
   },
   syncBtn: {
     height: 36,
     paddingHorizontal: spacing.md,
+    alignSelf: "flex-start",
   },
 });
