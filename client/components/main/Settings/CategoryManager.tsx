@@ -1,25 +1,18 @@
 import EmptyState from "@/components/main/shared/EmptyState";
-import { useFetchData, usePatch } from "@/hooks/useApi";
+import { useFetchData } from "@/hooks/useApi";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { TCategory } from "@/types/Category.types";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Toast from "react-native-toast-message";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import CategoryFormModal from "./CategoryFormModal";
 
 export default function CategoryManager() {
   const C = useTheme();
   const [formOpen, setFormOpen] = useState(false);
-  const [editCategory, setEditCategory] = useState<TCategory | undefined>(
-    undefined,
-  );
+  const [editCategory, setEditCategory] = useState<TCategory | undefined>(undefined);
 
-  const { data, isLoading } = useFetchData<TCategory[]>(
-    ["categories"],
-    "/categories",
-  );
-  const deleteMutation = usePatch([["categories"]]);
+  const { data, isLoading } = useFetchData<TCategory[]>(["categories"], "/categories");
 
   const categories = data?.data ?? [];
 
@@ -33,152 +26,48 @@ export default function CategoryManager() {
     setFormOpen(true);
   };
 
-  const handleDelete = (category: TCategory) => {
-    Alert.alert("Delete category?", category.name, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const result = await deleteMutation.mutateAsync({
-              url: `/categories/${category._id}/delete`,
-              payload: {},
-            });
-            if (result?.success) {
-              Toast.show({
-                type: "success",
-                text1: result?.message,
-                position: "top",
-              });
-            }
-          } catch (error) {
-            console.log("error = ", error);
-          }
-        },
-      },
-    ]);
-  };
-
   return (
     <View>
+      <View style={styles.headerRow}>
+        <Text style={[text.kicker, { color: C.textSecondary }]}>Categories{categories.length ? ` · ${categories.length}` : ""}</Text>
+        <TouchableOpacity onPress={openCreate} style={styles.newBtn}>
+          <Ionicons name="add" size={16} color={C.accent} />
+          <Text style={[text.bodySm, { color: C.accent }]}>New</Text>
+        </TouchableOpacity>
+      </View>
+
       {!isLoading && categories.length === 0 ? (
-        <EmptyState
-          title="No categories yet"
-          subtitle="Add one to start tagging your transactions"
-        />
+        <EmptyState title="No categories yet" subtitle="Categories group your spending on Today, Activity and Budgets. Everything without one counts as Uncategorized." icon="pricetags-outline" />
       ) : (
-        categories.map((category, i) => (
-          <View
-            key={category._id}
-            style={[
-              styles.row,
-              {
-                borderColor: C.border,
-                backgroundColor: C.surface,
-                marginBottom: i === categories.length - 1 ? 0 : spacing.sm,
-              },
-            ]}
-          >
-            <View style={[styles.icon, { backgroundColor: C.accentDim }]}>
-              <MaterialCommunityIcons
-                name={(category.icon as any) ?? "shape"}
-                size={18}
-                color={C.accent}
-              />
-            </View>
-            <View style={styles.info}>
-              <Text
-                style={[text.bodyMd, { color: C.text }]}
-                numberOfLines={1}
-              >
+        <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }]}>
+          {categories.map((category, i) => (
+            <TouchableOpacity
+              key={category._id}
+              onPress={() => openEdit(category)}
+              activeOpacity={0.7}
+              style={[styles.row, i !== categories.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
+            >
+              <View style={[styles.icon, { backgroundColor: C.accentDim }]}>
+                <MaterialCommunityIcons name={(category.icon as any) ?? "shape"} size={16} color={C.accentText} />
+              </View>
+              <Text style={[text.body, { color: C.text, flex: 1 }]} numberOfLines={1}>
                 {category.name}
               </Text>
-            </View>
-            <View style={styles.actions}>
-              <TouchableOpacity
-                onPress={() => openEdit(category)}
-                style={[styles.actionButton, { backgroundColor: C.accentDim }]}
-              >
-                <MaterialCommunityIcons
-                  name="pencil-outline"
-                  size={14}
-                  color={C.accent}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleDelete(category)}
-                style={[styles.actionButton, { backgroundColor: C.expenseBg }]}
-              >
-                <MaterialCommunityIcons
-                  name="delete-outline"
-                  size={14}
-                  color={C.expense}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))
+              <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
+            </TouchableOpacity>
+          ))}
+        </View>
       )}
 
-      <TouchableOpacity
-        onPress={openCreate}
-        activeOpacity={0.8}
-        style={[
-          styles.addButton,
-          { borderColor: C.accentBorder, backgroundColor: C.accentDim },
-        ]}
-      >
-        <MaterialCommunityIcons name="plus" size={16} color={C.accent} />
-        <Text style={[text.bodyMd, { color: C.accent }]}>Add Category</Text>
-      </TouchableOpacity>
-
-      {formOpen && (
-        <CategoryFormModal
-          open={formOpen}
-          setOpen={setFormOpen}
-          initialValue={editCategory}
-        />
-      )}
+      {formOpen && <CategoryFormModal open={formOpen} setOpen={setFormOpen} initialValue={editCategory} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: 10,
-    paddingHorizontal: spacing.md,
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
-  icon: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.sm,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  info: { flex: 1, minWidth: 0 },
-  actions: { flexDirection: "row", alignItems: "center", gap: 4 },
-  actionButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    height: 44,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    marginTop: spacing.sm,
-  },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
+  newBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
+  card: { borderRadius: radius.card, borderWidth: 1 },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, height: 48, paddingHorizontal: spacing.md },
+  icon: { width: 30, height: 30, borderRadius: radius.sm + 2, alignItems: "center", justifyContent: "center", flexShrink: 0 },
 });
