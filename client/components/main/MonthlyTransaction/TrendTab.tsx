@@ -182,7 +182,7 @@ export default function TrendTab() {
 const styles = StyleSheet.create({
   segmentTrack: {
     flexDirection: "row",
-    borderRadius: radius.lg,
+    borderRadius: radius.sheet,
     borderWidth: 1,
     padding: 4,
     gap: 4,

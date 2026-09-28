@@ -45,7 +45,7 @@ export default function TypeToggle({ value, onChange }: TProps) {
 }
 
 const styles = StyleSheet.create({
-  track: { flexDirection: "row", borderRadius: radius.lg, borderWidth: 1, padding: 4, gap: 4 },
+  track: { flexDirection: "row", borderRadius: radius.sheet, borderWidth: 1, padding: 4, gap: 4 },
   opt: { flex: 1, paddingVertical: 10, borderRadius: radius.md, alignItems: "center", borderWidth: 1 },
   optContent: { flexDirection: "row", alignItems: "center", gap: 6 },
 });

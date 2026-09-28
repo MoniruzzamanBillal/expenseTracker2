@@ -167,7 +167,7 @@ export default function CategoryFormModal({
 const styles = StyleSheet.create({
   modalContent: {
     marginHorizontal: spacing.xl,
-    borderRadius: radius.lg,
+    borderRadius: radius.sheet,
     borderWidth: 1,
     padding: spacing.lg,
   },

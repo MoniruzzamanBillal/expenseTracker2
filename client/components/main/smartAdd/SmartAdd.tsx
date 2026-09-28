@@ -287,10 +287,10 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingTop: spacing.lg, paddingBottom: 40 },
   heading: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.xs },
   aiBadge: { borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  textarea: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, minHeight: 96, marginBottom: spacing.md, textAlignVertical: "top" },
+  textarea: { borderWidth: 1, borderRadius: radius.sheet, padding: spacing.base, minHeight: 96, marginBottom: spacing.md, textAlignVertical: "top" },
   resultsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
   countBadge: { borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  draftCard: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, marginBottom: spacing.sm },
+  draftCard: { borderWidth: 1, borderRadius: radius.sheet, padding: spacing.base, marginBottom: spacing.sm },
   draftHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.md },
   draftDeleteBtn: { marginLeft: spacing.sm, padding: 4 },
 });

@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   content: { paddingTop: spacing.md, paddingBottom: spacing.lg },
   segmentTrack: {
     flexDirection: "row",
-    borderRadius: radius.lg,
+    borderRadius: radius.sheet,
     borderWidth: 1,
     padding: 4,
     gap: 4,

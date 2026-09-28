@@ -169,7 +169,7 @@ export default function PendingTransactionEditModal({
 const styles = {
   modalContent: {
     marginHorizontal: spacing.xl,
-    borderRadius: radius.lg,
+    borderRadius: radius.sheet,
     borderWidth: 1,
     padding: spacing.lg,
   },

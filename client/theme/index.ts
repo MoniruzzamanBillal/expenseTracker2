@@ -1,5 +1,5 @@
-export { colors } from './colors';
+export { colors, currency } from './colors';
 export type { ColorScheme } from './colors';
 export { text, fontFamily } from './typography';
-export { spacing, radius, shadows } from './spacing';
+export { spacing, radius, elevation } from './spacing';
 export { useTheme, ThemeProvider } from './ThemeContext';

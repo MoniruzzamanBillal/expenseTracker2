@@ -98,7 +98,7 @@ export default function TransactionAccordion({
                         text.caption,
                         {
                           color: net < 0 ? C.expense : C.accent,
-                          fontFamily: fontFamily.semiBold,
+                          fontFamily: fontFamily.semibold,
                         },
                       ]}
                     >

@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
-    borderRadius: radius.full,
+    borderRadius: radius.pill,
     borderWidth: 0.5,
   },
   tightLine: {
