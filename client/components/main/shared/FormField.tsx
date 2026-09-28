@@ -6,13 +6,15 @@ import { Ionicons } from "@expo/vector-icons";
 type TProps = TextInputProps & {
   label: string;
   error?: string;
+  /** Red border with no inline message — for a field whose error is shown elsewhere (e.g. a banner above the submit button). */
+  invalid?: boolean;
   passwordToggle?: boolean;
   inputStyle?: TextStyle;
   /** Use inputBgSheet instead of inputBg — for fields rendered inside a bottom sheet. */
   inSheet?: boolean;
 };
 
-export default function FormField({ label, error, passwordToggle, secureTextEntry, inputStyle, inSheet, ...inputProps }: TProps) {
+export default function FormField({ label, error, invalid, passwordToggle, secureTextEntry, inputStyle, inSheet, ...inputProps }: TProps) {
   const C = useTheme();
   const [hidden, setHidden] = useState(secureTextEntry ?? false);
 
@@ -22,7 +24,7 @@ export default function FormField({ label, error, passwordToggle, secureTextEntr
       <View
         style={[
           styles.inputWrap,
-          { backgroundColor: inSheet ? C.inputBgSheet : C.inputBg, borderColor: error ? C.expense : C.border },
+          { backgroundColor: inSheet ? C.inputBgSheet : C.inputBg, borderColor: error || invalid ? C.expense : C.border },
           (inputProps.editable === false) && { opacity: 0.45 },
         ]}
       >
