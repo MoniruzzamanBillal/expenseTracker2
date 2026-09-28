@@ -1,4 +1,5 @@
 import EmptyState from "@/components/main/shared/EmptyState";
+import ErrorState from "@/components/main/shared/ErrorState";
 import TransactionCardSkeleton from "@/components/main/shared/TransactionCardSkeleton";
 import TransactionRequestEditModal from "@/components/main/shared/TransactionRequestEditModal";
 import {
@@ -7,10 +8,11 @@ import {
   useRejectTransactionRequest,
 } from "@/hooks/useTransactionRequests";
 import { usePatch } from "@/hooks/useApi";
-import { radius, spacing, text, useTheme } from "@/theme";
+import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransactionRequest } from "@/types/TransactionRequest.types";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
@@ -28,24 +30,20 @@ const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
 const SOURCE_META: Record<
   TTransactionRequest["sourceType"],
-  {
-    icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
-    label: string;
-  }
+  { icon: keyof typeof Ionicons.glyphMap }
 > = {
-  fuel: { icon: "gas-station", label: "Fuel" },
-  maintenance: { icon: "wrench", label: "Maintenance" },
-  accessory: { icon: "shopping-outline", label: "Accessory" },
+  fuel: { icon: "car-outline" },
+  maintenance: { icon: "build-outline" },
+  accessory: { icon: "pricetag-outline" },
 };
 
 export default function TransactionRequestsPage() {
   const C = useTheme();
-  const [editRequest, setEditRequest] = useState<TTransactionRequest | null>(
-    null,
-  );
+  const dark = C.statusBarStyle === "light";
+  const router = useRouter();
+  const [editRequest, setEditRequest] = useState<TTransactionRequest | null>(null);
 
-  const { data, isLoading, refetch, isRefetching } =
-    useFetchTransactionRequests();
+  const { data, isLoading, isError, error, refetch, isRefetching } = useFetchTransactionRequests();
 
   const acceptMutation = useAcceptTransactionRequest();
   const rejectMutation = useRejectTransactionRequest();
@@ -95,74 +93,34 @@ export default function TransactionRequestsPage() {
           }
         }
 
-        Toast.show({
-          type: "success",
-          text1: result?.message || "Request accepted",
-          position: "top",
-        });
+        Toast.show({ type: "success", text1: result?.message || "Request accepted", position: "top" });
       }
     } catch (error) {
       console.log("error = ", error);
-      Toast.show({
-        type: "error",
-        text1: "Something went wrong!!",
-        position: "top",
-      });
+      Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
     }
   };
 
   const rejectRequest = async (id: string) => {
     try {
-      const result = await rejectMutation.mutateAsync({
-        url: `/transaction-requests/${id}/reject`,
-        payload: {},
-      });
-
+      const result = await rejectMutation.mutateAsync({ url: `/transaction-requests/${id}/reject`, payload: {} });
       if (result?.success) {
-        Toast.show({
-          type: "success",
-          text1: result?.message || "Request rejected",
-          position: "top",
-        });
+        Toast.show({ type: "success", text1: result?.message || "Rejected", position: "top" });
       }
     } catch (error) {
       console.log("error = ", error);
-      Toast.show({
-        type: "error",
-        text1: "Something went wrong!!",
-        position: "top",
-      });
+      Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
     }
-  };
-
-  const handleAccept = (request: TTransactionRequest) => {
-    Alert.alert(
-      "Accept this request?",
-      `${request.title} · ৳${fmt(request.amount)}`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Accept", onPress: () => acceptRequest(request._id) },
-      ],
-    );
   };
 
   const handleReject = (request: TTransactionRequest) => {
     Alert.alert("Reject this request?", request.title, [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "Reject",
-        style: "destructive",
-        onPress: () => rejectRequest(request._id),
-      },
+      { text: "Reject", style: "destructive", onPress: () => rejectRequest(request._id) },
     ]);
   };
 
-  const handleModalAccept = async (edits: {
-    title: string;
-    description: string;
-    amount: number;
-    categoryId: string | null;
-  }) => {
+  const handleModalAccept = async (edits: { title: string; description: string; amount: number; categoryId: string | null }) => {
     if (!editRequest) return;
     const { categoryId, ...payload } = edits;
     await acceptRequest(editRequest._id, payload, categoryId);
@@ -170,115 +128,66 @@ export default function TransactionRequestsPage() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]} edges={["top"]}>
       <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingHorizontal: spacing.screenPad },
-        ]}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={C.accent}
-          />
-        }
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={C.accent} />}
       >
-        <Text
-          style={[text.navTitle, { color: C.text, marginBottom: spacing.xl }]}
-        >
-          Requests
-        </Text>
+        <View style={styles.nav}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={{ marginLeft: -10 }}>
+            <Ionicons name="chevron-back" size={22} color={C.text} />
+          </TouchableOpacity>
+          <Text style={[text.h2, { color: C.text, flex: 1 }]}>Requests</Text>
+          {requests.length > 0 ? <Text style={[text.bodySm, { color: C.textSecondary }]}>{requests.length} waiting</Text> : null}
+        </View>
 
-        {isLoading ? (
+        {isError ? (
+          <ErrorState title="Couldn't load requests" message={(error as any)?.message ?? "Network Error"} onRetry={refetch} />
+        ) : isLoading ? (
           <TransactionCardSkeleton />
         ) : requests.length === 0 ? (
           <EmptyState
-            title="No pending requests"
-            subtitle="Spend logged in bikelog will show up here for review."
+            title="Nothing pending"
+            subtitle="Expenses your other apps send (like fuel logged in bikelog) wait here until you accept or reject them."
+            icon="file-tray-outline"
           />
         ) : (
           requests.map((request) => {
             const meta = SOURCE_META[request.sourceType];
             return (
-              <View
-                key={request._id}
-                style={[
-                  styles.row,
-                  { borderColor: C.border, backgroundColor: C.surface },
-                ]}
-              >
-                <View style={[styles.icon, { backgroundColor: C.expenseBg }]}>
-                  <MaterialCommunityIcons
-                    name={meta.icon}
-                    size={18}
-                    color={C.expense}
-                  />
+              <View key={request._id} style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }, elevation(C, dark).card]}>
+                <View style={styles.cardTop}>
+                  <View style={[styles.icon, { backgroundColor: C.accentDim }]}>
+                    <Ionicons name={meta.icon} size={14} color={C.accentText} />
+                  </View>
+                  <Text style={[text.caption, { color: C.textSecondary, flex: 1 }]} numberOfLines={1}>
+                    bikelog · {request.sourceType}
+                  </Text>
+                  <Text style={[text.caption, { color: C.textMuted }]}>{format(new Date(request.occurredAt), "EEE d MMM, HH:mm")}</Text>
                 </View>
-                <View style={styles.info}>
-                  <Text
-                    style={[text.bodyMd, { color: C.text }]}
-                    numberOfLines={1}
-                  >
+
+                <View style={styles.titleRow}>
+                  <Text style={[text.bodyMd, { color: C.text, flex: 1 }]} numberOfLines={1}>
                     {request.title}
                   </Text>
-                  <Text
-                    style={[
-                      text.caption,
-                      { color: C.textSecondary, marginTop: 2 },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {meta.label} ·{" "}
-                    {format(new Date(request.occurredAt), "d MMM")}
-                  </Text>
+                  <Text style={[text.bodyMd, { color: C.expense }]}>−৳{fmt(request.amount)}</Text>
                 </View>
-                <View style={styles.right}>
-                  <View style={styles.actions}>
-                    <TouchableOpacity
-                      onPress={() => setEditRequest(request)}
-                      style={[
-                        styles.actionButton,
-                        { backgroundColor: C.accentDim },
-                      ]}
-                    >
-                      <MaterialCommunityIcons
-                        name="pencil-outline"
-                        size={14}
-                        color={C.accent}
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleAccept(request)}
-                      style={[
-                        styles.actionButton,
-                        { backgroundColor: C.incomeBg },
-                      ]}
-                    >
-                      <MaterialCommunityIcons
-                        name="check"
-                        size={14}
-                        color={C.income}
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleReject(request)}
-                      style={[
-                        styles.actionButton,
-                        { backgroundColor: C.expenseBg },
-                      ]}
-                    >
-                      <MaterialCommunityIcons
-                        name="close"
-                        size={14}
-                        color={C.expense}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  <Text style={[text.amountSm, { color: C.expense }]}>
-                    −৳{fmt(request.amount)}
+                {request.description ? (
+                  <Text style={[text.bodySm, { color: C.textSecondary }]} numberOfLines={2}>
+                    {request.description}
                   </Text>
+                ) : null}
+
+                <View style={styles.actionsRow}>
+                  <TouchableOpacity onPress={() => handleReject(request)} style={styles.rejectBtn}>
+                    <Ionicons name="close" size={16} color={C.textSecondary} />
+                    <Text style={[text.bodySm, { color: C.textSecondary }]}>Reject</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setEditRequest(request)} style={[styles.reviewBtn, { borderColor: C.accent }]}>
+                    <Text style={[text.bodySm, { color: C.accent }]}>Review</Text>
+                    <Ionicons name="arrow-forward" size={15} color={C.accent} />
+                  </TouchableOpacity>
                 </View>
               </View>
             );
@@ -301,33 +210,13 @@ export default function TransactionRequestsPage() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { flexGrow: 1, paddingTop: spacing.lg, paddingBottom: 40 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.md,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    marginBottom: spacing.sm,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  info: { flex: 1, minWidth: 0 },
-  right: { alignItems: "flex-end", gap: 4 },
-  actions: { flexDirection: "row", alignItems: "center", gap: 4 },
-  actionButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  content: { flexGrow: 1, paddingTop: spacing.xs, paddingBottom: 40 },
+  nav: { flexDirection: "row", alignItems: "center", height: 44, marginBottom: spacing.base },
+  card: { borderRadius: radius.card, borderWidth: 1, padding: spacing.md, gap: spacing.xs, marginBottom: spacing.sm },
+  cardTop: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  icon: { width: 24, height: 24, borderRadius: radius.sm, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  titleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
+  actionsRow: { flexDirection: "row", justifyContent: "flex-end", alignItems: "center", gap: spacing.sm, marginTop: spacing.xs },
+  rejectBtn: { flexDirection: "row", alignItems: "center", gap: 5, height: 36, paddingHorizontal: spacing.sm },
+  reviewBtn: { flexDirection: "row", alignItems: "center", gap: 5, height: 36, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1 },
 });

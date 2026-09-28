@@ -125,7 +125,7 @@ export default function TransactionRequestEditModal({
           <View style={styles.metaRow}>
             <Ionicons name={sourceIcon} size={14} color={C.accentText} />
             <Text style={[text.caption, { color: C.textSecondary }]}>
-              bikelog · {initialValue.sourceType} · {format(new Date(initialValue.createdAt), "EEE d MMM, HH:mm")}
+              bikelog · {initialValue.sourceType} · {format(new Date(initialValue.occurredAt), "EEE d MMM, HH:mm")}
             </Text>
           </View>
         ) : null}
@@ -160,7 +160,7 @@ export default function TransactionRequestEditModal({
           <View style={styles.infoRow}>
             <Ionicons name="information-circle-outline" size={15} color={C.textMuted} />
             <Text style={[text.caption, { color: C.textMuted, flex: 1 }]}>
-              Saved with today&apos;s date. The request keeps its original time ({format(new Date(initialValue.createdAt), "d MMM")}).
+              Saved with today&apos;s date. The request keeps its original time ({format(new Date(initialValue.occurredAt), "d MMM")}).
             </Text>
           </View>
         ) : null}
