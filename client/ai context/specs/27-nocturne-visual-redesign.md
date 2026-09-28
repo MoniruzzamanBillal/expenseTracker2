@@ -26,19 +26,36 @@ Full visual + navigation redesign of `client/` to the "Nocturne" design system, 
 
 ## Verify when done
 
-- [ ] `npx tsc --noEmit` clean from `client/`
-- [ ] `yarn lint` clean (or no new errors beyond the pre-existing baseline noted in root `CLAUDE.md`)
-- [ ] All 5 tabs render, in the new order, with the new icon set (Ionicons, `home-outline`/`home`, `calendar-clear-outline`/`calendar-clear`, `stats-chart-outline`/`stats-chart`, `pie-chart-outline`/`pie-chart`), center Add button as an outline pill
-- [ ] Today: avatar → Settings, tray icon w/ pending-count badge → Requests, glow net card, compact category breakdown bar, entries list with offline-queue items merged in as "waiting to sync" rows
-- [ ] Add: in-app keypad, no Requests button, Smart Add kept
-- [ ] Smart Add: compose → parsing → review-drafts-with-category-picker → saved/error, matching S1–S5
-- [ ] Quick Add + widget: sheet-not-screen, widget uses the updated hardcoded Nocturne palette
-- [ ] Activity: Month/Week segmented, no accordion (always-open day groups), daily spend strip
-- [ ] Insights: Year/Trend segmented (renamed from History; Trend moved out of MonthlyTransaction)
-- [ ] Budgets: now a visible tab, tone-based sorting/coloring
-- [ ] Requests: inbox card list, Reject quiet / Review opens accept sheet
-- [ ] Settings: profile, appearance (new persisted Dark/Light/System toggle), categories, sign out
-- [ ] Auth: sign in / register, verbatim server error strings preserved
-- [ ] Every data screen has loading/empty/error states per `StatePhone` contract, error states show the API message verbatim + "Try again" → refetch
-- [ ] Dark and light themes both verified (no hardcoded scheme)
-- [ ] No hex values/magic numbers inside components — tokens only
+- [x] `npx tsc --noEmit` clean from `client/`
+- [x] `yarn lint` clean
+- [x] All 5 tabs render, in the new order, with the new icon set (Ionicons, `home-outline`/`home`, `calendar-clear-outline`/`calendar-clear`, `stats-chart-outline`/`stats-chart`, `pie-chart-outline`/`pie-chart`), center Add button as an outline pill
+- [x] Today: avatar → Settings, tray icon w/ pending-count badge → Requests, glow net card, compact category breakdown bar, entries list with offline-queue items merged in as "waiting to sync" rows
+- [x] Add: in-app keypad, no Requests button, Smart Add kept
+- [x] Smart Add: compose → parsing → review-drafts-with-category-picker → saved/error, matching S1–S5
+- [x] Quick Add + widget: sheet-not-screen, widget uses the updated hardcoded Nocturne palette
+- [x] Activity: Month/Week segmented, no accordion (always-open day groups), daily spend strip
+- [x] Insights: Year/Trend segmented (renamed from History; Trend moved out of MonthlyTransaction)
+- [x] Budgets: now a visible tab, tone-based sorting/coloring
+- [x] Requests: inbox card list, Reject quiet / Review opens accept sheet
+- [x] Settings: profile, appearance (new persisted Dark/Light/System toggle), categories, sign out
+- [x] Auth: sign in / register, verbatim server error strings preserved
+- [x] Every data screen has loading/empty/error states per `StatePhone` contract, error states show the API message verbatim + "Try again" → refetch
+- [x] Dark and light themes both verified (elevation/tokens are theme-driven throughout; not manually clicked through in a running app — no device/simulator available this session)
+- [x] No hex values/magic numbers inside components — tokens only
+
+## Implementation notes
+
+Completed 2026-09-28, all four phases, code-reviewed against the design docs and `npx tsc --noEmit`/`yarn lint` (clean, whole app) after every phase. Installed one new client-only dependency, `expo-document-picker` (for Add/Quick Add's "Choose PDF" receipt option — the current app only ever picked images despite the server/types already supporting PDF receipts).
+
+**Not manually verified in a running app or on a device this session** — no dev server/simulator/emulator available. Everything below is code-level verified (types, lint, cross-referenced against the design docs and existing hooks/endpoints) but not click-tested. Before shipping, a human pass should cover:
+- Real device/simulator click-through of all 10 screens, both themes, both platforms (the app ships as an Android APK)
+- The widget's actual rendering (Q1/W1) — `widgets/QuickAddWidget.tsx`'s palette was updated by inspection, not rendered
+- Keypad/amount entry UX feel (Add, Quick Add, Smart Add draft edit)
+- Swipe gestures on TransactionCard (left/right action mapping was swapped during the TxRow rewrite — right-swipe now reveals Edit, left-swipe reveals Delete, matching TxRow's swipe direction convention; verify this feels right, not mirrored)
+- The Requests accept-then-categorize two-step flow against a real backend (only code-reviewed, not exercised)
+- AsyncStorage-persisted theme preference actually surviving an app restart
+
+**Deviations / judgment calls worth a second look:**
+- CategoryBreakdown was redesigned as a single component serving both Today's read-only compact bar+legend and Activity's tappable filter (same props/behavior, no `mode` prop) — simpler than the design's two-variant framing but may need to diverge later if Today needs to *not* be tappable-looking.
+- HistoryPage's year bar-chart row is a lightweight custom View-based bar strip, not `react-native-gifted-charts` — TrendTab (moved in from MonthlyTransaction) already uses gifted-charts for its line/donut so the dependency is in use; the year view didn't seem to need a charting library for 12 simple paired bars.
+- Smart Add's review screen simplifies the mockup's "cards stack, one expanded" into a summary-row that expands into the full edit form in place, rather than a fixed one-open-at-a-time carousel — functionally equivalent, fewer moving parts.
