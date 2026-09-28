@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/nocturne-da3133c7-5391-47d1-8ae1-ebc9f72eaa2b/styles.css">
+<script src="_ds/nocturne-da3133c7-5391-47d1-8ae1-ebc9f72eaa2b/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+<script src="ic.js"></script>
+<style>html{background:#0e0f17}body{margin:0;background:#0e0f17;color:#e9e9ed;font-family:Inter,system-ui,sans-serif}a{color:#9184d9;text-decoration:none}a:hover{color:#d2cefd}</style>
+</helmet>
+
+<div style="padding:56px 56px 8px;display:flex;flex-direction:column;gap:10px;max-width:980px">
+<div style="display:flex;gap:10px;font-size:12px"><a href="01 Foundations.dc.html">01 Foundations</a><span style="color:#75798c">/</span><span style="color:#e9e9ed">02 Today &amp; capture</span><span style="color:#75798c">/</span><a href="03 Review and Manage.dc.html">03 Review &amp; manage</a></div>
+<div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9397ab">ExpenseTracker · Nocturne redesign</div>
+<h1 style="font-size:40px;margin:0">Today &amp; capture</h1>
+<p style="font-size:15px;color:#9397ab;max-width:640px;margin:0">Home, Add, Smart Add, Quick Add + widget, and the receipt flow. Every figure on these phones is computed from the endpoint named in the notes beside it. Labels (H1, A2…) are stable — reference them in chat.</p>
+</div>
+
+<section id="home" style="padding:40px 56px;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+<div style="max-width:420px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9184d9">Screen 1 · app/(tabs)/index.tsx</div>
+<h2 style="font-size:28px;margin:0">Today</h2>
+<p style="font-size:14px;color:#9397ab;margin:0">Net first, then where it went, then the entries. The net figure is the one glow card in the app's most-opened screen; in/out sit directly under it as a proportional bar so the ratio reads before the numbers do.</p>
+</div>
+<div style="max-width:460px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5;color:#b2b6ca">
+<div><span style="color:#e9e9ed">Feed</span> GET /transactions/daily-transaction → data.{income, expense, transactions[], categoryBreakdown[]}</div>
+<div><span style="color:#e9e9ed">Net</span> income − expense (client). Sign colored pos/neg, figure stays ink. "7 entries" = transactions.length.</div>
+<div><span style="color:#e9e9ed">Spent on</span> categoryBreakdown filtered to expense &gt; 0, sorted desc, ramp c1→c5 by rank; Uncategorized always uses the uncat swatch, never a ramp hue.</div>
+<div><span style="color:#e9e9ed">Inbox badge</span> GET /transaction-requests length (already fetched by useTransactionRequests). Replaces the "Requests" button on Add.</div>
+<div><span style="color:#e9e9ed">Avatar</span> → Settings (replaces the gear). Initials from user.name; profilePicture if set.</div>
+<div><span style="color:#e9e9ed">Diverged</span> Greeting dropped; category breakdown moved above the list as a compact bar; offline queue is merged into the list as "waiting to sync" rows instead of a separate section.</div>
+</div>
+</div>
+<div style="display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">H1</span>Populated · dark</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--posTint:rgba(124,191,142,0.13);--warn:#d8a657;--warnTint:rgba(216,166,87,0.13);--neg:#e0786e;--negTint:rgba(224,120,110,0.13);--cardShadow:0 6px 18px rgba(0,0,0,0.45);--glow:0 0 28px rgba(145,132,217,0.30);--c1:#968ae0;--c2:#d2cefd;--c3:#75798c;--c4:#5d5294;--c5:#b2b6ca;--uncat:#4a4d5a;--scrim:rgba(10,11,18,0.72);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:12px;height:48px">
+<div style="width:36px;height:36px;border-radius:18px;background:var(--tint);color:var(--accentText);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">RA</div>
+<div style="flex:1;display:flex;flex-direction:column"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Mon · 28 Sep</span><span style="font-size:20px;line-height:24px;font-weight:500;letter-spacing:-0.015em">Today</span></div>
+<div style="position:relative;width:40px;height:40px;border-radius:10px;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink)"><x-ic name="file-tray-outline" style="font-size:inherit"></x-ic><div style="position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--ground);font-size:11px;font-weight:600;line-height:18px;text-align:center;font-variant-numeric:tabular-nums">3</div></div>
+</div>
+<div style="background:var(--card);border:1px solid var(--accentBorder);border-radius:10px;box-shadow:var(--glow);padding:16px 18px 18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Net today</span><span style="font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums">7 entries</span></div>
+<div style="display:flex;align-items:baseline;gap:3px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em"><span style="font-size:26px;color:var(--neg)">−</span><span style="font-size:26px;color:var(--ink2)">৳</span><span style="font-size:48px;line-height:50px;font-weight:500">1,850</span></div>
+<div style="display:flex;gap:3px;height:6px"><div style="flex:500;border-radius:3px;background:var(--pos)"></div><div style="flex:2350;border-radius:3px;background:var(--neg)"></div></div>
+<div style="display:flex;gap:28px">
+<div style="display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)"><span style="width:6px;height:6px;border-radius:1px;background:var(--pos)"></span>In</span><span style="font-size:18px;font-weight:500;color:var(--pos);font-variant-numeric:tabular-nums">+৳500</span></div>
+<div style="display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)"><span style="width:6px;height:6px;border-radius:1px;background:var(--neg)"></span>Out</span><span style="font-size:18px;font-weight:500;color:var(--neg);font-variant-numeric:tabular-nums">−৳2,350</span></div>
+</div>
+</div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;box-shadow:var(--cardShadow);padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Spent on</span><x-ic name="chevron-forward" style="font-size:16px;color:var(--ink3)"></x-ic></div>
+<div style="display:flex;gap:2px;height:8px"><sc-for list="{{ spend }}" as="s" hint-placeholder-count="4"><div style="flex:{{ s.v }};border-radius:2px;background:{{ s.c }}"></div></sc-for></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 14px"><sc-for list="{{ spend }}" as="s" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)"><span style="width:8px;height:8px;border-radius:2px;background:{{ s.c }}"></span>{{ s.name }}<span style="color:var(--ink);font-variant-numeric:tabular-nums">{{ s.pct }}</span></span></sc-for></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Entries</span><span style="font-size:12px;color:var(--ink3)">Newest first</span></div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;box-shadow:var(--cardShadow)"><sc-for list="{{ homeRows }}" as="r" hint-placeholder-count="5"><dc-import name="TxRow" title="{{ r.title }}" meta="{{ r.meta }}" icon="{{ r.icon }}" amt="{{ r.amt }}" kind="{{ r.kind }}" receipt="{{ r.receipt }}" last="{{ r.last }}" hint-size="100%,58px"></dc-import></sc-for></div>
+</div>
+</div>
+<dc-import name="TabBar" active="today" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">H2</span>Populated · light</div>
+<div style="--ground:#eef0f9;--card:#f7f8fe;--muted:#e4e7f5;--tint:#e7e5fe;--skel:#e1e4f1;--accent:#5d5294;--accentText:#423a6a;--accentBorder:rgba(93,82,148,0.5);--ink:#1f2130;--ink2:#595d6c;--ink3:#75798c;--hair:rgba(31,33,48,0.12);--edge:#dcdfee;--pos:#3b7650;--posTint:rgba(59,118,80,0.10);--warn:#8f6219;--warnTint:rgba(143,98,25,0.10);--neg:#b4453d;--negTint:rgba(180,69,61,0.09);--cardShadow:0 4px 14px rgba(31,33,48,0.07);--glow:0 0 26px rgba(93,82,148,0.20);--c1:#968ae0;--c2:#d2cefd;--c3:#75798c;--c4:#5d5294;--c5:#b2b6ca;--uncat:#c3c7d9;--scrim:rgba(31,33,48,0.45);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:12px;height:48px">
+<div style="width:36px;height:36px;border-radius:18px;background:var(--tint);color:var(--accentText);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">RA</div>
+<div style="flex:1;display:flex;flex-direction:column"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Mon · 28 Sep</span><span style="font-size:20px;line-height:24px;font-weight:500;letter-spacing:-0.015em">Today</span></div>
+<div style="position:relative;width:40px;height:40px;border-radius:10px;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink)"><x-ic name="file-tray-outline" style="font-size:inherit"></x-ic><div style="position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--ground);font-size:11px;font-weight:600;line-height:18px;text-align:center;font-variant-numeric:tabular-nums">3</div></div>
+</div>
+<div style="background:var(--card);border:1px solid var(--accentBorder);border-radius:10px;box-shadow:var(--glow);padding:16px 18px 18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Net today</span><span style="font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums">7 entries</span></div>
+<div style="display:flex;align-items:baseline;gap:3px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em"><span style="font-size:26px;color:var(--neg)">−</span><span style="font-size:26px;color:var(--ink2)">৳</span><span style="font-size:48px;line-height:50px;font-weight:500">1,850</span></div>
+<div style="display:flex;gap:3px;height:6px"><div style="flex:500;border-radius:3px;background:var(--pos)"></div><div style="flex:2350;border-radius:3px;background:var(--neg)"></div></div>
+<div style="display:flex;gap:28px">
+<div style="display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)"><span style="width:6px;height:6px;border-radius:1px;background:var(--pos)"></span>In</span><span style="font-size:18px;font-weight:500;color:var(--pos);font-variant-numeric:tabular-nums">+৳500</span></div>
+<div style="display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)"><span style="width:6px;height:6px;border-radius:1px;background:var(--neg)"></span>Out</span><span style="font-size:18px;font-weight:500;color:var(--neg);font-variant-numeric:tabular-nums">−৳2,350</span></div>
+</div>
+</div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;box-shadow:var(--cardShadow);padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Spent on</span><x-ic name="chevron-forward" style="font-size:16px;color:var(--ink3)"></x-ic></div>
+<div style="display:flex;gap:2px;height:8px"><sc-for list="{{ spend }}" as="s" hint-placeholder-count="4"><div style="flex:{{ s.v }};border-radius:2px;background:{{ s.c }}"></div></sc-for></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 14px"><sc-for list="{{ spend }}" as="s" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)"><span style="width:8px;height:8px;border-radius:2px;background:{{ s.c }}"></span>{{ s.name }}<span style="color:var(--ink);font-variant-numeric:tabular-nums">{{ s.pct }}</span></span></sc-for></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Entries</span><span style="font-size:12px;color:var(--ink3)">Newest first</span></div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;box-shadow:var(--cardShadow)"><sc-for list="{{ homeRows }}" as="r" hint-placeholder-count="5"><dc-import name="TxRow" title="{{ r.title }}" meta="{{ r.meta }}" icon="{{ r.icon }}" amt="{{ r.amt }}" kind="{{ r.kind }}" receipt="{{ r.receipt }}" last="{{ r.last }}" hint-size="100%,58px"></dc-import></sc-for></div>
+</div>
+</div>
+<dc-import name="TabBar" active="today" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">H3</span>Loading</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--neg:#e0786e;--cardShadow:0 6px 18px rgba(0,0,0,0.45);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:12px;height:48px">
+<div style="width:36px;height:36px;border-radius:18px;background:var(--tint);color:var(--accentText);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">RA</div>
+<div style="flex:1;display:flex;flex-direction:column"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Mon · 28 Sep</span><span style="font-size:20px;line-height:24px;font-weight:500;letter-spacing:-0.015em">Today</span></div>
+<div style="width:40px;height:40px;border-radius:10px;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:20px"><x-ic name="file-tray-outline" style="font-size:inherit"></x-ic></div>
+</div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px">
+<div style="width:72px;height:10px;border-radius:3px;background:var(--skel)"></div>
+<div style="width:168px;height:40px;border-radius:6px;background:var(--skel)"></div>
+<div style="height:6px;border-radius:3px;background:var(--skel)"></div>
+<div style="display:flex;gap:28px"><div style="width:72px;height:28px;border-radius:4px;background:var(--skel)"></div><div style="width:88px;height:28px;border-radius:4px;background:var(--skel)"></div></div>
+</div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px"><div style="width:64px;height:10px;border-radius:3px;background:var(--skel)"></div><div style="height:8px;border-radius:2px;background:var(--skel)"></div></div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px"><sc-for list="{{ skel5 }}" as="k" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:12px;height:58px;padding:0 14px;opacity:{{ k.o }}"><div style="width:36px;height:36px;border-radius:8px;background:var(--skel)"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px"><div style="width:{{ k.w }};height:11px;border-radius:3px;background:var(--skel)"></div><div style="width:84px;height:9px;border-radius:3px;background:var(--skel)"></div></div><div style="width:56px;height:12px;border-radius:3px;background:var(--skel)"></div></div></sc-for></div>
+</div>
+<dc-import name="TabBar" active="today" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">H4</span>Empty — nothing logged today</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--neg:#e0786e;--cardShadow:0 6px 18px rgba(0,0,0,0.45);--glow:0 0 28px rgba(145,132,217,0.30);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:12px;height:48px">
+<div style="width:36px;height:36px;border-radius:18px;background:var(--tint);color:var(--accentText);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">RA</div>
+<div style="flex:1;display:flex;flex-direction:column"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Mon · 28 Sep</span><span style="font-size:20px;line-height:24px;font-weight:500;letter-spacing:-0.015em">Today</span></div>
+<div style="width:40px;height:40px;border-radius:10px;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:20px"><x-ic name="file-tray-outline" style="font-size:inherit"></x-ic></div>
+</div>
+<div style="background:var(--card);border:1px solid var(--accentBorder);border-radius:10px;box-shadow:var(--glow);padding:16px 18px 18px;display:flex;flex-direction:column;gap:14px">
+<span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Net today</span>
+<div style="display:flex;align-items:baseline;gap:3px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em"><span style="font-size:26px;color:var(--ink3)">৳</span><span style="font-size:48px;line-height:50px;font-weight:500;color:var(--ink3)">0</span></div>
+<div style="height:6px;border-radius:3px;background:var(--muted);border:1px solid var(--edge)"></div>
+<div style="display:flex;gap:28px;font-size:12px;color:var(--ink2)"><span>In ৳0</span><span>Out ৳0</span></div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:28px 2px 0">
+<div style="width:44px;height:44px;border-radius:10px;border:1px dashed var(--edge);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ink3)"><x-ic name="receipt-outline" style="font-size:inherit"></x-ic></div>
+<div style="font-size:17px;font-weight:500;letter-spacing:-0.015em">Nothing logged today</div>
+<div style="font-size:14px;color:var(--ink2);max-width:280px">Entries you add today show up here, newest first.</div>
+<div style="display:flex;gap:10px;margin-top:6px">
+<div style="height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500"><x-ic name="add" style="font-size:18px"></x-ic>Add entry</div>
+<div style="height:44px;padding:0 14px;border-radius:10px;color:var(--ink2);display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500"><x-ic name="sparkles-outline" style="font-size:17px"></x-ic>Smart Add</div>
+</div>
+</div>
+</div>
+<dc-import name="TabBar" active="today" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">H5</span>Error · offline with queued entries</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--warn:#d8a657;--warnTint:rgba(216,166,87,0.13);--neg:#e0786e;--negTint:rgba(224,120,110,0.13);--cardShadow:0 6px 18px rgba(0,0,0,0.45);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:12px;height:48px">
+<div style="width:36px;height:36px;border-radius:18px;background:var(--tint);color:var(--accentText);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">RA</div>
+<div style="flex:1;display:flex;flex-direction:column"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Mon · 28 Sep</span><span style="font-size:20px;line-height:24px;font-weight:500;letter-spacing:-0.015em">Today</span></div>
+<div style="width:40px;height:40px;border-radius:10px;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:20px"><x-ic name="file-tray-outline" style="font-size:inherit"></x-ic></div>
+</div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;box-shadow:var(--cardShadow);padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px"><x-ic name="alert-circle-outline" style="font-size:22px;color:var(--neg)"></x-ic><span style="font-size:16px;font-weight:500">Couldn't load today</span></div>
+<div style="font-size:14px;color:var(--ink2)">Network Error</div>
+<div style="align-self:flex-start;height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500"><x-ic name="refresh-outline" style="font-size:17px"></x-ic>Try again</div>
+</div>
+<div style="background:var(--warnTint);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><x-ic name="cloud-offline-outline" style="font-size:19px;color:var(--warn);margin-top:1px"></x-ic><span style="font-size:13px;line-height:19px">2 entries are saved on this phone. They'll sync when you're back online.</span></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Waiting to sync</span>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px"><dc-import name="TxRow" title="Tea and snacks" meta="14:20" icon="" amt="120" kind="out" pending="yes" hint-size="100%,58px"></dc-import><dc-import name="TxRow" title="Phone top-up" meta="14:02" icon="" amt="300" kind="out" pending="yes" last="yes" hint-size="100%,58px"></dc-import></div>
+<span style="font-size:12px;color:var(--ink3)">Tap a queued entry to edit or remove it before it syncs.</span>
+</div>
+</div>
+<dc-import name="TabBar" active="today" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">H6</span>Tap an entry → edit sheet (receipt lives here)</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--neg:#e0786e;--negTint:rgba(224,120,110,0.13);--cardShadow:0 6px 18px rgba(0,0,0,0.45);--scrim:rgba(10,11,18,0.72);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px;display:flex;flex-direction:column;gap:16px;opacity:0.9"><div style="height:48px"></div><div style="height:170px;border-radius:10px;background:var(--card)"></div><div style="height:90px;border-radius:10px;background:var(--card)"></div></div>
+<div style="position:absolute;inset:0;background:var(--scrim)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--edge);border-radius:14px 14px 0 0;padding:8px 20px 34px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -16px 40px rgba(0,0,0,0.6)">
+<div style="width:36px;height:4px;border-radius:2px;background:var(--edge);align-self:center"></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:17px;font-weight:500;letter-spacing:-0.015em">Edit entry</span><span style="font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums">Today · 13:05</span></div>
+<div style="display:flex;height:36px;padding:3px;border-radius:9px;background:var(--muted);border:1px solid var(--edge)"><div style="flex:1;border-radius:6px;background:var(--negTint);border:1px solid var(--neg);color:var(--neg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">Expense</div><div style="flex:1;color:var(--ink2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">Income</div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12px;font-weight:500;color:var(--ink2)">Amount</span><div style="height:48px;border-radius:10px;background:var(--ground);border:1px solid var(--edge);display:flex;align-items:center;padding:0 14px;gap:4px;font-size:20px;font-weight:500;font-variant-numeric:tabular-nums"><span style="color:var(--ink2);font-weight:400">৳</span>650</div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12px;font-weight:500;color:var(--ink2)">Title</span><div style="height:48px;border-radius:10px;background:var(--ground);border:1px solid var(--accent);display:flex;align-items:center;padding:0 14px">Lunch with team<span style="width:1.5px;height:20px;background:var(--accent);margin-left:1px"></span></div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12px;font-weight:500;color:var(--ink2)">Category</span><div style="height:48px;border-radius:10px;background:var(--ground);border:1px solid var(--edge);display:flex;align-items:center;padding:0 12px;gap:10px"><div style="width:28px;height:28px;border-radius:6px;background:var(--tint);color:var(--accentText);display:flex;align-items:center;justify-content:center;font-size:16px"><i class="mdi mdi-food"></i></div><span style="flex:1">Food</span><x-ic name="chevron-down" style="color:var(--ink3);font-size:16px"></x-ic></div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12px;font-weight:500;color:var(--ink2)">Receipt</span><div style="height:52px;border-radius:10px;background:var(--tint);border:1px solid var(--accentBorder);display:flex;align-items:center;padding:0 8px 0 8px;gap:10px"><div style="width:36px;height:36px;border-radius:6px;background:repeating-linear-gradient(135deg,#3a3d4b 0 6px,#33364a 6px 12px);display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:16px"><x-ic name="image-outline" style="font-size:inherit"></x-ic></div><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;color:var(--accentText);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">IMG_20260928_1305.jpg</span><span style="font-size:12px;color:var(--ink2)">Tap to view</span></div><div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:18px"><x-ic name="trash-outline" style="font-size:inherit"></x-ic></div></div></div>
+<div style="display:flex;gap:10px;margin-top:4px">
+<div style="height:48px;padding:0 16px;border-radius:10px;border:1px solid rgba(224,120,110,0.55);color:var(--neg);display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500"><x-ic name="trash-outline" style="font-size:17px"></x-ic>Delete</div>
+<div style="flex:1;height:48px;border-radius:10px;background:var(--accent);color:var(--ground);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500">Save changes</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section id="add" style="padding:40px 56px;display:flex;flex-direction:column;gap:28px">
+<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(233,233,237,0.14) 48px,rgba(233,233,237,0.14) calc(100% - 48px),transparent);margin-bottom:12px"></div>
+<div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+<div style="max-width:420px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9184d9">Screen 2 · app/(tabs)/addTransaction.tsx</div>
+<h2 style="font-size:28px;margin:0">Add entry</h2>
+<p style="font-size:14px;color:#9397ab;margin:0">Amount first, typed on an in-app keypad in the thumb zone, so the most common entry (amount + category) never raises the system keyboard. Title and note use the system keyboard only when tapped.</p>
+</div>
+<div style="max-width:460px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5;color:#b2b6ca">
+<div><span style="color:#e9e9ed">Save</span> POST /transactions/new-transaction {type, amount, title, description?, categoryId?}. If a receipt is attached: then PUT /transactions/receipt-file/:id (multipart "file") with the returned _id.</div>
+<div><span style="color:#e9e9ed">Categories</span> GET /categories → chip row; first chip "None" sends categoryId null.</div>
+<div><span style="color:#e9e9ed">Keypad</span> Flex rows of Pressables, same regex as today (/^\d+(\.\d{0,2})?$/) — invalid keys simply don't register, so the "Invalid Amount" toast goes away.</div>
+<div><span style="color:#e9e9ed">Title</span> Required by the API; if empty on save we fall back to the category name instead of blocking — see A4 for the validation that remains.</div>
+<div><span style="color:#e9e9ed">Diverged</span> "Requests" button moved to Today's inbox icon. Smart Add stays here as the one header action. Offline: unchanged queue behaviour, the button reads "Save offline".</div>
+</div>
+</div>
+<div style="display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start">
+<sc-for list="{{ addPhones }}" as="p" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">{{ p.id }}</span>{{ p.label }}</div>
+<div style="{{ p.vars }};width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;height:44px"><span style="font-size:20px;font-weight:500;letter-spacing:-0.015em">New entry</span><div style="height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--accentBorder);color:var(--accent);display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500"><x-ic name="sparkles-outline" style="font-size:16px"></x-ic>Smart Add</div></div>
+<div style="display:flex;height:40px;padding:3px;border-radius:10px;background:var(--muted);border:1px solid var(--edge)"><div style="flex:1;border-radius:7px;background:var(--negTint);border:1px solid var(--neg);color:var(--neg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500">Expense</div><div style="flex:1;color:var(--ink2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500">Income</div></div>
+<div style="display:flex;flex-direction:column;gap:2px;padding:6px 0 2px"><span style="font-size:11px;line-height:14px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2)">Amount</span><div style="display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;height:60px"><span style="font-size:28px;color:var(--ink2)">৳</span><span style="font-size:52px;font-weight:500;color:{{ p.amtColor }}">{{ p.amt }}</span><span style="width:2px;height:40px;background:var(--accent);border-radius:1px"></span></div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><div style="height:46px;border-radius:10px;background:var(--card);border:1px solid {{ p.titleBorder }};display:flex;align-items:center;padding:0 14px;gap:10px"><x-ic name="text-outline" style="font-size:17px;color:var(--ink3)"></x-ic><span style="color:{{ p.titleColor }}">{{ p.title }}</span></div><sc-if value="{{ p.titleErr }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--neg)"><x-ic name="alert-circle-outline" style="font-size:14px"></x-ic>Please enter a title</span></sc-if></div>
+<div style="display:flex;gap:8px;overflow:hidden;margin-right:-20px">
+<sc-if value="{{ p.catLoading }}" hint-placeholder-val="{{ false }}"><div style="width:74px;height:34px;border-radius:17px;background:var(--skel);flex:none"></div><div style="width:96px;height:34px;border-radius:17px;background:var(--skel);flex:none"></div><div style="width:86px;height:34px;border-radius:17px;background:var(--skel);flex:none"></div><div style="width:90px;height:34px;border-radius:17px;background:var(--skel);flex:none"></div></sc-if>
+<sc-if value="{{ p.catReady }}" hint-placeholder-val="{{ true }}"><sc-for list="{{ chips }}" as="c" hint-placeholder-count="5"><div style="flex:none;height:34px;padding:0 12px 0 10px;border-radius:17px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500"><i class="mdi mdi-{{ c.icon }}" style="font-size:16px"></i>{{ c.name }}</div></sc-for></sc-if>
+</div>
+<div style="display:flex;gap:8px">
+<div style="height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--edge);color:var(--ink2);display:flex;align-items:center;gap:6px;font-size:13px"><x-ic name="create-outline" style="font-size:15px"></x-ic>Note</div>
+<sc-if value="{{ p.noReceipt }}" hint-placeholder-val="{{ true }}"><div style="height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--edge);color:var(--ink2);display:flex;align-items:center;gap:6px;font-size:13px"><x-ic name="attach-outline" style="font-size:16px"></x-ic>Receipt</div></sc-if>
+<sc-if value="{{ p.hasReceipt }}" hint-placeholder-val="{{ false }}"><div style="flex:1;min-width:0;height:34px;padding:0 4px 0 10px;border-radius:8px;border:1px solid var(--accentBorder);background:var(--tint);color:var(--accentText);display:flex;align-items:center;gap:6px;font-size:13px"><x-ic name="document-text-outline" style="font-size:15px"></x-ic><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">invoice-sept.pdf</span><x-ic name="close" style="font-size:16px;padding:4px"></x-ic></div></sc-if>
+</div>
+<div style="display:flex;flex-wrap:wrap;margin:2px -6px 0">
+<sc-for list="{{ keys }}" as="k" hint-placeholder-count="12"><div style="width:33.33%;height:46px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:400;font-variant-numeric:tabular-nums;color:var(--ink)"><sc-if value="{{ k.txt }}" hint-placeholder-val="{{ true }}">{{ k.l }}</sc-if><sc-if value="{{ k.back }}" hint-placeholder-val="{{ false }}"><x-ic name="backspace-outline" style="font-size:24px;color:var(--ink2)"></x-ic></sc-if></div></sc-for>
+</div>
+<div style="height:50px;border-radius:10px;background:var(--accent);color:var(--ground);display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;opacity:{{ p.saveOp }}">{{ p.save }}</div>
+</div>
+<sc-if value="{{ p.toast }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:52px;left:12px;right:12px;background:var(--card);border:1px solid var(--edge);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,0.6);padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><x-ic name="alert-circle-outline" style="font-size:20px;color:var(--neg);margin-top:1px"></x-ic><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500">Entry saved, receipt didn't upload</span><span style="font-size:13px;color:var(--ink2)">File too large. Open the entry to try another file.</span></div></div></sc-if>
+<dc-import name="TabBar" active="add" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="receipt" style="padding:40px 56px;display:flex;flex-direction:column;gap:28px">
+<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(233,233,237,0.14) 48px,rgba(233,233,237,0.14) calc(100% - 48px),transparent);margin-bottom:12px"></div>
+<div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+<div style="max-width:420px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9184d9">Flow · ReceiptImagePicker + ReceiptViewerModal</div>
+<h2 style="font-size:28px;margin:0">Receipt attachment</h2>
+<p style="font-size:14px;color:#9397ab;margin:0">Pick → chip (A4) → view → remove. The server only accepts a file on an existing transaction, so on Add the file rides along as a chip and uploads right after create.</p>
+</div>
+<div style="max-width:460px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5;color:#b2b6ca">
+<div><span style="color:#e9e9ed">Upload</span> PUT /transactions/receipt-file/:id, field "file", image or PDF, 10 MB cap (multer). A second upload replaces the first.</div>
+<div><span style="color:#e9e9ed">Display</span> receiptFileUrl, receiptFileOriginalName for the chip, receiptFileResourceType "image" | "raw" chooses image vs PDF viewer.</div>
+<div><span style="color:#e9e9ed">Remove</span> DELETE /transactions/receipt-file/:id after R4.</div>
+<div><span style="color:#e9e9ed">Row indicator</span> attach-outline next to the title whenever receiptFileUrl is set.</div>
+</div>
+</div>
+<div style="display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start">
+<sc-for list="{{ receiptPhones }}" as="p" hint-placeholder-count="4">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">{{ p.id }}</span>{{ p.label }}</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--neg:#e0786e;--scrim:rgba(10,11,18,0.72);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:{{ p.bg }};color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<sc-if value="{{ p.sheet }}" hint-placeholder-val="{{ false }}">
+<div style="padding:4px 20px;display:flex;flex-direction:column;gap:14px"><div style="height:44px"></div><div style="height:40px;border-radius:10px;background:var(--muted)"></div><div style="height:70px"></div><div style="height:46px;border-radius:10px;background:var(--card)"></div></div>
+<div style="position:absolute;inset:0;background:var(--scrim)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--edge);border-radius:14px 14px 0 0;padding:8px 12px 34px;display:flex;flex-direction:column;box-shadow:0 -16px 40px rgba(0,0,0,0.6)">
+<div style="width:36px;height:4px;border-radius:2px;background:var(--edge);align-self:center;margin-bottom:12px"></div>
+<div style="padding:0 8px 10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:17px;font-weight:500;letter-spacing:-0.015em">Attach receipt</span><span style="font-size:13px;color:var(--ink2)">Image or PDF, up to 10 MB</span></div>
+<sc-for list="{{ attachOpts }}" as="o" hint-placeholder-count="3"><div style="height:52px;display:flex;align-items:center;gap:14px;padding:0 8px;border-radius:8px;background:{{ o.bg }}"><x-ic name="{{ o.icon }}" style="font-size:21px;color:var(--accent)"></x-ic><span style="flex:1;font-size:15px">{{ o.l }}</span></div></sc-for>
+<div style="height:48px;margin-top:10px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:15px;font-weight:500">Cancel</div>
+</div>
+</sc-if>
+<sc-if value="{{ p.viewer }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:8px;height:52px;padding:0 12px"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px"><x-ic name="close" style="font-size:inherit"></x-ic></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center"><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px">{{ p.file }}</span><span style="font-size:12px;color:var(--ink2)">Lunch with team · −৳650</span></div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:21px;color:var(--ink2)"><x-ic name="trash-outline" style="font-size:inherit"></x-ic></div></div>
+<sc-if value="{{ p.img }}" hint-placeholder-val="{{ false }}"><div style="flex:1;margin:12px 20px 40px;border-radius:6px;background:repeating-linear-gradient(135deg,#262838 0 10px,#222433 10px 20px);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--ink3);font-size:12px;font-family:ui-monospace,Menlo,monospace"><x-ic name="image-outline" style="font-size:28px"></x-ic>receipt photo · pinch to zoom</div><div style="display:flex;justify-content:center;gap:10px;padding-bottom:40px"><div style="height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--accentBorder);color:var(--accent);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500"><x-ic name="swap-horizontal-outline" style="font-size:17px"></x-ic>Replace</div><div style="height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--accentBorder);color:var(--accent);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500"><x-ic name="share-outline" style="font-size:17px"></x-ic>Share</div></div></sc-if>
+<sc-if value="{{ p.pdf }}" hint-placeholder-val="{{ false }}"><div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 32px 120px;gap:14px"><div style="width:64px;height:78px;border-radius:8px;border:1px solid var(--edge);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--accentText)"><x-ic name="document-text-outline" style="font-size:inherit"></x-ic></div><div style="font-size:20px;font-weight:500;letter-spacing:-0.015em">invoice-sept.pdf</div><div style="font-size:14px;color:var(--ink2)">PDFs open in the system viewer. The file stays attached to this entry.</div><div style="display:flex;gap:10px;margin-top:6px"><div style="height:46px;padding:0 16px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500"><x-ic name="open-outline" style="font-size:17px"></x-ic>Open PDF</div><div style="height:46px;padding:0 14px;border-radius:10px;color:var(--ink2);display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500"><x-ic name="swap-horizontal-outline" style="font-size:17px"></x-ic>Replace</div></div></div></sc-if>
+<sc-if value="{{ p.confirm }}" hint-placeholder-val="{{ false }}"><div style="flex:1;margin:12px 20px 40px;border-radius:6px;background:repeating-linear-gradient(135deg,#262838 0 10px,#222433 10px 20px);border:1px solid var(--edge)"></div><div style="position:absolute;inset:0;background:var(--scrim)"></div><div style="position:absolute;left:24px;right:24px;top:300px;background:var(--card);border:1px solid var(--edge);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 16px 40px rgba(0,0,0,0.65)"><span style="font-size:17px;font-weight:500;letter-spacing:-0.015em">Remove receipt?</span><span style="font-size:14px;color:var(--ink2)">The file is deleted from this entry. The entry itself stays.</span><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px"><div style="height:44px;padding:0 16px;border-radius:10px;color:var(--ink2);display:flex;align-items:center;font-size:15px;font-weight:500">Cancel</div><div style="height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--neg);color:var(--neg);display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500"><x-ic name="trash-outline" style="font-size:16px"></x-ic>Remove</div></div></div></sc-if>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="smart" style="padding:40px 56px;display:flex;flex-direction:column;gap:28px">
+<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(233,233,237,0.14) 48px,rgba(233,233,237,0.14) calc(100% - 48px),transparent);margin-bottom:12px"></div>
+<div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+<div style="max-width:420px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9184d9">Screen 3 · app/(tabs)/smart-add.tsx</div>
+<h2 style="font-size:28px;margin:0">Smart Add</h2>
+<p style="font-size:14px;color:#9397ab;margin:0">Write a sentence, get drafts, fix what's wrong, save once. The review list is the screen — each draft is a card you can edit in place or discard; nothing is written until the one Save.</p>
+</div>
+<div style="max-width:460px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5;color:#b2b6ca">
+<div><span style="color:#e9e9ed">Parse</span> POST /transactions/manage-money {prompt} → data: [{type, amount, title, description}] (no category — the AI never returns one).</div>
+<div><span style="color:#e9e9ed">Save</span> POST /transactions/many-transaction with the edited array + categoryId per draft (spec 22 picker). Response is Prisma's {count} — S4 uses that count.</div>
+<div><span style="color:#e9e9ed">Empty</span> data: [] → "Didn't find any amounts in that" with the text kept for editing.</div>
+<div><span style="color:#e9e9ed">Error</span> 400 "AI returned invalid transaction data" or OpenRouter failure → S5, text preserved.</div>
+<div><span style="color:#e9e9ed">Diverged</span> Drafts without a category are flagged "No category" rather than silently saved as Uncategorized.</div>
+</div>
+</div>
+<div style="display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">S1</span>Compose</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:6px;height:44px;margin-left:-10px"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px"><x-ic name="chevron-back" style="font-size:inherit"></x-ic></div><span style="font-size:20px;font-weight:500;letter-spacing:-0.015em">Smart Add</span></div>
+<div style="background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:14px 16px;min-height:168px;display:flex;flex-direction:column;justify-content:space-between;gap:12px"><div style="font-size:17px;line-height:26px">Spent 250 on coffee and 450 on lunch, paid 1,200 for the electricity bill, got 800 back from Rafi for the tickets<span style="display:inline-block;width:1.5px;height:20px;background:var(--accent);vertical-align:-4px;margin-left:1px"></span></div><div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink3)"><span>One sentence can hold several entries</span><x-ic name="close-circle" style="font-size:18px"></x-ic></div></div>
+<div style="font-size:13px;color:var(--ink2);line-height:19px">You'll review every entry before anything is saved.</div>
+<div style="height:50px;border-radius:10px;border:1px solid var(--accent);background:var(--tint);color:var(--accentText);display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500"><x-ic name="sparkles-outline" style="font-size:18px"></x-ic>Find entries</div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;height:291px;background:#2a2c3a;display:flex;flex-direction:column;gap:8px;padding:10px 4px;align-items:center;justify-content:flex-start;color:#75798c;font-size:12px;font-family:ui-monospace,Menlo,monospace"><div style="flex:1;width:100%;border-radius:6px;background:repeating-linear-gradient(135deg,#2e3140 0 8px,#2a2c3a 8px 16px);display:flex;align-items:center;justify-content:center">system keyboard</div></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">S2</span>Parsing (loading)</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:6px;height:44px;margin-left:-10px"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px"><x-ic name="chevron-back" style="font-size:inherit"></x-ic></div><span style="font-size:20px;font-weight:500;letter-spacing:-0.015em">Smart Add</span></div>
+<div style="background:var(--muted);border:1px solid var(--edge);border-radius:10px;padding:12px 14px;font-size:14px;line-height:21px;color:var(--ink2)">Spent 250 on coffee and 450 on lunch, paid 1,200 for the electricity bill, got 800 back from Rafi for the tickets</div>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--accentText)"><x-ic name="sparkles-outline" style="font-size:16px"></x-ic>Reading your text…</div>
+<sc-for list="{{ skel3 }}" as="k" hint-placeholder-count="3"><div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;opacity:{{ k.o }}"><div style="display:flex;justify-content:space-between"><div style="width:64px;height:20px;border-radius:5px;background:var(--skel)"></div><div style="width:72px;height:16px;border-radius:4px;background:var(--skel)"></div></div><div style="width:{{ k.w }};height:13px;border-radius:3px;background:var(--skel)"></div><div style="width:110px;height:28px;border-radius:14px;background:var(--skel)"></div></div></sc-for>
+</div>
+<dc-import name="TabBar" active="add" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">S3</span>Review drafts · one open for edit</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--posTint:rgba(124,191,142,0.13);--warn:#d8a657;--neg:#e0786e;--negTint:rgba(224,120,110,0.13);--cardShadow:0 6px 18px rgba(0,0,0,0.45);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:6px;height:44px;margin-left:-10px"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px"><x-ic name="chevron-back" style="font-size:inherit"></x-ic></div><span style="font-size:20px;font-weight:500;letter-spacing:-0.015em;flex:1">Review</span><span style="font-size:14px;color:var(--accent);font-weight:500">Edit text</span></div>
+<div style="display:flex;gap:16px;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums"><span>4 drafts</span><span style="color:var(--pos)">In +৳800</span><span style="color:var(--neg)">Out −৳1,900</span></div>
+<div style="background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;height:32px;padding:2px;border-radius:8px;background:var(--muted);border:1px solid var(--edge)"><div style="flex:1;border-radius:6px;background:var(--negTint);border:1px solid var(--neg);color:var(--neg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">Expense</div><div style="flex:1;color:var(--ink2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">Income</div></div>
+<div style="display:flex;gap:8px"><div style="width:108px;height:42px;border-radius:8px;background:var(--ground);border:1px solid var(--edge);display:flex;align-items:center;padding:0 10px;gap:3px;font-variant-numeric:tabular-nums;font-weight:500"><span style="color:var(--ink2);font-weight:400">৳</span>250</div><div style="flex:1;height:42px;border-radius:8px;background:var(--ground);border:1px solid var(--accent);display:flex;align-items:center;padding:0 10px">Coffee<span style="width:1.5px;height:18px;background:var(--accent);margin-left:1px"></span></div></div>
+<div style="height:42px;border-radius:8px;background:var(--ground);border:1px solid var(--edge);display:flex;align-items:center;padding:0 10px;font-size:14px;color:var(--ink2)">Coffee purchase</div>
+<div style="display:flex;gap:6px;overflow:hidden;margin-right:-14px"><sc-for list="{{ chips }}" as="c" hint-placeholder-count="5"><div style="flex:none;height:30px;padding:0 10px 0 8px;border-radius:15px;border:1px solid {{ c.bd2 }};background:{{ c.bg2 }};color:{{ c.fg2 }};display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500"><i class="mdi mdi-{{ c.icon }}" style="font-size:14px"></i>{{ c.name }}</div></sc-for></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px"><div style="display:flex;align-items:center;gap:6px;color:var(--neg);font-size:13px;font-weight:500;height:36px"><x-ic name="trash-outline" style="font-size:16px"></x-ic>Discard</div><div style="height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--accent);color:var(--accent);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500"><x-ic name="checkmark" style="font-size:16px"></x-ic>Done</div></div>
+</div>
+<sc-for list="{{ drafts }}" as="d" hint-placeholder-count="3"><div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;box-shadow:var(--cardShadow);padding:12px 8px 12px 14px;display:flex;gap:10px;align-items:flex-start">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</span><span style="font-size:15px;font-weight:500;color:{{ d.color }};font-variant-numeric:tabular-nums;white-space:nowrap">{{ d.amt }}</span></div>
+<span style="font-size:13px;color:var(--ink2);line-height:18px">{{ d.desc }}</span>
+<div style="align-self:flex-start;height:28px;padding:0 10px 0 8px;border-radius:14px;border:1px {{ d.catBorder }};color:{{ d.catColor }};background:{{ d.catBg }};display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500"><i class="mdi mdi-{{ d.icon }}" style="font-size:14px"></i>{{ d.cat }}</div>
+</div>
+<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:18px"><x-ic name="create-outline" style="font-size:inherit"></x-ic></div>
+</div></sc-for>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:84px;padding:12px 20px 12px;background:var(--ground)"><div style="height:1px;margin:-12px -20px 12px;background:linear-gradient(90deg,transparent,var(--hair) 48px,var(--hair) calc(100% - 48px),transparent)"></div><div style="height:50px;border-radius:10px;background:var(--accent);color:var(--ground);display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500">Save 4 entries</div></div>
+<dc-import name="TabBar" active="add" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">S4</span>Saved</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--neg:#e0786e;--cardShadow:0 6px 18px rgba(0,0,0,0.45);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:120px 28px 0;display:flex;flex-direction:column;gap:12px">
+<x-ic name="checkmark-circle-outline" style="font-size:44px;color:var(--pos)"></x-ic>
+<div style="font-size:28px;line-height:34px;font-weight:500;letter-spacing:-0.015em">4 entries saved</div>
+<div style="font-size:14px;color:var(--ink2)">They're in today's list now.</div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;box-shadow:var(--cardShadow);padding:4px 14px;margin-top:10px">
+<sc-for list="{{ savedLines }}" as="s" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;align-items:center;height:42px;font-size:14px"><span>{{ s.t }}</span><span style="color:{{ s.c }};font-variant-numeric:tabular-nums;font-weight:500">{{ s.a }}</span></div></sc-for>
+</div>
+<div style="display:flex;gap:10px;margin-top:14px"><div style="flex:1;height:48px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500">View today</div><div style="flex:1;height:48px;border-radius:10px;color:var(--ink2);display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:500"><x-ic name="add" style="font-size:18px"></x-ic>Add more</div></div>
+</div>
+<dc-import name="TabBar" active="add" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">S5</span>Error · text kept</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--neg:#e0786e;--negTint:rgba(224,120,110,0.13);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:var(--ground);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:6px;height:44px;margin-left:-10px"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px"><x-ic name="chevron-back" style="font-size:inherit"></x-ic></div><span style="font-size:20px;font-weight:500;letter-spacing:-0.015em">Smart Add</span></div>
+<div style="background:var(--card);border:1px solid var(--edge);border-radius:10px;padding:14px 16px;min-height:140px;font-size:17px;line-height:26px">bought stuff yesterday, not sure how much</div>
+<div style="background:var(--negTint);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><x-ic name="alert-circle-outline" style="font-size:19px;color:var(--neg);margin-top:1px"></x-ic><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500">Couldn't find entries</span><span style="font-size:13px;color:var(--ink2);line-height:19px">AI returned invalid transaction data. Add an amount for each thing and try again.</span></div></div>
+<div style="height:50px;border-radius:10px;border:1px solid var(--accent);background:var(--tint);color:var(--accentText);display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500"><x-ic name="refresh-outline" style="font-size:18px"></x-ic>Try again</div>
+<div style="font-size:13px;color:var(--ink3);line-height:19px">Empty result ([]) uses the same slot: "No amounts found in that text."</div>
+</div>
+<dc-import name="TabBar" active="add" hint-size="375px,84px"></dc-import>
+</div>
+</div>
+
+</div>
+</section>
+
+<section id="quick" style="padding:40px 56px 80px;display:flex;flex-direction:column;gap:28px">
+<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(233,233,237,0.14) 48px,rgba(233,233,237,0.14) calc(100% - 48px),transparent);margin-bottom:12px"></div>
+<div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+<div style="max-width:420px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9184d9">Screen 11 · app/quick-add.tsx + widgets/QuickAddWidget.tsx</div>
+<h2 style="font-size:28px;margin:0">Quick Add + widget</h2>
+<p style="font-size:14px;color:#9397ab;margin:0">A sheet over a scrim, not a screen: no tab bar, no header, one job. The deep-link type presets the toggle; the keypad and Save sit in the thumb zone. On save it closes back to the launcher.</p>
+</div>
+<div style="max-width:460px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5;color:#b2b6ca">
+<div><span style="color:#e9e9ed">Entry</span> client://quick-add?type=expense|income → toggle preset, keypad focused.</div>
+<div><span style="color:#e9e9ed">Save</span> same POST /transactions/new-transaction; offline queue applies. No receipt here (that's what the full Add is for).</div>
+<div><span style="color:#e9e9ed">Widget</span> FlexWidget + TextWidget only: flat rects, 1px borders, 16/12 radii, hardcoded palette below (the widget can't read ThemeContext). No data shown — it runs in a headless task without the auth token flow, so a total would be stale or wrong.</div>
+</div>
+</div>
+<div style="display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">Q1</span>Quick Add sheet · type=expense</div>
+<div style="--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--neg:#e0786e;--negTint:rgba(224,120,110,0.13);--scrim:rgba(10,11,18,0.72);width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:repeating-linear-gradient(160deg,#2a2d3f 0 30px,#252838 30px 60px);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<dc-import name="Status" hint-size="375px,44px"></dc-import>
+<div style="position:absolute;inset:0;background:var(--scrim)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--edge);border-radius:14px 14px 0 0;padding:8px 20px 30px;display:flex;flex-direction:column;gap:12px;box-shadow:0 -16px 40px rgba(0,0,0,0.6)">
+<div style="width:36px;height:4px;border-radius:2px;background:var(--edge);align-self:center"></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;height:34px;padding:2px;border-radius:9px;background:var(--muted);border:1px solid var(--edge);width:190px"><div style="flex:1;border-radius:7px;background:var(--negTint);border:1px solid var(--neg);color:var(--neg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">Expense</div><div style="flex:1;color:var(--ink2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">Income</div></div><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ink2);margin-right:-8px"><x-ic name="close" style="font-size:inherit"></x-ic></div></div>
+<div style="display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;height:58px"><span style="font-size:28px;color:var(--ink2)">৳</span><span style="font-size:50px;font-weight:500">180</span><span style="width:2px;height:38px;background:var(--accent);border-radius:1px"></span></div>
+<div style="height:46px;border-radius:10px;background:var(--ground);border:1px solid var(--edge);display:flex;align-items:center;padding:0 14px;gap:10px;color:var(--ink3)"><x-ic name="text-outline" style="font-size:17px"></x-ic>Title (defaults to category)</div>
+<div style="display:flex;gap:8px;overflow:hidden;margin-right:-20px"><sc-for list="{{ chipsQ }}" as="c" hint-placeholder-count="5"><div style="flex:none;height:34px;padding:0 12px 0 10px;border-radius:17px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500"><i class="mdi mdi-{{ c.icon }}" style="font-size:16px"></i>{{ c.name }}</div></sc-for></div>
+<div style="display:flex;flex-wrap:wrap;margin:0 -6px"><sc-for list="{{ keys }}" as="k" hint-placeholder-count="12"><div style="width:33.33%;height:48px;display:flex;align-items:center;justify-content:center;font-size:23px;font-variant-numeric:tabular-nums"><sc-if value="{{ k.txt }}" hint-placeholder-val="{{ true }}">{{ k.l }}</sc-if><sc-if value="{{ k.back }}" hint-placeholder-val="{{ false }}"><x-ic name="backspace-outline" style="font-size:24px;color:var(--ink2)"></x-ic></sc-if></div></sc-for></div>
+<div style="height:50px;border-radius:10px;background:var(--accent);color:var(--ground);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500">Save expense</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9397ab"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 6px;border-radius:4px;background:#2b2741;color:#d2cefd">W1</span>Home-screen widget · 4×1 and 2×2, dark + light</div>
+<div style="width:375px;height:812px;flex:none;position:relative;overflow:hidden;border-radius:44px;background:repeating-linear-gradient(160deg,#2a2d3f 0 30px,#252838 30px 60px);font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;gap:28px;padding:84px 16px 0;box-shadow:0 0 0 7px #05060a,0 0 0 8px #2a2c38,0 30px 70px rgba(0,0,0,0.55)">
+<div style="height:104px;border-radius:16px;background:#232532;border:1px solid #3f424d;padding:12px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:#9397ab">Quick add</span><span style="font-size:11px;color:#75798c">ExpenseTracker</span></div><div style="display:flex;gap:8px;flex:1"><div style="flex:1;border-radius:12px;border:1px solid #e0786e;background:#3a2a31;display:flex;align-items:center;justify-content:center;color:#e0786e;font-size:14px;font-weight:600">− Expense</div><div style="flex:1;border-radius:12px;border:1px solid #7cbf8e;background:#26352f;display:flex;align-items:center;justify-content:center;color:#7cbf8e;font-size:14px;font-weight:600">+ Income</div></div></div>
+<div style="display:flex;gap:16px">
+<div style="width:164px;height:164px;border-radius:16px;background:#232532;border:1px solid #3f424d;padding:12px;display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:#9397ab">Quick add</span><div style="flex:1;border-radius:12px;border:1px solid #e0786e;background:#3a2a31;display:flex;align-items:center;justify-content:center;color:#e0786e;font-size:14px;font-weight:600">− Expense</div><div style="flex:1;border-radius:12px;border:1px solid #7cbf8e;background:#26352f;display:flex;align-items:center;justify-content:center;color:#7cbf8e;font-size:14px;font-weight:600">+ Income</div></div>
+<div style="width:164px;height:164px;border-radius:16px;background:#f7f8fe;border:1px solid #dcdfee;padding:12px;display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:#595d6c">Quick add</span><div style="flex:1;border-radius:12px;border:1px solid #b4453d;background:#f6e9ea;display:flex;align-items:center;justify-content:center;color:#b4453d;font-size:14px;font-weight:600">− Expense</div><div style="flex:1;border-radius:12px;border:1px solid #3b7650;background:#e6efeb;display:flex;align-items:center;justify-content:center;color:#3b7650;font-size:14px;font-weight:600">+ Income</div></div>
+</div>
+<div style="background:#1f2130;border:1px solid #3f424d;border-radius:10px;padding:12px 14px;font:12px/1.6 ui-monospace,Menlo,monospace;color:#b2b6ca">dark: surface #232532 · edge #3f424d<br>expense #e0786e on #3a2a31<br>income #7cbf8e on #26352f<br>light: #f7f8fe · #dcdfee · #b4453d/#f6e9ea · #3b7650/#e6efeb<br>tints pre-mixed — widgets have no alpha blending of tokens</div>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const D = '--ground:#161826;--card:#232532;--muted:#1f2130;--tint:#2b2741;--skel:#2c2e3c;--accent:#9184d9;--accentText:#d2cefd;--accentBorder:rgba(145,132,217,0.55);--ink:#e9e9ed;--ink2:#9397ab;--ink3:#75798c;--hair:rgba(233,233,237,0.14);--edge:#3f424d;--pos:#7cbf8e;--posTint:rgba(124,191,142,0.13);--warn:#d8a657;--neg:#e0786e;--negTint:rgba(224,120,110,0.13);--cardShadow:0 6px 18px rgba(0,0,0,0.45)';
+    const L = '--ground:#eef0f9;--card:#f7f8fe;--muted:#e4e7f5;--tint:#e7e5fe;--skel:#e1e4f1;--accent:#5d5294;--accentText:#423a6a;--accentBorder:rgba(93,82,148,0.5);--ink:#1f2130;--ink2:#595d6c;--ink3:#75798c;--hair:rgba(31,33,48,0.12);--edge:#dcdfee;--pos:#3b7650;--posTint:rgba(59,118,80,0.10);--warn:#8f6219;--neg:#b4453d;--negTint:rgba(180,69,61,0.09);--cardShadow:0 4px 14px rgba(31,33,48,0.07)';
+    const chipDefs = [['None', 'shape-outline'], ['Food', 'food'], ['Transport', 'bus'], ['Groceries', 'cart'], ['Bills', 'receipt'], ['Coffee', 'coffee']];
+    const chip = (sel) => ([n, icon]) => {
+      const on = n === sel;
+      return { name: n, icon, bd: on ? 'var(--accent)' : 'var(--edge)', bg: on ? 'var(--tint)' : 'transparent', fg: on ? 'var(--accentText)' : 'var(--ink2)',
+        bd2: on ? 'var(--accent)' : 'var(--edge)', bg2: on ? 'var(--tint)' : 'transparent', fg2: on ? 'var(--accentText)' : 'var(--ink2)' };
+    };
+    const keys = ['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(l => ({ l, txt: l !== '⌫', back: l === '⌫' }));
+    const addBase = { amtColor: 'var(--ink)', titleBorder: 'var(--edge)', titleColor: 'var(--ink)', titleErr: false, catLoading: false, catReady: true, noReceipt: true, hasReceipt: false, saveOp: 1, toast: false };
+    return {
+      spend: [
+        { name: 'Food', v: 1100, c: 'var(--c1)', pct: '47%' },
+        { name: 'Transport', v: 650, c: 'var(--c2)', pct: '28%' },
+        { name: 'Groceries', v: 420, c: 'var(--c4)', pct: '18%' },
+        { name: 'Uncategorized', v: 180, c: 'var(--uncat)', pct: '8%' },
+      ],
+      homeRows: [
+        { title: 'Lunch with team', meta: 'Food · 13:05', icon: 'food', amt: '650', kind: 'out', receipt: 'y' },
+        { title: 'Refund — returned charger', meta: 'Uncategorized · 12:10', icon: '', amt: '500', kind: 'in' },
+        { title: 'Ride to office', meta: 'Transport · 09:40', icon: 'bus', amt: '420', kind: 'out' },
+        { title: 'Rickshaw', meta: 'Transport · 08:55', icon: 'bus', amt: '230', kind: 'out' },
+        { title: 'Coffee & breakfast', meta: 'Food · 08:30', icon: 'food', amt: '450', kind: 'out' },
+        { title: 'Weekly groceries', meta: 'Groceries · 07:50', icon: 'cart', amt: '420', kind: 'out', receipt: 'y' },
+        { title: 'Parking', meta: 'Uncategorized · 07:45', icon: '', amt: '180', kind: 'out', last: 'y' },
+      ],
+      skel5: [{ w: '62%', o: 1 }, { w: '48%', o: 0.85 }, { w: '70%', o: 0.7 }, { w: '40%', o: 0.55 }, { w: '56%', o: 0.4 }],
+      skel3: [{ w: '60%', o: 1 }, { w: '45%', o: 0.75 }, { w: '68%', o: 0.5 }],
+      chips: chipDefs.map(chip('Food')),
+      chipsQ: chipDefs.map(chip('Transport')),
+      keys,
+      addPhones: [
+        { ...addBase, id: 'A1', label: 'Filled · dark', vars: D, amt: '1,250', title: 'Lunch with team', save: 'Save expense' },
+        { ...addBase, id: 'A2', label: 'Filled · light', vars: L, amt: '1,250', title: 'Lunch with team', save: 'Save expense' },
+        { ...addBase, id: 'A3', label: 'Empty form · categories loading', vars: D, amt: '0', amtColor: 'var(--ink3)', title: 'Title', titleColor: 'var(--ink3)', catLoading: true, catReady: false, saveOp: 0.45, save: 'Save expense' },
+        { ...addBase, id: 'A4', label: 'Validation + PDF attached + upload error toast', vars: D, amt: '1,250', title: 'Title', titleColor: 'var(--ink3)', titleBorder: 'var(--neg)', titleErr: true, noReceipt: false, hasReceipt: true, toast: true, save: 'Save expense' },
+      ],
+      receiptPhones: [
+        { id: 'R1', label: 'Pick source', sheet: true, viewer: false, bg: 'var(--ground)' },
+        { id: 'R2', label: 'Viewer · image', sheet: false, viewer: true, img: true, file: 'IMG_20260928_1305.jpg', bg: '#10111b' },
+        { id: 'R3', label: 'Viewer · PDF (resourceType "raw")', sheet: false, viewer: true, pdf: true, file: 'invoice-sept.pdf', bg: '#10111b' },
+        { id: 'R4', label: 'Remove confirm', sheet: false, viewer: true, confirm: true, file: 'IMG_20260928_1305.jpg', bg: '#10111b' },
+      ],
+      attachOpts: [
+        { icon: 'camera-outline', l: 'Take photo', bg: 'var(--tint)' },
+        { icon: 'image-outline', l: 'Choose from library', bg: 'transparent' },
+        { icon: 'document-outline', l: 'Choose PDF', bg: 'transparent' },
+      ],
+      drafts: [
+        { title: 'Lunch', amt: '−৳450', color: 'var(--neg)', desc: 'Lunch expense', cat: 'Food', icon: 'food', catBorder: 'solid var(--accentBorder)', catColor: 'var(--accentText)', catBg: 'var(--tint)' },
+        { title: 'Electricity bill', amt: '−৳1,200', color: 'var(--neg)', desc: 'Monthly electricity payment', cat: 'No category', icon: 'plus', catBorder: 'dashed var(--warn)', catColor: 'var(--warn)', catBg: 'transparent' },
+        { title: 'Tickets refund from Rafi', amt: '+৳800', color: 'var(--pos)', desc: 'Rafi paid back for tickets', cat: 'No category', icon: 'plus', catBorder: 'dashed var(--warn)', catColor: 'var(--warn)', catBg: 'transparent' },
+      ],
+      savedLines: [
+        { t: 'Coffee', a: '−৳250', c: 'var(--neg)' },
+        { t: 'Lunch', a: '−৳450', c: 'var(--neg)' },
+        { t: 'Electricity bill', a: '−৳1,200', c: 'var(--neg)' },
+        { t: 'Tickets refund from Rafi', a: '+৳800', c: 'var(--pos)' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
