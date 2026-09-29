@@ -30,7 +30,7 @@ export const useEnqueuePendingTransactions = () => {
 
   return async (items: TEnqueueInput[]) => {
     const enqueued = await transactionQueue.enqueue(items);
-    await queryClient.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
+    await queryClient?.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
     return enqueued;
   };
 };
@@ -40,7 +40,7 @@ export const useUpdatePendingTransaction = () => {
 
   return async (localId: string, payload: TPendingTransactionPayload) => {
     await transactionQueue.updatePayload(localId, payload);
-    await queryClient.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
+    await queryClient?.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
   };
 };
 
@@ -49,7 +49,7 @@ export const useRemovePendingTransaction = () => {
 
   return async (localId: string) => {
     await transactionQueue.remove(localId);
-    await queryClient.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
+    await queryClient?.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
   };
 };
 
@@ -87,9 +87,9 @@ export const useSyncPendingTransactions = () => {
         }
       }
 
-      await queryClient.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
+      await queryClient?.invalidateQueries({ queryKey: PENDING_QUERY_KEY });
       SYNCED_INVALIDATION_KEYS.forEach((key) => {
-        queryClient.invalidateQueries({ queryKey: key });
+        queryClient?.invalidateQueries({ queryKey: key });
       });
 
       if (syncedCount > 0 || failedCount > 0) {

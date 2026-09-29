@@ -39,13 +39,13 @@ export default function RegisterScreen() {
     try {
       const payload = { name, email, password };
 
-      const result = await registerMutation.mutateAsync({
+      const result = await registerMutation?.mutateAsync({
         url: "/auth/register",
         payload,
       });
       if (result?.success) {
         Toast.show({ type: "success", text1: result?.message, position: "top" });
-        router.replace("/auth");
+        router?.replace("/auth");
       } else {
         setErrorMessage(result?.message ?? "Something went wrong. Please try again.");
       }
@@ -56,7 +56,7 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C?.background }]}>
       <KeyboardAwareScrollView
         style={{ flex: 1 }}
         contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
@@ -65,11 +65,11 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.wordmark}>
-          <View style={[styles.tick, { backgroundColor: C.accent }]} />
-          <Text style={[text.kicker, { color: C.textSecondary }]}>ExpenseTracker</Text>
+          <View style={[styles.tick, { backgroundColor: C?.accent }]} />
+          <Text style={[text.kicker, { color: C?.textSecondary }]}>ExpenseTracker</Text>
         </View>
 
-        <Text style={[text.h1, { color: C.text, marginBottom: spacing.xxl }]}>Create account</Text>
+        <Text style={[text.h1, { color: C?.text, marginBottom: spacing.xxl }]}>Create account</Text>
 
         <FormField
           label="Name"
@@ -101,9 +101,9 @@ export default function RegisterScreen() {
         />
 
         {errorMessage ? (
-          <View style={[styles.errorBanner, { backgroundColor: C.expenseBg }]}>
-            <Ionicons name="alert-circle-outline" size={17} color={C.expense} />
-            <Text style={[text.bodySm, { color: C.text, flex: 1 }]}>{errorMessage}</Text>
+          <View style={[styles.errorBanner, { backgroundColor: C?.expenseBg }]}>
+            <Ionicons name="alert-circle-outline" size={17} color={C?.expense} />
+            <Text style={[text.bodySm, { color: C?.text, flex: 1 }]}>{errorMessage}</Text>
           </View>
         ) : null}
 
@@ -117,9 +117,9 @@ export default function RegisterScreen() {
         />
 
         <View style={styles.footer}>
-          <Text style={[text.bodySm, { color: C.textSecondary }]}>Have an account? </Text>
-          <TouchableOpacity onPress={() => router.replace("/auth")}>
-            <Text style={[text.bodySm, { color: C.accent }]}>Sign in</Text>
+          <Text style={[text.bodySm, { color: C?.textSecondary }]}>Have an account? </Text>
+          <TouchableOpacity onPress={() => router?.replace("/auth")}>
+            <Text style={[text.bodySm, { color: C?.accent }]}>Sign in</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>

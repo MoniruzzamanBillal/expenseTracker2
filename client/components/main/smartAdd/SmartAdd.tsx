@@ -57,7 +57,7 @@ export default function SmartAddPage() {
     setParseError(null);
 
     try {
-      const result = await parseMutation.mutateAsync({
+      const result = await parseMutation?.mutateAsync({
         url: "/transactions/manage-money",
         payload: { prompt },
       });
@@ -94,7 +94,7 @@ export default function SmartAddPage() {
 
     try {
       // spec 22 / G2 — include categoryId in the online save payload
-      const result = await saveMutation.mutateAsync({
+      const result = await saveMutation?.mutateAsync({
         url: "/transactions/many-transaction",
         payload: drafts.map((d) => ({
           type: d.type,
@@ -140,21 +140,21 @@ export default function SmartAddPage() {
   // S4 — saved success screen
   if (savedLines) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: C?.background }]} edges={["top"]}>
         <View style={[styles.content, { paddingHorizontal: spacing.screenPad, paddingTop: 100 }]}>
-          <Ionicons name="checkmark-circle-outline" size={44} color={C.income} />
-          <Text style={[text.h1, { color: C.text, marginTop: spacing.md }]}>
+          <Ionicons name="checkmark-circle-outline" size={44} color={C?.income} />
+          <Text style={[text.h1, { color: C?.text, marginTop: spacing.md }]}>
             {savedLines.length} {savedLines.length === 1 ? "entry" : "entries"} saved
           </Text>
-          <Text style={[text.body, { color: C.textSecondary, marginTop: 4 }]}>They&apos;re in today&apos;s list now.</Text>
+          <Text style={[text.body, { color: C?.textSecondary, marginTop: 4 }]}>They&apos;re in today&apos;s list now.</Text>
 
-          <View style={[styles.savedCard, { backgroundColor: C.surface, borderColor: C.border }]}>
+          <View style={[styles.savedCard, { backgroundColor: C?.surface, borderColor: C?.border }]}>
             {savedLines.map((s, i) => (
-              <View key={i} style={[styles.savedLine, i !== savedLines.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}>
-                <Text style={[text.body, { color: C.text, flex: 1 }]} numberOfLines={1}>
+              <View key={i} style={[styles.savedLine, i !== savedLines.length - 1 && { borderBottomWidth: 1, borderBottomColor: C?.divider }]}>
+                <Text style={[text.body, { color: C?.text, flex: 1 }]} numberOfLines={1}>
                   {s.title}
                 </Text>
-                <Text style={[text.bodyMd, { color: s.type === TransactionTypeConst.income ? C.income : C.expense }]}>
+                <Text style={[text.bodyMd, { color: s.type === TransactionTypeConst.income ? C?.income : C?.expense }]}>
                   {s.type === TransactionTypeConst.income ? "+" : "−"}৳{fmt(s.amount)}
                 </Text>
               </View>
@@ -162,8 +162,8 @@ export default function SmartAddPage() {
           </View>
 
           <View style={styles.savedActions}>
-            <PrimaryButton label="View today" onPress={() => router.push("/")} variant="outline" style={{ flex: 1 }} />
-            <PrimaryButton label="Add more" onPress={() => setSavedLines(null)} variant="ghost" icon={<Ionicons name="add" size={18} color={C.textSecondary} />} style={{ flex: 1 }} />
+            <PrimaryButton label="View today" onPress={() => router?.push("/")} variant="outline" style={{ flex: 1 }} />
+            <PrimaryButton label="Add more" onPress={() => setSavedLines(null)} variant="ghost" icon={<Ionicons name="add" size={18} color={C?.textSecondary} />} style={{ flex: 1 }} />
           </View>
         </View>
       </SafeAreaView>
@@ -171,7 +171,7 @@ export default function SmartAddPage() {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]} edges={["top"]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C?.background }]} edges={["top"]}>
       <KeyboardAwareScrollView
         contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
         bottomOffset={30}
@@ -179,21 +179,21 @@ export default function SmartAddPage() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heading}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={{ marginLeft: -10, marginRight: 4 }}>
-            <Ionicons name="chevron-back" size={22} color={C.text} />
+          <TouchableOpacity onPress={() => router?.back()} hitSlop={8} style={{ marginLeft: -10, marginRight: 4 }}>
+            <Ionicons name="chevron-back" size={22} color={C?.text} />
           </TouchableOpacity>
-          <Text style={[text.h2, { color: C.text }]}>{drafts !== null ? "Review" : "Smart Add"}</Text>
+          <Text style={[text.h2, { color: C?.text }]}>{drafts !== null ? "Review" : "Smart Add"}</Text>
         </View>
 
         {drafts !== null && drafts.length > 0 ? (
           <View style={styles.summaryRow}>
-            <Text style={[text.bodySm, { color: C.textSecondary }]}>
+            <Text style={[text.bodySm, { color: C?.textSecondary }]}>
               {drafts.length} draft{drafts.length > 1 ? "s" : ""}
             </Text>
-            <Text style={[text.bodySm, { color: C.income }]}>
+            <Text style={[text.bodySm, { color: C?.income }]}>
               In +৳{fmt(drafts.filter((d) => d.type === TransactionTypeConst.income).reduce((s, d) => s + d.amount, 0))}
             </Text>
-            <Text style={[text.bodySm, { color: C.expense }]}>
+            <Text style={[text.bodySm, { color: C?.expense }]}>
               Out −৳{fmt(drafts.filter((d) => d.type === TransactionTypeConst.expense).reduce((s, d) => s + d.amount, 0))}
             </Text>
           </View>
@@ -205,27 +205,27 @@ export default function SmartAddPage() {
               value={prompt || ""}
               onChangeText={setPrompt}
               multiline
-              style={[styles.textarea, { backgroundColor: C.surface, borderColor: C.accent, color: C.text }, text.body]}
+              style={[styles.textarea, { backgroundColor: C?.surface, borderColor: C?.accent, color: C?.text }, text.body]}
               placeholder="Spent 250 on coffee and 450 on lunch, paid 1,200 for the electricity bill…"
-              placeholderTextColor={C.placeholder}
+              placeholderTextColor={C?.placeholder}
             />
-            <Text style={[text.bodySm, { color: C.textSecondary, marginBottom: spacing.lg }]}>You&apos;ll review every entry before anything is saved.</Text>
+            <Text style={[text.bodySm, { color: C?.textSecondary, marginBottom: spacing.lg }]}>You&apos;ll review every entry before anything is saved.</Text>
 
             {parseError && parseError !== "empty" ? (
-              <View style={[styles.errorCard, { backgroundColor: C.expenseBg }]}>
-                <Ionicons name="alert-circle-outline" size={19} color={C.expense} />
+              <View style={[styles.errorCard, { backgroundColor: C?.expenseBg }]}>
+                <Ionicons name="alert-circle-outline" size={19} color={C?.expense} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[text.bodyMd, { color: C.text }]}>Couldn&apos;t find entries</Text>
-                  <Text style={[text.bodySm, { color: C.textSecondary, marginTop: 2 }]}>{parseError}</Text>
+                  <Text style={[text.bodyMd, { color: C?.text }]}>Couldn&apos;t find entries</Text>
+                  <Text style={[text.bodySm, { color: C?.textSecondary, marginTop: 2 }]}>{parseError}</Text>
                 </View>
               </View>
             ) : null}
             {parseError === "empty" ? (
-              <View style={[styles.errorCard, { backgroundColor: C.expenseBg }]}>
-                <Ionicons name="alert-circle-outline" size={19} color={C.expense} />
+              <View style={[styles.errorCard, { backgroundColor: C?.expenseBg }]}>
+                <Ionicons name="alert-circle-outline" size={19} color={C?.expense} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[text.bodyMd, { color: C.text }]}>Couldn&apos;t find entries</Text>
-                  <Text style={[text.bodySm, { color: C.textSecondary, marginTop: 2 }]}>No amounts found in that text.</Text>
+                  <Text style={[text.bodyMd, { color: C?.text }]}>Couldn&apos;t find entries</Text>
+                  <Text style={[text.bodySm, { color: C?.textSecondary, marginTop: 2 }]}>No amounts found in that text.</Text>
                 </View>
               </View>
             ) : null}
@@ -236,7 +236,7 @@ export default function SmartAddPage() {
               loading={parseMutation?.isPending}
               disabled={!prompt?.trim()}
               variant="outline"
-              icon={!parseMutation?.isPending ? <Ionicons name="sparkles-outline" size={18} color={C.accent} /> : undefined}
+              icon={!parseMutation?.isPending ? <Ionicons name="sparkles-outline" size={18} color={C?.accent} /> : undefined}
               height={spacing.cta}
             />
           </>
@@ -253,48 +253,48 @@ export default function SmartAddPage() {
                     key={i}
                     onPress={() => setExpandedIndex(i)}
                     activeOpacity={0.8}
-                    style={[styles.draftSummary, { backgroundColor: C.surface, borderColor: C.border }]}
+                    style={[styles.draftSummary, { backgroundColor: C?.surface, borderColor: C?.border }]}
                   >
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <View style={styles.draftSummaryTitleRow}>
-                        <Text style={[text.bodyMd, { color: C.text, flexShrink: 1 }]} numberOfLines={1}>
+                        <Text style={[text.bodyMd, { color: C?.text, flexShrink: 1 }]} numberOfLines={1}>
                           {draft.title}
                         </Text>
-                        <Text style={[text.bodyMd, { color: isIncome ? C.income : C.expense }]}>
+                        <Text style={[text.bodyMd, { color: isIncome ? C?.income : C?.expense }]}>
                           {isIncome ? "+" : "−"}৳{fmt(draft.amount)}
                         </Text>
                       </View>
                       {draft.description ? (
-                        <Text style={[text.bodySm, { color: C.textSecondary }]} numberOfLines={1}>
+                        <Text style={[text.bodySm, { color: C?.textSecondary }]} numberOfLines={1}>
                           {draft.description}
                         </Text>
                       ) : null}
                       <View
                         style={[
                           styles.draftCatChip,
-                          hasCategory ? { borderColor: C.accentBorder, backgroundColor: C.accentDim } : { borderColor: C.warning, borderStyle: "dashed" },
+                          hasCategory ? { borderColor: C?.accentBorder, backgroundColor: C?.accentDim } : { borderColor: C?.warning, borderStyle: "dashed" },
                         ]}
                       >
-                        <Text style={[text.caption, { color: hasCategory ? C.accentText : C.warning }]}>{hasCategory ? "Categorized" : "No category"}</Text>
+                        <Text style={[text.caption, { color: hasCategory ? C?.accentText : C?.warning }]}>{hasCategory ? "Categorized" : "No category"}</Text>
                       </View>
                     </View>
-                    <Ionicons name="create-outline" size={18} color={C.textSecondary} />
+                    <Ionicons name="create-outline" size={18} color={C?.textSecondary} />
                   </TouchableOpacity>
                 );
               }
 
               return (
-                <View key={i} style={[styles.draftCard, { backgroundColor: C.surface, borderColor: C.accent }]}>
+                <View key={i} style={[styles.draftCard, { backgroundColor: C?.surface, borderColor: C?.accent }]}>
                   <TypeToggle value={draft.type} onChange={(v) => updateDraft(i, "type", v)} />
 
                   <View style={styles.draftRow}>
-                    <View style={[styles.draftAmountBox, { backgroundColor: C.background, borderColor: C.border }]}>
-                      <Text style={[text.bodySm, { color: C.textSecondary }]}>৳</Text>
+                    <View style={[styles.draftAmountBox, { backgroundColor: C?.background, borderColor: C?.border }]}>
+                      <Text style={[text.bodySm, { color: C?.textSecondary }]}>৳</Text>
                       <TextInput
                         value={String(draft.amount)}
                         onChangeText={(v) => updateDraft(i, "amount", parseFloat(v.replace(/[^0-9.]/g, "")) || 0)}
                         keyboardType="decimal-pad"
-                        style={[text.bodyMd, { color: C.text, flex: 1, padding: 0 }]}
+                        style={[text.bodyMd, { color: C?.text, flex: 1, padding: 0 }]}
                       />
                     </View>
                     <FormField label="" value={draft.title} onChangeText={(v) => updateDraft(i, "title", v)} inputStyle={{ height: 42 }} />
@@ -306,12 +306,12 @@ export default function SmartAddPage() {
 
                   <View style={styles.draftActionsRow}>
                     <TouchableOpacity onPress={() => removeDraft(i)} style={styles.discardBtn}>
-                      <Ionicons name="trash-outline" size={16} color={C.expense} />
-                      <Text style={[text.bodySm, { color: C.expense }]}>Discard</Text>
+                      <Ionicons name="trash-outline" size={16} color={C?.expense} />
+                      <Text style={[text.bodySm, { color: C?.expense }]}>Discard</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setExpandedIndex(null)} style={[styles.doneBtn, { borderColor: C.accent }]}>
-                      <Ionicons name="checkmark" size={16} color={C.accent} />
-                      <Text style={[text.bodySm, { color: C.accent }]}>Done</Text>
+                    <TouchableOpacity onPress={() => setExpandedIndex(null)} style={[styles.doneBtn, { borderColor: C?.accent }]}>
+                      <Ionicons name="checkmark" size={16} color={C?.accent} />
+                      <Text style={[text.bodySm, { color: C?.accent }]}>Done</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -319,7 +319,7 @@ export default function SmartAddPage() {
             })}
 
             {drafts.length === 0 ? (
-              <Text style={[text.body, { color: C.textSecondary, textAlign: "center", marginVertical: spacing.xl }]}>No amounts found in that text.</Text>
+              <Text style={[text.body, { color: C?.textSecondary, textAlign: "center", marginVertical: spacing.xl }]}>No amounts found in that text.</Text>
             ) : null}
 
             {drafts.length > 0 && (

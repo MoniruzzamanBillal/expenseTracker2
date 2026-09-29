@@ -34,7 +34,7 @@ export default function CategoryFormModal({ open, setOpen, initialValue }: TProp
   const postMutation = usePost([["categories"]]);
   const patchMutation = usePatch([["categories"]]);
   const deleteMutation = usePatch([["categories"]]);
-  const isPending = postMutation.isPending || patchMutation.isPending;
+  const isPending = postMutation?.isPending || patchMutation?.isPending;
 
   const hideModal = () => setOpen(false);
 
@@ -48,8 +48,8 @@ export default function CategoryFormModal({ open, setOpen, initialValue }: TProp
       const payload = { name: name.trim(), icon };
 
       const result = isEdit
-        ? await patchMutation.mutateAsync({ url: `/categories/${initialValue!._id}`, payload })
-        : await postMutation.mutateAsync({ url: "/categories", payload });
+        ? await patchMutation?.mutateAsync({ url: `/categories/${initialValue!._id}`, payload })
+        : await postMutation?.mutateAsync({ url: "/categories", payload });
 
       if (result?.success) {
         Toast.show({ type: "success", text1: result?.message, position: "top" });
@@ -72,7 +72,7 @@ export default function CategoryFormModal({ open, setOpen, initialValue }: TProp
         style: "destructive",
         onPress: async () => {
           try {
-            const result = await deleteMutation.mutateAsync({ url: `/categories/${initialValue?._id}/delete`, payload: {} });
+            const result = await deleteMutation?.mutateAsync({ url: `/categories/${initialValue?._id}/delete`, payload: {} });
             if (result?.success) {
               Toast.show({ type: "success", text1: result?.message, position: "top" });
               hideModal();
@@ -88,12 +88,12 @@ export default function CategoryFormModal({ open, setOpen, initialValue }: TProp
   return (
     <Sheet visible={open} onDismiss={hideModal}>
       <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }} bottomOffset={20} extraKeyboardSpace={10} showsVerticalScrollIndicator={false}>
-        <Text style={[text.h3, { color: C.text, marginBottom: spacing.md }]}>{isEdit ? "Edit category" : "New category"}</Text>
+        <Text style={[text.h3, { color: C?.text, marginBottom: spacing.md }]}>{isEdit ? "Edit category" : "New category"}</Text>
 
         <FormField label="Name" value={name} onChangeText={setName} placeholder="e.g. Food" inSheet />
 
         <View style={{ marginBottom: spacing.lg }}>
-          <Text style={[text.captionMd, { color: C.textSecondary, marginBottom: spacing.xs + 1 }]}>Icon</Text>
+          <Text style={[text.captionMd, { color: C?.textSecondary, marginBottom: spacing.xs + 1 }]}>Icon</Text>
           <View style={styles.grid}>
             {CATEGORY_ICON_OPTIONS.map((opt) => {
               const active = icon === opt;
@@ -101,9 +101,9 @@ export default function CategoryFormModal({ open, setOpen, initialValue }: TProp
                 <TouchableOpacity
                   key={opt}
                   onPress={() => setIcon(opt)}
-                  style={[styles.chip, { borderColor: active ? C.accent : C.border, backgroundColor: active ? C.accentDim : "transparent" }]}
+                  style={[styles.chip, { borderColor: active ? C?.accent : C?.border, backgroundColor: active ? C?.accentDim : "transparent" }]}
                 >
-                  <MaterialCommunityIcons name={opt} size={20} color={active ? C.accentText : C.textSecondary} />
+                  <MaterialCommunityIcons name={opt} size={20} color={active ? C?.accentText : C?.textSecondary} />
                 </TouchableOpacity>
               );
             })}

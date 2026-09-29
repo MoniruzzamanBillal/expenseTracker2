@@ -12,21 +12,21 @@ type TProps = {
 
 export default function ErrorState({ title, message, onRetry }: TProps) {
   const C = useTheme();
-  const dark = C.statusBarStyle === "light";
+  const dark = C?.statusBarStyle === "light";
   return (
-    <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }, elevation(C, dark).card]}>
+    <View style={[styles.card, { backgroundColor: C?.surface, borderColor: C?.border }, elevation(C, dark)?.card]}>
       <View style={styles.headRow}>
-        <Ionicons name="alert-circle-outline" size={22} color={C.expense} />
-        <Text style={[text.bodyMd, { color: C.text }]}>{title}</Text>
+        <Ionicons name="alert-circle-outline" size={22} color={C?.expense} />
+        <Text style={[text.bodyMd, { color: C?.text }]}>{title}</Text>
       </View>
-      <Text style={[text.body, { color: C.textSecondary }]}>{message}</Text>
+      <Text style={[text.body, { color: C?.textSecondary }]}>{message}</Text>
       <TouchableOpacity
         onPress={onRetry}
         activeOpacity={0.8}
-        style={[styles.retry, { borderColor: C.accent, alignSelf: "flex-start" }]}
+        style={[styles.retry, { borderColor: C?.accent, alignSelf: "flex-start" }]}
       >
-        <Ionicons name="refresh-outline" size={17} color={C.accent} />
-        <Text style={[text.bodyMd, { color: C.accent }]}>Try again</Text>
+        <Ionicons name="refresh-outline" size={17} color={C?.accent} />
+        <Text style={[text.bodyMd, { color: C?.accent }]}>Try again</Text>
       </TouchableOpacity>
     </View>
   );

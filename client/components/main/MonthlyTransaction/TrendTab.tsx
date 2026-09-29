@@ -34,22 +34,22 @@ export default function TrendTab() {
   const monthlySummary = trend?.monthlySummary ?? [];
   const categoryBreakdown = trend?.categoryBreakdown ?? [];
   const breakdownTotal = categoryBreakdown.reduce(
-    (sum, c) => sum + c.expense,
+    (sum, c) => sum + c?.expense,
     0,
   );
 
   const barData = monthlySummary.map((m) => {
-    const net = m.income - m.expense;
+    const net = m?.income - m?.expense;
     return {
       value: net,
-      label: format(parse(m.targetMonth, "yyyy-MM", new Date()), "MMM"),
+      label: format(parse(m?.targetMonth, "yyyy-MM", new Date()), "MMM"),
       frontColor: net >= 0 ? C.income : C.expense,
     };
   });
 
   const pieData = categoryBreakdown.map((c, i) => ({
-    value: c.expense,
-    text: c.name,
+    value: c?.expense,
+    text: c?.name,
     color: C.chartPalette[i % C.chartPalette.length],
   }));
 
@@ -142,11 +142,11 @@ export default function TrendTab() {
             {categoryBreakdown.map((c, i) => {
               const pct =
                 breakdownTotal > 0
-                  ? ((c.expense / breakdownTotal) * 100).toFixed(1)
+                  ? ((c?.expense / breakdownTotal) * 100).toFixed(1)
                   : "0.0";
               return (
                 <View
-                  key={c.categoryId ?? "uncategorized"}
+                  key={c?.categoryId ?? "uncategorized"}
                   style={styles.legendRow}
                 >
                   <View
@@ -162,10 +162,10 @@ export default function TrendTab() {
                     style={[text.caption, { color: C.text, flex: 1 }]}
                     numberOfLines={1}
                   >
-                    {c.name}
+                    {c?.name}
                   </Text>
                   <Text style={[text.caption, { color: C.textSecondary }]}>
-                    ৳{fmt(c.expense)} ({pct}%)
+                    ৳{fmt(c?.expense)} ({pct}%)
                   </Text>
                 </View>
               );

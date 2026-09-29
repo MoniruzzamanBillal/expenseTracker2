@@ -47,7 +47,7 @@ function QuickAddSheet() {
   ]);
   const enqueuePendingTransactions = useEnqueuePendingTransactions();
 
-  const close = () => router.back();
+  const close = () => router?.back();
 
   const handleSave = async () => {
     if (!amount) return;
@@ -60,7 +60,7 @@ function QuickAddSheet() {
     };
 
     try {
-      const result = await addTransactionMutation.mutateAsync({
+      const result = await addTransactionMutation?.mutateAsync({
         url: "/transactions/new-transaction",
         payload: { ...basePayload, categoryId },
       });
@@ -69,7 +69,7 @@ function QuickAddSheet() {
         Toast.show({ type: "success", text1: result?.message, position: "top" });
         close();
       } else {
-        await enqueuePendingTransactions([{ payload: basePayload, origin: "manual" }]);
+        await enqueuePendingTransactions?.([{ payload: basePayload, origin: "manual" }]);
         Toast.show({ type: "success", text1: "Saved offline", text2: "It will sync when you're back online", position: "top" });
         close();
       }
@@ -81,27 +81,27 @@ function QuickAddSheet() {
 
   return (
     <View style={StyleSheet.absoluteFillObject}>
-      <Pressable style={[StyleSheet.absoluteFillObject, { backgroundColor: C.scrim }]} onPress={close} />
+      <Pressable style={[StyleSheet.absoluteFillObject, { backgroundColor: C?.scrim }]} onPress={close} />
       <View
         style={[
           styles.sheet,
-          { backgroundColor: C.surface, borderColor: C.border, paddingBottom: spacing.lg + insets.bottom },
+          { backgroundColor: C?.surface, borderColor: C?.border, paddingBottom: spacing.lg + insets?.bottom },
         ]}
       >
-        <View style={[styles.grabber, { backgroundColor: C.border }]} />
+        <View style={[styles.grabber, { backgroundColor: C?.border }]} />
 
         <View style={styles.headerRow}>
           <View style={{ width: 190 }}>
             <TypeToggle value={txType} onChange={setTxType} />
           </View>
           <TouchableOpacity onPress={close} hitSlop={8} style={styles.closeBtn}>
-            <Ionicons name="close" size={22} color={C.textSecondary} />
+            <Ionicons name="close" size={22} color={C?.textSecondary} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.amountRow}>
-          <Text style={[styles.currencySymbol, { color: C.textSecondary }]}>৳</Text>
-          <Text style={[text.amountInput, { color: amount ? C.text : C.textMuted }]}>{fmt(amount) || "0"}</Text>
+          <Text style={[styles.currencySymbol, { color: C?.textSecondary }]}>৳</Text>
+          <Text style={[text.amountInput, { color: amount ? C?.text : C?.textMuted }]}>{fmt(amount) || "0"}</Text>
         </View>
 
         <FormField
@@ -117,11 +117,11 @@ function QuickAddSheet() {
         <Keypad value={amount} onChange={setAmount} />
 
         <PrimaryButton
-          label={addTransactionMutation.isPending ? "Saving…" : `Save ${txType === TransactionTypeConst.income ? "income" : "expense"}`}
+          label={addTransactionMutation?.isPending ? "Saving…" : `Save ${txType === TransactionTypeConst.income ? "income" : "expense"}`}
           onPress={handleSave}
-          loading={addTransactionMutation.isPending}
+          loading={addTransactionMutation?.isPending}
           disabled={!amount}
-          color={txType === TransactionTypeConst.income ? C.income : C.expense}
+          color={txType === TransactionTypeConst.income ? C?.income : C?.expense}
           height={spacing.cta}
         />
       </View>

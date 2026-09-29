@@ -117,7 +117,7 @@ export default function MonthlyTransactionPage() {
     if (!selectedCategoryKey) return monthlyBuckets;
     return monthlyBuckets.map((day) => ({
       ...day,
-      transactions: day.transactions.filter((t) => (t.categoryId ?? "uncategorized") === selectedCategoryKey),
+      transactions: day?.transactions.filter((t) => (t?.categoryId ?? "uncategorized") === selectedCategoryKey),
     }));
   }, [monthlyBuckets, selectedCategoryKey]);
 
@@ -131,7 +131,7 @@ export default function MonthlyTransactionPage() {
     if (!selectedCategoryKey) return weeklyBuckets;
     return weeklyBuckets.map((day) => ({
       ...day,
-      transactions: day.transactions.filter((t) => (t.categoryId ?? "uncategorized") === selectedCategoryKey),
+      transactions: day?.transactions.filter((t) => (t?.categoryId ?? "uncategorized") === selectedCategoryKey),
     }));
   }, [weeklyBuckets, selectedCategoryKey]);
 

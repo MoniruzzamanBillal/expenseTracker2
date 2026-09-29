@@ -24,12 +24,12 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
   const isEdit = !!initialValue;
 
   const [categoryId, setCategoryId] = useState<string | null>(initialValue?.categoryId ?? null);
-  const [limit, setLimit] = useState(initialValue ? String(initialValue.monthlyLimit) : "");
+  const [limit, setLimit] = useState(initialValue ? String(initialValue?.monthlyLimit) : "");
 
   useEffect(() => {
     if (open) {
       setCategoryId(initialValue?.categoryId ?? null);
-      setLimit(initialValue ? String(initialValue.monthlyLimit) : "");
+      setLimit(initialValue ? String(initialValue?.monthlyLimit) : "");
     }
   }, [open, initialValue]);
 
@@ -48,7 +48,7 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
   const spentThisMonth = useMemo(() => {
     const key = categoryId;
     if (!key) return null;
-    const entry = monthlyData?.data?.categoryBreakdown?.find((c) => c.categoryId === key);
+    const entry = monthlyData?.data?.categoryBreakdown?.find((c) => c?.categoryId === key);
     return entry?.expense ?? 0;
   }, [monthlyData, categoryId]);
 
@@ -126,15 +126,15 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
             <Text style={[text.captionMd, { color: C.textSecondary, marginBottom: spacing.xs }]}>Category · only ones without a budget</Text>
             <View style={styles.grid}>
               {availableCategories.map((cat) => {
-                const active = categoryId === cat._id;
+                const active = categoryId === cat?._id;
                 return (
                   <TouchableOpacity
-                    key={cat._id}
-                    onPress={() => setCategoryId(cat._id)}
+                    key={cat?._id}
+                    onPress={() => setCategoryId(cat?._id)}
                     style={[styles.chip, { borderColor: active ? C.accent : C.border, backgroundColor: active ? C.accentDim : "transparent" }]}
                   >
-                    {cat.icon ? <MaterialCommunityIcons name={cat.icon as any} size={14} color={active ? C.accentText : C.textSecondary} /> : null}
-                    <Text style={[text.caption, { color: active ? C.accentText : C.textSecondary }]}>{cat.name}</Text>
+                    {cat?.icon ? <MaterialCommunityIcons name={cat?.icon as any} size={14} color={active ? C.accentText : C.textSecondary} /> : null}
+                    <Text style={[text.caption, { color: active ? C.accentText : C.textSecondary }]}>{cat?.name}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -146,7 +146,7 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
 
         {categoryId && spentThisMonth !== null ? (
           <Text style={[text.caption, { color: C.textMuted, marginTop: -spacing.md, marginBottom: spacing.lg }]}>
-            Spent on {isEdit ? initialValue?.category?.name : availableCategories.find((c) => c._id === categoryId)?.name} so far this month: ৳
+            Spent on {isEdit ? initialValue?.category?.name : availableCategories.find((c) => c?._id === categoryId)?.name} so far this month: ৳
             {Math.abs(spentThisMonth).toLocaleString("en-IN")}
           </Text>
         ) : null}

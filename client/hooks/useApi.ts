@@ -38,12 +38,12 @@ export const usePost = (invalidateQueriesKeys?: string[][]) => {
       url: string;
       payload: Record<string, unknown> | FormData | any;
     }) => {
-      return apiPost(params.url, params.payload);
+      return apiPost(params?.url, params?.payload);
     },
     onSuccess: (data) => {
       if (invalidateQueriesKeys) {
-        invalidateQueriesKeys.forEach((key) => {
-          queryClient.invalidateQueries({ queryKey: key });
+        invalidateQueriesKeys?.forEach((key) => {
+          queryClient?.invalidateQueries({ queryKey: key });
         });
       }
     },
@@ -63,7 +63,7 @@ export const useUpdateData = (key: string[], endPoint: string) => {
   return useMutation({
     mutationFn: (payload: any) => apiPut(endPoint, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: key });
+      queryClient?.invalidateQueries({ queryKey: key });
     },
   });
 };
@@ -76,12 +76,12 @@ export const usePut = (invalidateQueriesKeys?: string[][]) => {
 
   return useMutation({
     mutationFn: (params: { url: string; payload: FormData }) => {
-      return apiPut(params.url, params.payload);
+      return apiPut(params?.url, params?.payload);
     },
     onSuccess: () => {
       if (invalidateQueriesKeys) {
-        invalidateQueriesKeys.forEach((key) => {
-          queryClient.invalidateQueries({ queryKey: key });
+        invalidateQueriesKeys?.forEach((key) => {
+          queryClient?.invalidateQueries({ queryKey: key });
         });
       }
     },
@@ -99,12 +99,12 @@ export const usePatch = (invalidateQueriesKeys?: string[][]) => {
       url: string;
       payload: Record<string, unknown> | FormData;
     }) => {
-      return apiPatch(params.url, params.payload);
+      return apiPatch(params?.url, params?.payload);
     },
     onSuccess: () => {
       if (invalidateQueriesKeys) {
-        invalidateQueriesKeys.forEach((key) => {
-          queryClient.invalidateQueries({ queryKey: key });
+        invalidateQueriesKeys?.forEach((key) => {
+          queryClient?.invalidateQueries({ queryKey: key });
         });
       }
     },
@@ -124,8 +124,8 @@ export const useDeleteData = (invalidateQueriesKeys?: string[][]) => {
     },
     onSuccess: () => {
       if (invalidateQueriesKeys) {
-        invalidateQueriesKeys.forEach((key) => {
-          queryClient.invalidateQueries({ queryKey: key });
+        invalidateQueriesKeys?.forEach((key) => {
+          queryClient?.invalidateQueries({ queryKey: key });
         });
       }
     },

@@ -30,14 +30,14 @@ export default function Sheet({ visible, onDismiss, children, maxHeightPct = 88 
         contentContainerStyle={[
           styles.sheet,
           {
-            backgroundColor: C.surface,
-            borderColor: C.border,
-            paddingBottom: spacing.lg + insets.bottom,
+            backgroundColor: C?.surface,
+            borderColor: C?.border,
+            paddingBottom: spacing.lg + insets?.bottom,
             maxHeight: `${maxHeightPct}%`,
           },
         ]}
       >
-        <View style={[styles.grabber, { backgroundColor: C.border }]} />
+        <View style={[styles.grabber, { backgroundColor: C?.border }]} />
         {children}
       </Modal>
     </Portal>

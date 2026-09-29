@@ -11,11 +11,11 @@ type TProps = {
 export default function TypeToggle({ value, onChange }: TProps) {
   const C = useTheme();
   return (
-    <View style={[styles.track, { backgroundColor: C.surface2, borderColor: C.border }]}>
+    <View style={[styles.track, { backgroundColor: C?.surface2, borderColor: C?.border }]}>
       {(Object.values(TransactionTypeConst) as TTransactionType[]).map((type) => {
         const active = value === type;
-        const activeColor = type === "income" ? C.income : C.expense;
-        const activeBg = type === "income" ? C.incomeBg : C.expenseBg;
+        const activeColor = type === "income" ? C?.income : C?.expense;
+        const activeBg = type === "income" ? C?.incomeBg : C?.expenseBg;
         return (
           <TouchableOpacity
             key={type}
@@ -26,7 +26,7 @@ export default function TypeToggle({ value, onChange }: TProps) {
               { borderColor: active ? activeColor : "transparent", backgroundColor: active ? activeBg : "transparent" },
             ]}
           >
-            <Text style={[text.bodyMd, { color: active ? activeColor : C.textSecondary }]}>
+            <Text style={[text.bodyMd, { color: active ? activeColor : C?.textSecondary }]}>
               {type === "income" ? "Income" : "Expense"}
             </Text>
           </TouchableOpacity>

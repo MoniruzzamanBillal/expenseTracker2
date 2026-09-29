@@ -72,7 +72,7 @@ export default function AddTransactionPage({
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      setReceipt({ uri: asset.uri, name: asset.fileName ?? "receipt.jpg", type: asset.mimeType ?? "image/jpeg" });
+      setReceipt({ uri: asset?.uri, name: asset?.fileName ?? "receipt.jpg", type: asset?.mimeType ?? "image/jpeg" });
     }
   };
 
@@ -82,7 +82,7 @@ export default function AddTransactionPage({
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      setReceipt({ uri: asset.uri, name: asset.fileName ?? "receipt.jpg", type: asset.mimeType ?? "image/jpeg" });
+      setReceipt({ uri: asset?.uri, name: asset?.fileName ?? "receipt.jpg", type: asset?.mimeType ?? "image/jpeg" });
     }
   };
 
@@ -90,7 +90,7 @@ export default function AddTransactionPage({
     const result = await DocumentPicker.getDocumentAsync({ type: "application/pdf" });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      setReceipt({ uri: asset.uri, name: asset.name ?? "document.pdf", type: asset.mimeType ?? "application/pdf" });
+      setReceipt({ uri: asset?.uri, name: asset?.name ?? "document.pdf", type: asset?.mimeType ?? "application/pdf" });
     }
   };
 
@@ -242,7 +242,7 @@ export default function AddTransactionPage({
             <View style={[styles.pill, styles.receiptPill, { borderColor: C.accentBorder, backgroundColor: C.accentDim }]}>
               <Ionicons name="document-text-outline" size={15} color={C.accentText} />
               <Text style={[text.bodySm, { color: C.accentText, flex: 1 }]} numberOfLines={1}>
-                {receipt.name}
+                {receipt?.name}
               </Text>
               <TouchableOpacity onPress={() => setReceipt(null)} hitSlop={6}>
                 <Ionicons name="close" size={16} color={C.accentText} />

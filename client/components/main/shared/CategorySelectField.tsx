@@ -27,26 +27,26 @@ export default function CategorySelectField({ value, onChange, label = "Category
 
   return (
     <View style={styles.wrap}>
-      <Text style={[text.captionMd, { color: C.textSecondary, marginBottom: spacing.xs + 1 }]}>{label}</Text>
+      <Text style={[text.captionMd, { color: C?.textSecondary, marginBottom: spacing.xs + 1 }]}>{label}</Text>
 
-      <TouchableOpacity onPress={() => setOpen(true)} style={[styles.field, { backgroundColor: C.inputBg, borderColor: C.border }]}>
+      <TouchableOpacity onPress={() => setOpen(true)} style={[styles.field, { backgroundColor: C?.inputBg, borderColor: C?.border }]}>
         {selected?.icon ? (
-          <View style={[styles.iconTile, { backgroundColor: C.accentDim }]}>
-            <MaterialCommunityIcons name={selected.icon as any} size={16} color={C.accentText} />
+          <View style={[styles.iconTile, { backgroundColor: C?.accentDim }]}>
+            <MaterialCommunityIcons name={selected.icon as any} size={16} color={C?.accentText} />
           </View>
         ) : null}
-        <Text style={[text.body, { color: selected ? C.text : C.placeholder, flex: 1 }]} numberOfLines={1}>
+        <Text style={[text.body, { color: selected ? C?.text : C?.placeholder, flex: 1 }]} numberOfLines={1}>
           {selected ? selected.name : "Select category"}
         </Text>
-        <Ionicons name="chevron-down" size={16} color={C.textMuted} />
+        <Ionicons name="chevron-down" size={16} color={C?.textMuted} />
       </TouchableOpacity>
 
       <Portal>
-        <Modal visible={open} onDismiss={() => setOpen(false)} contentContainerStyle={[styles.modalContent, { backgroundColor: C.surface, borderColor: C.border }]}>
-          <Text style={[text.h3, { color: C.text, marginBottom: spacing.md }]}>Select category</Text>
+        <Modal visible={open} onDismiss={() => setOpen(false)} contentContainerStyle={[styles.modalContent, { backgroundColor: C?.surface, borderColor: C?.border }]}>
+          <Text style={[text.h3, { color: C?.text, marginBottom: spacing.md }]}>Select category</Text>
 
           {categories.length === 0 ? (
-            <Text style={[text.caption, { color: C.textMuted }]}>No categories yet — add one from Settings.</Text>
+            <Text style={[text.caption, { color: C?.textMuted }]}>No categories yet — add one from Settings.</Text>
           ) : (
             <FlatList
               data={categories}
@@ -55,10 +55,10 @@ export default function CategorySelectField({ value, onChange, label = "Category
               ListHeaderComponent={
                 <TouchableOpacity
                   onPress={() => handleSelect(null)}
-                  style={[styles.row, { borderColor: !value ? C.accent : C.border, backgroundColor: !value ? C.accentDim : "transparent" }]}
+                  style={[styles.row, { borderColor: !value ? C?.accent : C?.border, backgroundColor: !value ? C?.accentDim : "transparent" }]}
                 >
-                  <MaterialCommunityIcons name="shape-outline" size={16} color={!value ? C.accentText : C.textSecondary} />
-                  <Text style={[text.body, { color: !value ? C.accentText : C.textSecondary }]}>None</Text>
+                  <MaterialCommunityIcons name="shape-outline" size={16} color={!value ? C?.accentText : C?.textSecondary} />
+                  <Text style={[text.body, { color: !value ? C?.accentText : C?.textSecondary }]}>None</Text>
                 </TouchableOpacity>
               }
               renderItem={({ item }) => {
@@ -66,10 +66,10 @@ export default function CategorySelectField({ value, onChange, label = "Category
                 return (
                   <TouchableOpacity
                     onPress={() => handleSelect(item._id)}
-                    style={[styles.row, { borderColor: active ? C.accent : C.border, backgroundColor: active ? C.accentDim : "transparent" }]}
+                    style={[styles.row, { borderColor: active ? C?.accent : C?.border, backgroundColor: active ? C?.accentDim : "transparent" }]}
                   >
-                    {item.icon ? <MaterialCommunityIcons name={item.icon as any} size={16} color={active ? C.accentText : C.textSecondary} /> : null}
-                    <Text style={[text.body, { color: active ? C.accentText : C.text }]}>{item.name}</Text>
+                    {item.icon ? <MaterialCommunityIcons name={item.icon as any} size={16} color={active ? C?.accentText : C?.textSecondary} /> : null}
+                    <Text style={[text.body, { color: active ? C?.accentText : C?.text }]}>{item.name}</Text>
                   </TouchableOpacity>
                 );
               }}

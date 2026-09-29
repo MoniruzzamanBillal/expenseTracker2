@@ -15,9 +15,9 @@ export default function SummaryPills({ pills }: { pills: TSummaryPill[] }) {
   return (
     <View style={styles.row}>
       {pills.map((p) => (
-        <View key={p.label} style={[styles.pill, { backgroundColor: p.bg }]}>
-          <Text style={[text.kicker, { color: p.color, marginBottom: 3 }]}>{p.label}</Text>
-          <Text style={[text.amountMd, { color: C.text }]}>{p.value}</Text>
+        <View key={p?.label} style={[styles.pill, { backgroundColor: p?.bg }]}>
+          <Text style={[text.kicker, { color: p?.color, marginBottom: 3 }]}>{p?.label}</Text>
+          <Text style={[text.amountMd, { color: C?.text }]}>{p?.value}</Text>
         </View>
       ))}
     </View>

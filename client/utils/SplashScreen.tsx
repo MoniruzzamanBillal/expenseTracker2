@@ -5,8 +5,8 @@ import { useTheme } from "@/theme";
 export default function SplashScreen() {
   const C = useTheme();
   return (
-    <View style={[styles.container, { backgroundColor: C.background }]}>
-      <ActivityIndicator size="large" color={C.accent} />
+    <View style={[styles.container, { backgroundColor: C?.background }]}>
+      <ActivityIndicator size="large" color={C?.accent} />
     </View>
   );
 }

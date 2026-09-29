@@ -18,8 +18,8 @@ const NEAR_LIMIT_THRESHOLD = 80;
 const CURRENT_MONTH_LABEL = new Date().toLocaleDateString("en-US", { month: "long" });
 
 function tone(budget: TBudget): "over" | "near" | "ontrack" {
-  if (budget.isOverLimit) return "over";
-  if (budget.percentage >= NEAR_LIMIT_THRESHOLD) return "near";
+  if (budget?.isOverLimit) return "over";
+  if (budget?.percentage >= NEAR_LIMIT_THRESHOLD) return "near";
   return "ontrack";
 }
 
@@ -51,13 +51,13 @@ export default function BudgetsPage() {
 
   const budgets = budgetsData?.data ?? [];
   const categories = categoriesData?.data ?? [];
-  const availableCategories = categories.filter((c) => !budgets.some((b) => b.categoryId === c._id));
+  const availableCategories = categories.filter((c) => !budgets.some((b) => b?.categoryId === c?._id));
 
   const toneRank = { over: 0, near: 1, ontrack: 2 };
   const sortedBudgets = [...budgets].sort((a, b) => toneRank[tone(a)] - toneRank[tone(b)]);
 
-  const totalSpent = budgets.reduce((s, b) => s + b.spent, 0);
-  const totalLimit = budgets.reduce((s, b) => s + b.monthlyLimit, 0);
+  const totalSpent = budgets.reduce((s, b) => s + b?.spent, 0);
+  const totalLimit = budgets.reduce((s, b) => s + b?.monthlyLimit, 0);
   const overCount = budgets.filter((b) => tone(b) === "over").length;
   const nearCount = budgets.filter((b) => tone(b) === "near").length;
   const onTrackCount = budgets.filter((b) => tone(b) === "ontrack").length;
@@ -73,14 +73,14 @@ export default function BudgetsPage() {
   };
 
   const handleDelete = (budget: TBudget) => {
-    Alert.alert("Delete this budget?", budget.category.name, [
+    Alert.alert("Delete this budget?", budget?.category?.name, [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
         style: "destructive",
         onPress: async () => {
           try {
-            const result = await deleteMutation.mutateAsync({ url: `/budgets/${budget._id}` });
+            const result = await deleteMutation.mutateAsync({ url: `/budgets/${budget?._id}` });
             if (result?.success) {
               Toast.show({ type: "success", text1: result?.message, position: "top" });
             }
@@ -154,13 +154,13 @@ export default function BudgetsPage() {
               {sortedBudgets.map((budget, i) => {
                 const t = tone(budget);
                 return (
-                  <View key={budget._id} style={[styles.row, i !== sortedBudgets.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}>
+                  <View key={budget?._id} style={[styles.row, i !== sortedBudgets.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}>
                     <View style={styles.rowTop}>
                       <View style={[styles.icon, { backgroundColor: C.accentDim }]}>
-                        <MaterialCommunityIcons name={(budget.category.icon as any) ?? "shape"} size={18} color={C.accentText} />
+                        <MaterialCommunityIcons name={(budget?.category?.icon as any) ?? "shape"} size={18} color={C.accentText} />
                       </View>
                       <Text style={[text.bodyMd, { color: C.text, flex: 1 }]} numberOfLines={1}>
-                        {budget.category.name}
+                        {budget?.category?.name}
                       </Text>
                       {t !== "ontrack" ? (
                         <View style={[styles.tag, { backgroundColor: t === "over" ? C.expenseBg : C.warningBg }]}>
@@ -175,7 +175,7 @@ export default function BudgetsPage() {
                       </TouchableOpacity>
                     </View>
 
-                    <BudgetProgressBar spent={budget.spent} limit={budget.monthlyLimit} percentage={budget.percentage} isOverLimit={budget.isOverLimit} />
+                    <BudgetProgressBar spent={budget?.spent} limit={budget?.monthlyLimit} percentage={budget?.percentage} isOverLimit={budget?.isOverLimit} />
                   </View>
                 );
               })}

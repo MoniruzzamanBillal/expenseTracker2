@@ -54,7 +54,7 @@ export default function UpdateTransactionModal({
 
   const patchMutation = usePatch(INVALIDATE_KEYS);
 
-  const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
+  const accentColor = type === TransactionTypeConst.income ? C?.income : C?.expense;
 
   const handleTextChange = (text: string) => {
     const regex = /^\d+(\.\d{0,2})?$/;
@@ -116,7 +116,7 @@ export default function UpdateTransactionModal({
         categoryId,
       };
 
-      const result = await patchMutation.mutateAsync({
+      const result = await patchMutation?.mutateAsync({
         url: `/transactions/update-transaction/${initialValue?._id}`,
         payload,
       });
@@ -150,7 +150,7 @@ export default function UpdateTransactionModal({
 
   const handleDeleteTransaction = async () => {
     try {
-      const result = await patchMutation.mutateAsync({
+      const result = await patchMutation?.mutateAsync({
         url: `/transactions/delete-transaction/${initialValue?._id}`,
         payload: initialValue ?? {},
       });
@@ -180,9 +180,9 @@ export default function UpdateTransactionModal({
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headRow}>
-          <Text style={[text.h3, { color: C.text }]}>Edit entry</Text>
+          <Text style={[text.h3, { color: C?.text }]}>Edit entry</Text>
           {initialValue?.createdAt ? (
-            <Text style={[text.caption, { color: C.textMuted }]}>Today · {format(new Date(initialValue.createdAt), "HH:mm")}</Text>
+            <Text style={[text.caption, { color: C?.textMuted }]}>Today · {format(new Date(initialValue?.createdAt), "HH:mm")}</Text>
           ) : null}
         </View>
 

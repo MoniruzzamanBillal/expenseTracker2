@@ -49,7 +49,7 @@ export default function SettingsPage() {
     }
 
     try {
-      const result = await updateProfileMutation.mutateAsync({
+      const result = await updateProfileMutation?.mutateAsync({
         url: "/auth/update-profile",
         payload: { name: name.trim() },
       });
@@ -84,44 +84,44 @@ export default function SettingsPage() {
   const displayEmail = profile?.data?.email ?? user?.email ?? "";
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]} edges={["top"]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C?.background }]} edges={["top"]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]} showsVerticalScrollIndicator={false}>
         <View style={styles.nav}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={{ marginLeft: -10 }}>
-            <Ionicons name="chevron-back" size={22} color={C.text} />
+          <TouchableOpacity onPress={() => router?.back()} hitSlop={8} style={{ marginLeft: -10 }}>
+            <Ionicons name="chevron-back" size={22} color={C?.text} />
           </TouchableOpacity>
-          <Text style={[text.h2, { color: C.text }]}>Settings</Text>
+          <Text style={[text.h2, { color: C?.text }]}>Settings</Text>
         </View>
 
-        <TouchableOpacity onPress={() => setEditOpen(true)} activeOpacity={0.8} style={[styles.profileCard, { backgroundColor: C.surface, borderColor: C.border }]}>
-          <View style={[styles.avatar, { backgroundColor: C.accentDim }]}>
-            <Text style={[text.bodyMd, { color: C.accentText }]}>{initials(displayName)}</Text>
+        <TouchableOpacity onPress={() => setEditOpen(true)} activeOpacity={0.8} style={[styles.profileCard, { backgroundColor: C?.surface, borderColor: C?.border }]}>
+          <View style={[styles.avatar, { backgroundColor: C?.accentDim }]}>
+            <Text style={[text.bodyMd, { color: C?.accentText }]}>{initials(displayName)}</Text>
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={[text.bodyMd, { color: C.text }]} numberOfLines={1}>
+            <Text style={[text.bodyMd, { color: C?.text }]} numberOfLines={1}>
               {displayName}
             </Text>
-            <Text style={[text.bodySm, { color: C.textSecondary }]} numberOfLines={1}>
+            <Text style={[text.bodySm, { color: C?.textSecondary }]} numberOfLines={1}>
               {displayEmail}
             </Text>
           </View>
-          <View style={[styles.editBtn, { borderColor: C.accentBorder }]}>
-            <Text style={[text.bodySm, { color: C.accent }]}>Edit</Text>
+          <View style={[styles.editBtn, { borderColor: C?.accentBorder }]}>
+            <Text style={[text.bodySm, { color: C?.accent }]}>Edit</Text>
           </View>
         </TouchableOpacity>
 
-        <Text style={[text.kicker, { color: C.textSecondary, marginTop: spacing.xl, marginBottom: spacing.sm }]}>Appearance</Text>
-        <View style={[styles.appearanceTrack, { backgroundColor: C.surface2, borderColor: C.border }]}>
+        <Text style={[text.kicker, { color: C?.textSecondary, marginTop: spacing.xl, marginBottom: spacing.sm }]}>Appearance</Text>
+        <View style={[styles.appearanceTrack, { backgroundColor: C?.surface2, borderColor: C?.border }]}>
           {APPEARANCE_OPTIONS.map((opt) => {
             const active = preference === opt.key;
             return (
               <TouchableOpacity
                 key={opt.key}
                 onPress={() => setPreference(opt.key)}
-                style={[styles.appearanceOpt, active && { backgroundColor: C.surface, borderColor: C.border, borderWidth: 1 }]}
+                style={[styles.appearanceOpt, active && { backgroundColor: C?.surface, borderColor: C?.border, borderWidth: 1 }]}
               >
-                <Ionicons name={opt.icon} size={15} color={active ? C.text : C.textSecondary} />
-                <Text style={[text.bodySm, { color: active ? C.text : C.textSecondary }]}>{opt.label}</Text>
+                <Ionicons name={opt.icon} size={15} color={active ? C?.text : C?.textSecondary} />
+                <Text style={[text.bodySm, { color: active ? C?.text : C?.textSecondary }]}>{opt.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -131,28 +131,28 @@ export default function SettingsPage() {
           <CategoryManager />
         </View>
 
-        <TouchableOpacity onPress={handleLogoutPress} activeOpacity={0.8} style={[styles.logoutBtn, { borderColor: `${C.expense}80` }]}>
-          <Ionicons name="log-out-outline" size={18} color={C.expense} />
-          <Text style={[text.bodyMd, { color: C.expense }]}>Log out</Text>
+        <TouchableOpacity onPress={handleLogoutPress} activeOpacity={0.8} style={[styles.logoutBtn, { borderColor: `${C?.expense}80` }]}>
+          <Ionicons name="log-out-outline" size={18} color={C?.expense} />
+          <Text style={[text.bodyMd, { color: C?.expense }]}>Log out</Text>
         </TouchableOpacity>
       </ScrollView>
 
       <Sheet visible={editOpen} onDismiss={() => setEditOpen(false)}>
         <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }} bottomOffset={20} extraKeyboardSpace={10} showsVerticalScrollIndicator={false}>
           <View style={styles.editHeadRow}>
-            <View style={[styles.avatarLg, { backgroundColor: C.accentDim }]}>
-              <Text style={[text.h3, { color: C.accentText }]}>{initials(displayName)}</Text>
+            <View style={[styles.avatarLg, { backgroundColor: C?.accentDim }]}>
+              <Text style={[text.h3, { color: C?.accentText }]}>{initials(displayName)}</Text>
             </View>
-            <Text style={[text.h3, { color: C.text }]}>Edit profile</Text>
+            <Text style={[text.h3, { color: C?.text }]}>Edit profile</Text>
           </View>
 
           <FormField label="Name" value={name} onChangeText={setName} placeholder="Your name" inSheet />
           <FormField label="Email" value={displayEmail} editable={false} inSheet />
-          <Text style={[text.caption, { color: C.textMuted, marginTop: -spacing.md, marginBottom: spacing.lg }]}>
+          <Text style={[text.caption, { color: C?.textMuted, marginTop: -spacing.md, marginBottom: spacing.lg }]}>
             Email and photo can&apos;t be changed from the app yet.
           </Text>
 
-          <PrimaryButton label={updateProfileMutation.isPending ? "Saving…" : "Save"} onPress={saveName} loading={updateProfileMutation.isPending} height={spacing.cta} />
+          <PrimaryButton label={updateProfileMutation?.isPending ? "Saving…" : "Save"} onPress={saveName} loading={updateProfileMutation?.isPending} height={spacing.cta} />
         </KeyboardAwareScrollView>
       </Sheet>
     </SafeAreaView>

@@ -45,7 +45,7 @@ export default function TransactionRequestEditModal({
   const C = useTheme();
 
   const [amount, setAmount] = useState<string | null>(
-    initialValue ? String(initialValue.amount) : null,
+    initialValue ? String(initialValue?.amount) : null,
   );
   const [title, setTitle] = useState<string | null>(
     initialValue?.title || null,
@@ -74,9 +74,9 @@ export default function TransactionRequestEditModal({
 
   useEffect(() => {
     if (initialValue) {
-      setAmount(String(initialValue.amount));
-      setTitle(initialValue.title);
-      setDescription(initialValue.description ?? " ");
+      setAmount(String(initialValue?.amount));
+      setTitle(initialValue?.title);
+      setDescription(initialValue?.description ?? " ");
       setCategoryId(null);
     }
   }, [initialValue]);
@@ -111,7 +111,7 @@ export default function TransactionRequestEditModal({
     });
   };
 
-  const sourceIcon = initialValue?.sourceType ? SOURCE_ICON[initialValue.sourceType] ?? "pricetag-outline" : "pricetag-outline";
+  const sourceIcon = initialValue?.sourceType ? SOURCE_ICON[initialValue?.sourceType] ?? "pricetag-outline" : "pricetag-outline";
 
   return (
     <Sheet visible={open} onDismiss={hideModal}>
@@ -123,13 +123,13 @@ export default function TransactionRequestEditModal({
       >
         {initialValue ? (
           <View style={styles.metaRow}>
-            <Ionicons name={sourceIcon} size={14} color={C.accentText} />
-            <Text style={[text.caption, { color: C.textSecondary }]}>
-              bikelog · {initialValue.sourceType} · {format(new Date(initialValue.occurredAt), "EEE d MMM, HH:mm")}
+            <Ionicons name={sourceIcon} size={14} color={C?.accentText} />
+            <Text style={[text.caption, { color: C?.textSecondary }]}>
+              bikelog · {initialValue?.sourceType} · {format(new Date(initialValue?.occurredAt), "EEE d MMM, HH:mm")}
             </Text>
           </View>
         ) : null}
-        <Text style={[text.h3, { color: C.text, marginBottom: spacing.md }]}>Review expense</Text>
+        <Text style={[text.h3, { color: C?.text, marginBottom: spacing.md }]}>Review expense</Text>
 
         <FormField
           label="Amount"
@@ -138,7 +138,7 @@ export default function TransactionRequestEditModal({
           keyboardType="decimal-pad"
           placeholder="0.00"
           inSheet
-          inputStyle={{ fontSize: 20, fontWeight: "500", color: C.expense }}
+          inputStyle={{ fontSize: 20, fontWeight: "500", color: C?.expense }}
         />
         <FormField label="Title" value={title || ""} onChangeText={setTitle} placeholder="e.g. Fuel: Shell Station" inSheet />
         <FormField
@@ -152,15 +152,15 @@ export default function TransactionRequestEditModal({
         />
 
         <View style={{ marginBottom: spacing.md }}>
-          <Text style={[text.captionMd, { color: C.textSecondary, marginBottom: spacing.xs + 1 }]}>Category</Text>
+          <Text style={[text.captionMd, { color: C?.textSecondary, marginBottom: spacing.xs + 1 }]}>Category</Text>
           <CategoryPicker value={categoryId} onChange={setCategoryId} />
         </View>
 
         {initialValue ? (
           <View style={styles.infoRow}>
-            <Ionicons name="information-circle-outline" size={15} color={C.textMuted} />
-            <Text style={[text.caption, { color: C.textMuted, flex: 1 }]}>
-              Saved with today&apos;s date. The request keeps its original time ({format(new Date(initialValue.occurredAt), "d MMM")}).
+            <Ionicons name="information-circle-outline" size={15} color={C?.textMuted} />
+            <Text style={[text.caption, { color: C?.textMuted, flex: 1 }]}>
+              Saved with today&apos;s date. The request keeps its original time ({format(new Date(initialValue?.occurredAt), "d MMM")}).
             </Text>
           </View>
         ) : null}
@@ -169,7 +169,7 @@ export default function TransactionRequestEditModal({
           label={loading ? "Accepting…" : "Accept expense"}
           onPress={handleAccept}
           loading={loading}
-          color={C.expense}
+          color={C?.expense}
           height={spacing.field}
         />
       </KeyboardAwareScrollView>

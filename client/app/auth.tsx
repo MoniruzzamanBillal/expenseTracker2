@@ -32,7 +32,7 @@ export default function AuthScreen() {
     try {
       const payload = { email, password };
 
-      const result = await loginMutation.mutateAsync({
+      const result = await loginMutation?.mutateAsync({
         url: "/auth/login",
         payload,
       });
@@ -51,7 +51,7 @@ export default function AuthScreen() {
         handleSetUser(userPayload);
 
         Toast.show({ type: "success", text1: result?.message, position: "top" });
-        router.replace("/");
+        router?.replace("/");
       } else {
         // Server error strings are shown verbatim, no rewording — see the
         // Auth build notes ("worth tidying those strings server-side").
@@ -64,7 +64,7 @@ export default function AuthScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C?.background }]}>
       <KeyboardAwareScrollView
         style={{ flex: 1 }}
         contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
@@ -73,11 +73,11 @@ export default function AuthScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.wordmark}>
-          <View style={[styles.tick, { backgroundColor: C.accent }]} />
-          <Text style={[text.kicker, { color: C.textSecondary }]}>ExpenseTracker</Text>
+          <View style={[styles.tick, { backgroundColor: C?.accent }]} />
+          <Text style={[text.kicker, { color: C?.textSecondary }]}>ExpenseTracker</Text>
         </View>
 
-        <Text style={[text.h1, { color: C.text, marginBottom: spacing.xxl }]}>Sign in</Text>
+        <Text style={[text.h1, { color: C?.text, marginBottom: spacing.xxl }]}>Sign in</Text>
 
         <FormField
           label="Email"
@@ -105,9 +105,9 @@ export default function AuthScreen() {
         />
 
         {errorMessage ? (
-          <View style={[styles.errorBanner, { backgroundColor: C.expenseBg }]}>
-            <Ionicons name="alert-circle-outline" size={17} color={C.expense} />
-            <Text style={[text.bodySm, { color: C.text, flex: 1 }]}>{errorMessage}</Text>
+          <View style={[styles.errorBanner, { backgroundColor: C?.expenseBg }]}>
+            <Ionicons name="alert-circle-outline" size={17} color={C?.expense} />
+            <Text style={[text.bodySm, { color: C?.text, flex: 1 }]}>{errorMessage}</Text>
           </View>
         ) : null}
 
@@ -121,9 +121,9 @@ export default function AuthScreen() {
         />
 
         <View style={styles.footer}>
-          <Text style={[text.bodySm, { color: C.textSecondary }]}>New here? </Text>
-          <TouchableOpacity onPress={() => router.push("/register")}>
-            <Text style={[text.bodySm, { color: C.accent }]}>Create an account</Text>
+          <Text style={[text.bodySm, { color: C?.textSecondary }]}>New here? </Text>
+          <TouchableOpacity onPress={() => router?.push("/register")}>
+            <Text style={[text.bodySm, { color: C?.accent }]}>Create an account</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>

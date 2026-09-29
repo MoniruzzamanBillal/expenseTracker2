@@ -55,7 +55,7 @@ export default function HistoryPage() {
   // so past years get no drill-in chevron.
   const canDrillIn = selectedYear === currentYear;
 
-  const recentMonths = useMemo(() => [...yearSummary].filter((m) => m.income > 0 || m.expense > 0 || m.transactionCount > 0).reverse(), [yearSummary]);
+  const recentMonths = useMemo(() => [...yearSummary].filter((m) => m?.income > 0 || m?.expense > 0 || m?.transactionCount > 0).reverse(), [yearSummary]);
 
   const segmentControl = (
     <View style={[styles.segmentTrack, { backgroundColor: C.surface2, borderColor: C.border }]}>
@@ -93,7 +93,7 @@ export default function HistoryPage() {
     <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]} edges={["top"]}>
       <FlatList
         data={isError ? [] : yearSummary.length ? recentMonths.slice(0, 5) : []}
-        keyExtractor={(m) => String(m.month)}
+        keyExtractor={(m) => String(m?.month)}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={C.accent} />}
         contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
         showsVerticalScrollIndicator={false}
@@ -146,16 +146,16 @@ export default function HistoryPage() {
             {!isLoading && !isError && yearSummary.length > 0 ? (
               <View style={[styles.yearBarRow, { backgroundColor: C.surface, borderColor: C.border }]}>
                 {yearSummary.map((m) => {
-                  const maxAbs = Math.max(...yearSummary.map((x) => Math.abs(x.income - x.expense)), 1);
-                  const isFuture = selectedYear === currentYear && m.month > currentMonth;
-                  const isCurrentMonth = selectedYear === currentYear && m.month === currentMonth;
+                  const maxAbs = Math.max(...yearSummary.map((x) => Math.abs(x?.income - x?.expense)), 1);
+                  const isFuture = selectedYear === currentYear && m?.month > currentMonth;
+                  const isCurrentMonth = selectedYear === currentYear && m?.month === currentMonth;
                   return (
-                    <View key={m.month} style={styles.yearBarCol}>
+                    <View key={m?.month} style={styles.yearBarCol}>
                       <View style={styles.yearBarPair}>
-                        <View style={{ width: 5, height: isFuture ? 2 : Math.max((m.income / (maxAbs || 1)) * 54, m.income > 0 ? 2 : 0), backgroundColor: C.income, borderRadius: 1 }} />
-                        <View style={{ width: 5, height: isFuture ? 2 : Math.max((m.expense / (maxAbs || 1)) * 54, m.expense > 0 ? 2 : 0), backgroundColor: C.expense, borderRadius: 1 }} />
+                        <View style={{ width: 5, height: isFuture ? 2 : Math.max((m?.income / (maxAbs || 1)) * 54, m?.income > 0 ? 2 : 0), backgroundColor: C.income, borderRadius: 1 }} />
+                        <View style={{ width: 5, height: isFuture ? 2 : Math.max((m?.expense / (maxAbs || 1)) * 54, m?.expense > 0 ? 2 : 0), backgroundColor: C.expense, borderRadius: 1 }} />
                       </View>
-                      <Text style={[text.caption, { color: isCurrentMonth ? C.accentText : C.textMuted, fontSize: 9 }]}>{MONTHS[m.month][0]}</Text>
+                      <Text style={[text.caption, { color: isCurrentMonth ? C.accentText : C.textMuted, fontSize: 9 }]}>{MONTHS[m?.month][0]}</Text>
                     </View>
                   );
                 })}
@@ -168,7 +168,7 @@ export default function HistoryPage() {
           </View>
         }
         renderItem={({ item: m }) => {
-          const mNet = m.income - m.expense;
+          const mNet = m?.income - m?.expense;
           const isPositive = mNet >= 0;
           const barColor = isPositive ? C.income : C.expense;
 
@@ -179,11 +179,11 @@ export default function HistoryPage() {
               activeOpacity={canDrillIn ? 0.7 : 1}
               style={styles.monthRow}
             >
-              <Text style={[text.bodyMd, { color: C.text, width: 40 }]}>{MONTHS[m.month].slice(0, 3)}</Text>
+              <Text style={[text.bodyMd, { color: C.text, width: 40 }]}>{MONTHS[m?.month].slice(0, 3)}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={[text.caption, { color: C.textSecondary }]}>{m.transactionCount} entries</Text>
+                <Text style={[text.caption, { color: C.textSecondary }]}>{m?.transactionCount} entries</Text>
                 <Text style={[text.caption, { color: C.textSecondary }]}>
-                  <Text style={{ color: C.income }}>+{fmt(m.income)}</Text> <Text style={{ color: C.expense }}>−{fmt(m.expense)}</Text>
+                  <Text style={{ color: C.income }}>+{fmt(m?.income)}</Text> <Text style={{ color: C.expense }}>−{fmt(m?.expense)}</Text>
                 </Text>
               </View>
               <Text style={[text.bodyMd, { color: barColor }]}>

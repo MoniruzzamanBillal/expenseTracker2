@@ -52,12 +52,12 @@ export default function HomePage() {
   const pendingRequestCount = requestsData?.data?.length ?? 0;
 
   const pendingAsTransactions: TTransaction[] = (pendingTransactions ?? []).map((item) => ({
-    _id: item.localId,
-    title: item.payload.title,
-    description: item.payload.description,
-    amount: item.payload.amount,
-    type: item.payload.type,
-    createdAt: item.createdAt,
+    _id: item?.localId,
+    title: item?.payload?.title,
+    description: item?.payload?.description,
+    amount: item?.payload?.amount,
+    type: item?.payload?.type,
+    createdAt: item?.createdAt,
   }));
 
   const income = dailyTransaction?.data?.income ?? 0;
@@ -168,7 +168,7 @@ export default function HomePage() {
             ) : (
               <View style={[styles.listCard, { backgroundColor: C.surface, borderColor: C.border }, elevation(C, dark).card]}>
                 {pendingAsTransactions.map((t, i) => (
-                  <TransactionCard key={t._id} transactionData={t} pending isLast={i === allRows.length - 1} />
+                  <TransactionCard key={t?._id} transactionData={t} pending isLast={i === allRows.length - 1} />
                 ))}
                 {transactions.map((t, i) => (
                   <TransactionCard

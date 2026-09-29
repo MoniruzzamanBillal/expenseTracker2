@@ -31,9 +31,9 @@ export default function TransactionAccordion({ dailyData }: TProps) {
   return (
     <View>
       {dailyData?.map((day: TDailyData) => {
-        const hasIncome = day.income > 0;
-        const hasExpense = day.expense > 0;
-        const net = day.income - day.expense;
+        const hasIncome = day?.income > 0;
+        const hasExpense = day?.expense > 0;
+        const net = day?.income - day?.expense;
 
         return (
           <View key={day?.date} style={styles.dayGroup}>
@@ -43,8 +43,8 @@ export default function TransactionAccordion({ dailyData }: TProps) {
               </View>
               {hasIncome && hasExpense ? (
                 <View style={{ flexDirection: "row", gap: spacing.sm }}>
-                  <Text style={[text.bodySm, { color: C.income }]}>+৳{fmt(day.income)}</Text>
-                  <Text style={[text.bodySm, { color: C.expense }]}>−৳{fmt(day.expense)}</Text>
+                  <Text style={[text.bodySm, { color: C.income }]}>+৳{fmt(day?.income)}</Text>
+                  <Text style={[text.bodySm, { color: C.expense }]}>−৳{fmt(day?.expense)}</Text>
                 </View>
               ) : (
                 <Text style={[text.bodySm, { color: net >= 0 ? C.income : C.expense }]}>
@@ -55,11 +55,11 @@ export default function TransactionAccordion({ dailyData }: TProps) {
 
             {day?.transactions?.length > 0 ? (
               <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }, elevation(C, dark).card]}>
-                {day.transactions.map((item, i) => (
+                {day?.transactions.map((item, i) => (
                   <TransactionCard
                     key={item?._id}
                     transactionData={item}
-                    isLast={i === day.transactions.length - 1}
+                    isLast={i === day?.transactions.length - 1}
                     onSwipeOpen={(ref) => {
                       if (openSwipeableRef.current && openSwipeableRef.current !== ref) {
                         openSwipeableRef.current.close();

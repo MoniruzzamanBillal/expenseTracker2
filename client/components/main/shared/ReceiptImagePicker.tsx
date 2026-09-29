@@ -25,7 +25,7 @@ export default function ReceiptImagePicker({ transactionId, value, fileName, inv
     try {
       const formData = new FormData();
       formData.append("file", file as any);
-      const result = await putMutation.mutateAsync({
+      const result = await putMutation?.mutateAsync({
         url: `/transactions/receipt-file/${transactionId}`,
         payload: formData,
       });
@@ -39,14 +39,14 @@ export default function ReceiptImagePicker({ transactionId, value, fileName, inv
 
   const takePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
+    if (!permission?.granted) {
       Toast.show({ type: "error", text1: "Permission denied", text2: "Camera access is required to take a photo", position: "top" });
       return;
     }
 
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7, allowsEditing: false });
 
-    if (!result.canceled && result.assets?.[0]) {
+    if (!result?.canceled && result?.assets?.[0]) {
       const asset = result.assets[0];
       await upload({ uri: asset.uri, name: asset.fileName ?? "receipt.jpg", type: asset.mimeType ?? "image/jpeg" });
     }
@@ -54,14 +54,14 @@ export default function ReceiptImagePicker({ transactionId, value, fileName, inv
 
   const pickFromLibrary = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
+    if (!permission?.granted) {
       Toast.show({ type: "error", text1: "Permission denied", text2: "Photo library access is required to attach a receipt", position: "top" });
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7, allowsEditing: false });
 
-    if (!result.canceled && result.assets?.[0]) {
+    if (!result?.canceled && result?.assets?.[0]) {
       const asset = result.assets[0];
       await upload({ uri: asset.uri, name: asset.fileName ?? "receipt.jpg", type: asset.mimeType ?? "image/jpeg" });
     }
@@ -83,7 +83,7 @@ export default function ReceiptImagePicker({ transactionId, value, fileName, inv
         style: "destructive",
         onPress: async () => {
           try {
-            const result = await deleteMutation.mutateAsync({ url: `/transactions/receipt-file/${transactionId}` });
+            const result = await deleteMutation?.mutateAsync({ url: `/transactions/receipt-file/${transactionId}` });
             if (result?.success) {
               Toast.show({ type: "success", text1: result?.message, position: "top" });
             }
@@ -97,26 +97,26 @@ export default function ReceiptImagePicker({ transactionId, value, fileName, inv
 
   return (
     <View style={{ marginBottom: spacing.lg }}>
-      <Text style={[text.captionMd, { color: C.textSecondary, marginBottom: spacing.xs + 1 }]}>Receipt</Text>
+      <Text style={[text.captionMd, { color: C?.textSecondary, marginBottom: spacing.xs + 1 }]}>Receipt</Text>
 
       {value ? (
-        <View style={[styles.chip, { backgroundColor: C.accentDim, borderColor: C.accentBorder }]}>
+        <View style={[styles.chip, { backgroundColor: C?.accentDim, borderColor: C?.accentBorder }]}>
           <TouchableOpacity onPress={() => setViewerOpen(true)} activeOpacity={0.8} style={styles.chipTapArea}>
-            <View style={[styles.thumb, { backgroundColor: C.surface2 }]}>
+            <View style={[styles.thumb, { backgroundColor: C?.surface2 }]}>
               <Image source={{ uri: value }} style={StyleSheet.absoluteFillObject} contentFit="cover" />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={[text.bodySm, { color: C.accentText }]} numberOfLines={1}>
+              <Text style={[text.bodySm, { color: C?.accentText }]} numberOfLines={1}>
                 {fileName ?? "Receipt attached"}
               </Text>
-              <Text style={[text.caption, { color: C.textSecondary }]}>Tap to view</Text>
+              <Text style={[text.caption, { color: C?.textSecondary }]}>Tap to view</Text>
             </View>
           </TouchableOpacity>
-          {putMutation.isPending ? (
-            <ActivityIndicator color={C.accent} size="small" />
+          {putMutation?.isPending ? (
+            <ActivityIndicator color={C?.accent} size="small" />
           ) : (
             <TouchableOpacity onPress={handleRemove} style={styles.trashBtn} hitSlop={8}>
-              <Ionicons name="trash-outline" size={18} color={C.textSecondary} />
+              <Ionicons name="trash-outline" size={18} color={C?.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -124,15 +124,15 @@ export default function ReceiptImagePicker({ transactionId, value, fileName, inv
         <TouchableOpacity
           onPress={openPickerActionSheet}
           activeOpacity={0.8}
-          disabled={putMutation.isPending}
-          style={[styles.emptyChip, { borderColor: C.border }]}
+          disabled={putMutation?.isPending}
+          style={[styles.emptyChip, { borderColor: C?.border }]}
         >
-          {putMutation.isPending ? (
-            <ActivityIndicator color={C.textSecondary} size="small" />
+          {putMutation?.isPending ? (
+            <ActivityIndicator color={C?.textSecondary} size="small" />
           ) : (
             <>
-              <Ionicons name="attach-outline" size={16} color={C.textSecondary} />
-              <Text style={[text.bodySm, { color: C.textSecondary }]}>Receipt</Text>
+              <Ionicons name="attach-outline" size={16} color={C?.textSecondary} />
+              <Text style={[text.bodySm, { color: C?.textSecondary }]}>Receipt</Text>
             </>
           )}
         </TouchableOpacity>

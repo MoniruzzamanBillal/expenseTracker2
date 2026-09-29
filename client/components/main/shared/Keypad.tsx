@@ -19,7 +19,7 @@ export default function Keypad({ value, onChange }: TProps) {
 
   const press = (key: string) => {
     if (key === "⌫") {
-      onChange(value.slice(0, -1));
+      onChange(value?.slice(0, -1));
       return;
     }
     const next = value + key;
@@ -32,7 +32,7 @@ export default function Keypad({ value, onChange }: TProps) {
     <View style={styles.grid}>
       {KEYS.map((k) => (
         <TouchableOpacity key={k} onPress={() => press(k)} activeOpacity={0.6} style={styles.key}>
-          {k === "⌫" ? <Ionicons name="backspace-outline" size={24} color={C.textSecondary} /> : <Text style={[text.h1, { color: C.text }]}>{k}</Text>}
+          {k === "⌫" ? <Ionicons name="backspace-outline" size={24} color={C?.textSecondary} /> : <Text style={[text.h1, { color: C?.text }]}>{k}</Text>}
         </TouchableOpacity>
       ))}
     </View>

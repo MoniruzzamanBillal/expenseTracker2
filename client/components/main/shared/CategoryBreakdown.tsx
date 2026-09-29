@@ -35,7 +35,7 @@ export default function CategoryBreakdown({ data, selected, onSelect }: TProps) 
       name: entry.name,
       expense: entry.expense,
       pct: Math.round((entry.expense / total) * 100),
-      color: entry.categoryId === null ? C.uncategorized : C.chartPalette[i] ?? C.chartPalette[C.chartPalette.length - 1],
+      color: entry.categoryId === null ? C?.uncategorized : C?.chartPalette?.[i] ?? C?.chartPalette?.[C?.chartPalette.length - 1],
     }));
 
     if (expenseOnly.length > 5) {
@@ -45,7 +45,7 @@ export default function CategoryBreakdown({ data, selected, onSelect }: TProps) 
         name: "Other",
         expense: otherExpense,
         pct: Math.round((otherExpense / total) * 100),
-        color: C.chartPalette[C.chartPalette.length - 1],
+        color: C?.chartPalette?.[C?.chartPalette.length - 1],
       });
     }
     return ranked;
@@ -54,9 +54,9 @@ export default function CategoryBreakdown({ data, selected, onSelect }: TProps) 
   if (rows.length === 0) return null;
 
   return (
-    <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }]}>
+    <View style={[styles.card, { backgroundColor: C?.surface, borderColor: C?.border }]}>
       <View style={styles.headRow}>
-        <Text style={[text.kicker, { color: C.textSecondary }]}>Spent on</Text>
+        <Text style={[text.kicker, { color: C?.textSecondary }]}>Spent on</Text>
       </View>
       <View style={styles.bar}>
         {rows.map((r) => (
@@ -71,11 +71,11 @@ export default function CategoryBreakdown({ data, selected, onSelect }: TProps) 
               key={r.key}
               onPress={() => onSelect(active ? null : r.key)}
               activeOpacity={0.7}
-              style={[styles.legendItem, active && { backgroundColor: C.accentDim, borderRadius: radius.sm }]}
+              style={[styles.legendItem, active && { backgroundColor: C?.accentDim, borderRadius: radius.sm }]}
             >
               <View style={[styles.swatch, { backgroundColor: r.color }]} />
-              <Text style={[text.caption, { color: C.textSecondary }]}>{r.name}</Text>
-              <Text style={[text.caption, { color: C.text }]}>{r.pct}%</Text>
+              <Text style={[text.caption, { color: C?.textSecondary }]}>{r.name}</Text>
+              <Text style={[text.caption, { color: C?.text }]}>{r.pct}%</Text>
             </TouchableOpacity>
           );
         })}

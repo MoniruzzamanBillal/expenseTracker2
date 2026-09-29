@@ -23,21 +23,21 @@ export default function EmptyState({
   const C = useTheme();
   return (
     <View style={styles.wrap}>
-      <View style={[styles.icon, { borderColor: C.border }]}>
-        <Ionicons name={icon} size={22} color={C.textMuted} />
+      <View style={[styles.icon, { borderColor: C?.border }]}>
+        <Ionicons name={icon} size={22} color={C?.textMuted} />
       </View>
-      <Text style={[text.h3, { color: C.text, marginTop: spacing.md }]}>{title}</Text>
+      <Text style={[text.h3, { color: C?.text, marginTop: spacing.md }]}>{title}</Text>
       {subtitle ? (
-        <Text style={[text.body, { color: C.textSecondary, marginTop: spacing.xs }]}>{subtitle}</Text>
+        <Text style={[text.body, { color: C?.textSecondary, marginTop: spacing.xs }]}>{subtitle}</Text>
       ) : null}
       {actionLabel && onAction ? (
         <TouchableOpacity
           onPress={onAction}
           activeOpacity={0.8}
-          style={[styles.action, { borderColor: C.accent }]}
+          style={[styles.action, { borderColor: C?.accent }]}
         >
-          <Ionicons name={actionIcon} size={16} color={C.accent} />
-          <Text style={[text.bodyMd, { color: C.accent }]}>{actionLabel}</Text>
+          <Ionicons name={actionIcon} size={16} color={C?.accent} />
+          <Text style={[text.bodyMd, { color: C?.accent }]}>{actionLabel}</Text>
         </TouchableOpacity>
       ) : null}
     </View>

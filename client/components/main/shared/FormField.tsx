@@ -20,30 +20,30 @@ export default function FormField({ label, error, invalid, passwordToggle, secur
 
   return (
     <View style={label ? styles.wrap : undefined}>
-      {label ? <Text style={[text.captionMd, { color: C.textSecondary, marginBottom: spacing.xs + 1 }]}>{label}</Text> : null}
+      {label ? <Text style={[text.captionMd, { color: C?.textSecondary, marginBottom: spacing.xs + 1 }]}>{label}</Text> : null}
       <View
         style={[
           styles.inputWrap,
-          { backgroundColor: inSheet ? C.inputBgSheet : C.inputBg, borderColor: error || invalid ? C.expense : C.border },
-          (inputProps.editable === false) && { opacity: 0.45 },
+          { backgroundColor: inSheet ? C?.inputBgSheet : C?.inputBg, borderColor: error || invalid ? C?.expense : C?.border },
+          (inputProps?.editable === false) && { opacity: 0.45 },
         ]}
       >
         <TextInput
           {...inputProps}
           secureTextEntry={passwordToggle ? hidden : secureTextEntry}
-          style={[styles.input, text.body, { color: C.text }, inputStyle]}
-          placeholderTextColor={C.placeholder}
+          style={[styles.input, text.body, { color: C?.text }, inputStyle]}
+          placeholderTextColor={C?.placeholder}
         />
         {passwordToggle ? (
           <TouchableOpacity onPress={() => setHidden((h) => !h)} style={styles.eyeBtn}>
-            <Ionicons name={hidden ? "eye-off-outline" : "eye-outline"} size={18} color={C.textMuted} />
+            <Ionicons name={hidden ? "eye-off-outline" : "eye-outline"} size={18} color={C?.textMuted} />
           </TouchableOpacity>
         ) : null}
       </View>
       {error ? (
         <View style={styles.errorRow}>
-          <Ionicons name="alert-circle-outline" size={14} color={C.expense} />
-          <Text style={[text.caption, { color: C.expense }]}>{error}</Text>
+          <Ionicons name="alert-circle-outline" size={14} color={C?.expense} />
+          <Text style={[text.caption, { color: C?.expense }]}>{error}</Text>
         </View>
       ) : null}
     </View>

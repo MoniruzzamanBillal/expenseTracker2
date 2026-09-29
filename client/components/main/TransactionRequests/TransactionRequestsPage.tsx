@@ -39,7 +39,7 @@ const SOURCE_META: Record<
 
 export default function TransactionRequestsPage() {
   const C = useTheme();
-  const dark = C.statusBarStyle === "light";
+  const dark = C?.statusBarStyle === "light";
   const router = useRouter();
   const [editRequest, setEditRequest] = useState<TTransactionRequest | null>(null);
 
@@ -63,7 +63,7 @@ export default function TransactionRequestsPage() {
     categoryId: string | null = null,
   ) => {
     try {
-      const result = await acceptMutation.mutateAsync({
+      const result = await acceptMutation?.mutateAsync({
         url: `/transaction-requests/${id}/accept`,
         payload,
       });
@@ -77,7 +77,7 @@ export default function TransactionRequestsPage() {
         // reporting the whole accept as failed.
         if (categoryId && createdTransactionId) {
           try {
-            await categoryPatchMutation.mutateAsync({
+            await categoryPatchMutation?.mutateAsync({
               url: `/transactions/update-transaction/${createdTransactionId}`,
               payload: { categoryId },
             });
@@ -103,7 +103,7 @@ export default function TransactionRequestsPage() {
 
   const rejectRequest = async (id: string) => {
     try {
-      const result = await rejectMutation.mutateAsync({ url: `/transaction-requests/${id}/reject`, payload: {} });
+      const result = await rejectMutation?.mutateAsync({ url: `/transaction-requests/${id}/reject`, payload: {} });
       if (result?.success) {
         Toast.show({ type: "success", text1: result?.message || "Rejected", position: "top" });
       }
@@ -128,18 +128,18 @@ export default function TransactionRequestsPage() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]} edges={["top"]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C?.background }]} edges={["top"]}>
       <ScrollView
         contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={C.accent} />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={C?.accent} />}
       >
         <View style={styles.nav}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={{ marginLeft: -10 }}>
-            <Ionicons name="chevron-back" size={22} color={C.text} />
+          <TouchableOpacity onPress={() => router?.back()} hitSlop={8} style={{ marginLeft: -10 }}>
+            <Ionicons name="chevron-back" size={22} color={C?.text} />
           </TouchableOpacity>
-          <Text style={[text.h2, { color: C.text, flex: 1 }]}>Requests</Text>
-          {requests.length > 0 ? <Text style={[text.bodySm, { color: C.textSecondary }]}>{requests.length} waiting</Text> : null}
+          <Text style={[text.h2, { color: C?.text, flex: 1 }]}>Requests</Text>
+          {requests.length > 0 ? <Text style={[text.bodySm, { color: C?.textSecondary }]}>{requests.length} waiting</Text> : null}
         </View>
 
         {isError ? (
@@ -156,37 +156,37 @@ export default function TransactionRequestsPage() {
           requests.map((request) => {
             const meta = SOURCE_META[request.sourceType];
             return (
-              <View key={request._id} style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }, elevation(C, dark).card]}>
+              <View key={request._id} style={[styles.card, { backgroundColor: C?.surface, borderColor: C?.border }, elevation(C, dark).card]}>
                 <View style={styles.cardTop}>
-                  <View style={[styles.icon, { backgroundColor: C.accentDim }]}>
-                    <Ionicons name={meta.icon} size={14} color={C.accentText} />
+                  <View style={[styles.icon, { backgroundColor: C?.accentDim }]}>
+                    <Ionicons name={meta.icon} size={14} color={C?.accentText} />
                   </View>
-                  <Text style={[text.caption, { color: C.textSecondary, flex: 1 }]} numberOfLines={1}>
+                  <Text style={[text.caption, { color: C?.textSecondary, flex: 1 }]} numberOfLines={1}>
                     bikelog · {request.sourceType}
                   </Text>
-                  <Text style={[text.caption, { color: C.textMuted }]}>{format(new Date(request.occurredAt), "EEE d MMM, HH:mm")}</Text>
+                  <Text style={[text.caption, { color: C?.textMuted }]}>{format(new Date(request.occurredAt), "EEE d MMM, HH:mm")}</Text>
                 </View>
 
                 <View style={styles.titleRow}>
-                  <Text style={[text.bodyMd, { color: C.text, flex: 1 }]} numberOfLines={1}>
+                  <Text style={[text.bodyMd, { color: C?.text, flex: 1 }]} numberOfLines={1}>
                     {request.title}
                   </Text>
-                  <Text style={[text.bodyMd, { color: C.expense }]}>−৳{fmt(request.amount)}</Text>
+                  <Text style={[text.bodyMd, { color: C?.expense }]}>−৳{fmt(request.amount)}</Text>
                 </View>
                 {request.description ? (
-                  <Text style={[text.bodySm, { color: C.textSecondary }]} numberOfLines={2}>
+                  <Text style={[text.bodySm, { color: C?.textSecondary }]} numberOfLines={2}>
                     {request.description}
                   </Text>
                 ) : null}
 
                 <View style={styles.actionsRow}>
                   <TouchableOpacity onPress={() => handleReject(request)} style={styles.rejectBtn}>
-                    <Ionicons name="close" size={16} color={C.textSecondary} />
-                    <Text style={[text.bodySm, { color: C.textSecondary }]}>Reject</Text>
+                    <Ionicons name="close" size={16} color={C?.textSecondary} />
+                    <Text style={[text.bodySm, { color: C?.textSecondary }]}>Reject</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setEditRequest(request)} style={[styles.reviewBtn, { borderColor: C.accent }]}>
-                    <Text style={[text.bodySm, { color: C.accent }]}>Review</Text>
-                    <Ionicons name="arrow-forward" size={15} color={C.accent} />
+                  <TouchableOpacity onPress={() => setEditRequest(request)} style={[styles.reviewBtn, { borderColor: C?.accent }]}>
+                    <Text style={[text.bodySm, { color: C?.accent }]}>Review</Text>
+                    <Ionicons name="arrow-forward" size={15} color={C?.accent} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -201,7 +201,7 @@ export default function TransactionRequestsPage() {
           setOpen={(val) => !val && setEditRequest(null)}
           initialValue={editRequest}
           onAccept={handleModalAccept}
-          loading={acceptMutation.isPending}
+          loading={acceptMutation?.isPending}
         />
       )}
     </SafeAreaView>

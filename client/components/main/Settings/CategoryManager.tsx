@@ -29,31 +29,31 @@ export default function CategoryManager() {
   return (
     <View>
       <View style={styles.headerRow}>
-        <Text style={[text.kicker, { color: C.textSecondary }]}>Categories{categories.length ? ` · ${categories.length}` : ""}</Text>
+        <Text style={[text.kicker, { color: C?.textSecondary }]}>Categories{categories.length ? ` · ${categories.length}` : ""}</Text>
         <TouchableOpacity onPress={openCreate} style={styles.newBtn}>
-          <Ionicons name="add" size={16} color={C.accent} />
-          <Text style={[text.bodySm, { color: C.accent }]}>New</Text>
+          <Ionicons name="add" size={16} color={C?.accent} />
+          <Text style={[text.bodySm, { color: C?.accent }]}>New</Text>
         </TouchableOpacity>
       </View>
 
       {!isLoading && categories.length === 0 ? (
         <EmptyState title="No categories yet" subtitle="Categories group your spending on Today, Activity and Budgets. Everything without one counts as Uncategorized." icon="pricetags-outline" />
       ) : (
-        <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }]}>
+        <View style={[styles.card, { backgroundColor: C?.surface, borderColor: C?.border }]}>
           {categories.map((category, i) => (
             <TouchableOpacity
               key={category._id}
               onPress={() => openEdit(category)}
               activeOpacity={0.7}
-              style={[styles.row, i !== categories.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
+              style={[styles.row, i !== categories.length - 1 && { borderBottomWidth: 1, borderBottomColor: C?.divider }]}
             >
-              <View style={[styles.icon, { backgroundColor: C.accentDim }]}>
-                <MaterialCommunityIcons name={(category.icon as any) ?? "shape"} size={16} color={C.accentText} />
+              <View style={[styles.icon, { backgroundColor: C?.accentDim }]}>
+                <MaterialCommunityIcons name={(category.icon as any) ?? "shape"} size={16} color={C?.accentText} />
               </View>
-              <Text style={[text.body, { color: C.text, flex: 1 }]} numberOfLines={1}>
+              <Text style={[text.body, { color: C?.text, flex: 1 }]} numberOfLines={1}>
                 {category.name}
               </Text>
-              <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
+              <Ionicons name="chevron-forward" size={16} color={C?.textMuted} />
             </TouchableOpacity>
           ))}
         </View>

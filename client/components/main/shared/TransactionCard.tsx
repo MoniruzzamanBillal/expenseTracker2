@@ -46,7 +46,7 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
   const removePendingTransaction = useRemovePendingTransaction();
 
   const time = transactionData?.createdAt
-    ? new Date(transactionData.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    ? new Date(transactionData?.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
     : "";
   const categoryIcon = transactionData?.category?.icon ?? null;
   const categoryName = transactionData?.category?.name ?? null;
@@ -73,28 +73,28 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => setModalOpen(true)}
-          style={[styles.row, { borderBottomColor: C.divider, borderBottomWidth: isLast ? 0 : 1, opacity: 0.85 }]}
+          style={[styles.row, { borderBottomColor: C?.divider, borderBottomWidth: isLast ? 0 : 1, opacity: 0.85 }]}
         >
-          <View style={[styles.uncatIcon, { borderColor: C.border }]}>
-            <MaterialCommunityIcons name="clock-outline" size={18} color={C.textMuted} />
+          <View style={[styles.uncatIcon, { borderColor: C?.border }]}>
+            <MaterialCommunityIcons name="clock-outline" size={18} color={C?.textMuted} />
           </View>
           <View style={styles.info}>
-            <Text style={[text.bodyMd, { color: C.text }]} numberOfLines={1}>
+            <Text style={[text.bodyMd, { color: C?.text }]} numberOfLines={1}>
               {transactionData?.title}
             </Text>
             <View style={styles.metaRow}>
-              <Ionicons name="cloud-upload-outline" size={13} color={C.warning} />
-              <Text style={[text.caption, { color: C.warning }]}>Waiting to sync</Text>
-              <Text style={[text.caption, { color: C.textSecondary }]}>·</Text>
-              <Text style={[text.caption, { color: C.textSecondary }]} numberOfLines={1}>
+              <Ionicons name="cloud-upload-outline" size={13} color={C?.warning} />
+              <Text style={[text.caption, { color: C?.warning }]}>Waiting to sync</Text>
+              <Text style={[text.caption, { color: C?.textSecondary }]}>·</Text>
+              <Text style={[text.caption, { color: C?.textSecondary }]} numberOfLines={1}>
                 {format(new Date(transactionData?.createdAt as string), "d MMM")}
               </Text>
             </View>
           </View>
           <TouchableOpacity onPress={handleDeletePending} hitSlop={8} style={{ padding: 4 }}>
-            <Ionicons name="trash-outline" size={16} color={C.textMuted} />
+            <Ionicons name="trash-outline" size={16} color={C?.textMuted} />
           </TouchableOpacity>
-          <Text style={[text.amount, { color: isIncome ? C.income : C.expense }]}>
+          <Text style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}>
             {isIncome ? "+" : "−"}
             <Text style={{ opacity: 0.75 }}>৳</Text>
             {fmt(transactionData?.amount)}
@@ -108,7 +108,7 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
 
   const handleDeleteTransaction = async () => {
     try {
-      const result = await patchMutation.mutateAsync({
+      const result = await patchMutation?.mutateAsync({
         url: `/transactions/delete-transaction/${transactionData?._id}`,
         payload: transactionData,
       });
@@ -130,9 +130,9 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
   };
 
   const renderLeftActions = (_progress: any, dragX: any) => {
-    const scale = dragX.interpolate({ inputRange: [0, 100], outputRange: [0, 1], extrapolate: "clamp" });
+    const scale = dragX?.interpolate({ inputRange: [0, 100], outputRange: [0, 1], extrapolate: "clamp" });
     return (
-      <Animated.View style={[styles.leftAction, { backgroundColor: C.expenseBg, transform: [{ scale }] }]}>
+      <Animated.View style={[styles.leftAction, { backgroundColor: C?.expenseBg, transform: [{ scale }] }]}>
         <TouchableOpacity
           activeOpacity={0.6}
           onPress={() => {
@@ -140,17 +140,17 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
             confirmDelete();
           }}
         >
-          <Ionicons name="trash-outline" size={18} color={C.expense} />
-          <Text style={[text.caption, { color: C.expense, marginTop: 2 }]}>Delete</Text>
+          <Ionicons name="trash-outline" size={18} color={C?.expense} />
+          <Text style={[text.caption, { color: C?.expense, marginTop: 2 }]}>Delete</Text>
         </TouchableOpacity>
       </Animated.View>
     );
   };
 
   const renderRightActions = (_progress: any, dragX: any) => {
-    const scale = dragX.interpolate({ inputRange: [-100, 0], outputRange: [1, 0], extrapolate: "clamp" });
+    const scale = dragX?.interpolate({ inputRange: [-100, 0], outputRange: [1, 0], extrapolate: "clamp" });
     return (
-      <Animated.View style={[styles.rightAction, { backgroundColor: C.accentDim, transform: [{ scale }] }]}>
+      <Animated.View style={[styles.rightAction, { backgroundColor: C?.accentDim, transform: [{ scale }] }]}>
         <TouchableOpacity
           activeOpacity={0.6}
           onPress={() => {
@@ -158,8 +158,8 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
             setModalOpen(true);
           }}
         >
-          <Ionicons name="create-outline" size={18} color={C.accentText} />
-          <Text style={[text.caption, { color: C.accentText, marginTop: 2 }]}>Edit</Text>
+          <Ionicons name="create-outline" size={18} color={C?.accentText} />
+          <Text style={[text.caption, { color: C?.accentText, marginTop: 2 }]}>Edit</Text>
         </TouchableOpacity>
       </Animated.View>
     );
@@ -177,33 +177,33 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
           if (swipeableRef.current) onSwipeOpen?.(swipeableRef.current);
         }}
       >
-        <View style={[styles.row, { borderBottomColor: C.divider, borderBottomWidth: isLast ? 0 : 1, backgroundColor: C.background }]}>
+        <View style={[styles.row, { borderBottomColor: C?.divider, borderBottomWidth: isLast ? 0 : 1, backgroundColor: C?.background }]}>
           {categoryIcon ? (
-            <View style={[styles.catIcon, { backgroundColor: C.accentDim }]}>
-              <MaterialCommunityIcons name={categoryIcon as any} size={19} color={C.accentText} />
+            <View style={[styles.catIcon, { backgroundColor: C?.accentDim }]}>
+              <MaterialCommunityIcons name={categoryIcon as any} size={19} color={C?.accentText} />
             </View>
           ) : (
-            <View style={[styles.uncatIcon, { borderColor: C.border }]}>
-              <MaterialCommunityIcons name="shape-outline" size={18} color={C.textMuted} />
+            <View style={[styles.uncatIcon, { borderColor: C?.border }]}>
+              <MaterialCommunityIcons name="shape-outline" size={18} color={C?.textMuted} />
             </View>
           )}
           <View style={styles.info}>
             <View style={styles.titleRow}>
-              <Text style={[text.bodyMd, { color: C.text, flexShrink: 1 }]} numberOfLines={1}>
+              <Text style={[text.bodyMd, { color: C?.text, flexShrink: 1 }]} numberOfLines={1}>
                 {transactionData?.title}
               </Text>
-              {transactionData?.receiptFileUrl ? <Ionicons name="attach-outline" size={15} color={C.textSecondary} /> : null}
+              {transactionData?.receiptFileUrl ? <Ionicons name="attach-outline" size={15} color={C?.textSecondary} /> : null}
             </View>
-            <Text style={[text.caption, { color: C.textSecondary }]} numberOfLines={1}>
+            <Text style={[text.caption, { color: C?.textSecondary }]} numberOfLines={1}>
               {meta}
             </Text>
           </View>
           {transactionData?.receiptFileUrl ? (
             <TouchableOpacity onPress={() => setReceiptViewerOpen(true)} style={styles.receiptIconBtn} hitSlop={8}>
-              <Ionicons name="image-outline" size={16} color={C.textSecondary} />
+              <Ionicons name="image-outline" size={16} color={C?.textSecondary} />
             </TouchableOpacity>
           ) : null}
-          <Text style={[text.amount, { color: isIncome ? C.income : C.expense }]}>
+          <Text style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}>
             {isIncome ? "+" : "−"}
             <Text style={{ opacity: 0.75 }}>৳</Text>
             {fmt(transactionData?.amount)}
@@ -216,7 +216,7 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
           visible={receiptViewerOpen}
           imageUrl={transactionData.receiptFileUrl}
           onDismiss={() => setReceiptViewerOpen(false)}
-          fileName={transactionData.receiptFileOriginalName}
+          fileName={transactionData?.receiptFileOriginalName}
         />
       ) : null}
 

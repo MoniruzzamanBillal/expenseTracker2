@@ -16,7 +16,7 @@ export default function CategoryPicker({ value, onChange }: TProps) {
   const categories = data?.data ?? [];
 
   if (categories.length === 0) {
-    return <Text style={[text.caption, { color: C.textMuted, marginBottom: spacing.base }]}>No categories yet — add one from Settings.</Text>;
+    return <Text style={[text.caption, { color: C?.textMuted, marginBottom: spacing.base }]}>No categories yet — add one from Settings.</Text>;
   }
 
   return (
@@ -27,10 +27,10 @@ export default function CategoryPicker({ value, onChange }: TProps) {
     >
       <TouchableOpacity
         onPress={() => onChange(null)}
-        style={[styles.chip, { borderColor: value === null ? C.accent : C.border, backgroundColor: value === null ? C.accentDim : "transparent" }]}
+        style={[styles.chip, { borderColor: value === null ? C?.accent : C?.border, backgroundColor: value === null ? C?.accentDim : "transparent" }]}
       >
-        <MaterialCommunityIcons name="shape-outline" size={16} color={value === null ? C.accentText : C.textSecondary} />
-        <Text style={[text.bodySm, { color: value === null ? C.accentText : C.textSecondary }]}>None</Text>
+        <MaterialCommunityIcons name="shape-outline" size={16} color={value === null ? C?.accentText : C?.textSecondary} />
+        <Text style={[text.bodySm, { color: value === null ? C?.accentText : C?.textSecondary }]}>None</Text>
       </TouchableOpacity>
       {categories.map((cat) => {
         const active = value === cat._id;
@@ -38,10 +38,10 @@ export default function CategoryPicker({ value, onChange }: TProps) {
           <TouchableOpacity
             key={cat._id}
             onPress={() => onChange(cat._id)}
-            style={[styles.chip, { borderColor: active ? C.accent : C.border, backgroundColor: active ? C.accentDim : "transparent" }]}
+            style={[styles.chip, { borderColor: active ? C?.accent : C?.border, backgroundColor: active ? C?.accentDim : "transparent" }]}
           >
-            {cat.icon ? <MaterialCommunityIcons name={cat.icon as any} size={16} color={active ? C.accentText : C.textSecondary} /> : null}
-            <Text style={[text.bodySm, { color: active ? C.accentText : C.textSecondary }]}>{cat.name}</Text>
+            {cat.icon ? <MaterialCommunityIcons name={cat.icon as any} size={16} color={active ? C?.accentText : C?.textSecondary} /> : null}
+            <Text style={[text.bodySm, { color: active ? C?.accentText : C?.textSecondary }]}>{cat.name}</Text>
           </TouchableOpacity>
         );
       })}

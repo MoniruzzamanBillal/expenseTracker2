@@ -27,13 +27,13 @@ function AddTabIcon() {
         height: 38,
         borderRadius: radius.card,
         borderWidth: 1,
-        borderColor: C.accent,
-        backgroundColor: C.accentDim,
+        borderColor: C?.accent,
+        backgroundColor: C?.accentDim,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      <Ionicons name="add" size={22} color={C.accent} />
+      <Ionicons name="add" size={22} color={C?.accent} />
     </View>
   );
 }
@@ -43,11 +43,11 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
   const tabBarStyle = {
-    backgroundColor: C.background,
-    borderTopColor: C.border,
+    backgroundColor: C?.background,
+    borderTopColor: C?.border,
     borderTopWidth: 1,
-    height: spacing.tabBar + insets.bottom,
-    paddingBottom: insets.bottom + (Platform.OS === "ios" ? 8 : 10),
+    height: spacing.tabBar + insets?.bottom,
+    paddingBottom: insets?.bottom + (Platform.OS === "ios" ? 8 : 10),
     paddingTop: 10,
   };
 
@@ -57,8 +57,8 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
           tabBarStyle,
-          tabBarActiveTintColor: C.accent,
-          tabBarInactiveTintColor: C.textMuted,
+          tabBarActiveTintColor: C?.accent,
+          tabBarInactiveTintColor: C?.textMuted,
           tabBarLabelStyle: {
             fontSize: 10,
             fontFamily: fontFamily.medium,

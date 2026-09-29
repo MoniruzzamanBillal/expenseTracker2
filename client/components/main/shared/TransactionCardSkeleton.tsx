@@ -13,21 +13,21 @@ const ROWS: { w: DimensionValue; o: number }[] = [
 export default function TransactionCardSkeleton() {
   const C = useTheme();
   return (
-    <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }]}>
+    <View style={[styles.card, { backgroundColor: C?.surface, borderColor: C?.border }]}>
       {ROWS.map((row, i) => (
         <View
           key={i}
           style={[
             styles.row,
-            { borderBottomColor: C.divider, borderBottomWidth: i === ROWS.length - 1 ? 0 : 1, opacity: row.o },
+            { borderBottomColor: C?.divider, borderBottomWidth: i === ROWS.length - 1 ? 0 : 1, opacity: row?.o },
           ]}
         >
-          <View style={[styles.icon, { backgroundColor: C.skeleton }]} />
+          <View style={[styles.icon, { backgroundColor: C?.skeleton }]} />
           <View style={{ flex: 1, gap: 7 }}>
-            <View style={[styles.bar, { backgroundColor: C.skeleton, width: row.w, height: 11 }]} />
-            <View style={[styles.bar, { backgroundColor: C.skeleton, width: 84, height: 9 }]} />
+            <View style={[styles.bar, { backgroundColor: C?.skeleton, width: row?.w, height: 11 }]} />
+            <View style={[styles.bar, { backgroundColor: C?.skeleton, width: 84, height: 9 }]} />
           </View>
-          <View style={[styles.bar, { backgroundColor: C.skeleton, width: 56, height: 12 }]} />
+          <View style={[styles.bar, { backgroundColor: C?.skeleton, width: 56, height: 12 }]} />
         </View>
       ))}
     </View>

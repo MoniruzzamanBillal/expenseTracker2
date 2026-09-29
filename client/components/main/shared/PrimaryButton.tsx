@@ -29,19 +29,19 @@ export default function PrimaryButton({
   height = spacing.button,
 }: TProps) {
   const C = useTheme();
-  const accentColor = color ?? C.accent;
+  const accentColor = color ?? C?.accent;
 
   const variantStyle: ViewStyle =
     variant === "emphasis"
       ? { backgroundColor: accentColor, borderColor: accentColor }
       : variant === "destructive"
-        ? { backgroundColor: "transparent", borderColor: `${C.expense}8c` }
+        ? { backgroundColor: "transparent", borderColor: `${C?.expense}8c` }
         : variant === "ghost"
           ? { backgroundColor: "transparent", borderWidth: 0 }
           : { backgroundColor: "transparent", borderColor: accentColor };
 
   const labelColor =
-    variant === "emphasis" ? C.onAccent : variant === "destructive" ? C.expense : variant === "ghost" ? C.textSecondary : accentColor;
+    variant === "emphasis" ? C?.onAccent : variant === "destructive" ? C?.expense : variant === "ghost" ? C?.textSecondary : accentColor;
 
   return (
     <TouchableOpacity

@@ -39,7 +39,7 @@ export default function PendingTransactionEditModal({
     initialValue?.description || null,
   );
 
-  const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
+  const accentColor = type === TransactionTypeConst.income ? C?.income : C?.expense;
 
   const handleTextChange = (text: string) => {
     const regex = /^\d+(\.\d{0,2})?$/;
@@ -126,7 +126,7 @@ export default function PendingTransactionEditModal({
         extraKeyboardSpace={10}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[text.h3, { color: C.text, marginBottom: spacing.md }]}>Edit queued entry</Text>
+        <Text style={[text.h3, { color: C?.text, marginBottom: spacing.md }]}>Edit queued entry</Text>
 
         <TypeToggle value={type} onChange={setType} />
 
