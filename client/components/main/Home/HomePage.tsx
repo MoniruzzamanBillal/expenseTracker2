@@ -14,7 +14,9 @@ import CategoryBreakdown, { TBreakdownEntry } from "../shared/CategoryBreakdown"
 import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
 import TransactionCard from "../shared/TransactionCard";
+import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
+import { formatTotal as fmt } from "@/utils/formatAmount";
 
 type TData = {
   expense: number;
@@ -22,8 +24,6 @@ type TData = {
   transactions: TTransaction[];
   categoryBreakdown: TBreakdownEntry[];
 };
-
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
 function initials(name?: string | null) {
   if (!name) return "?";
@@ -111,7 +111,15 @@ export default function HomePage() {
         </View>
 
         {isError ? (
-          <ErrorState title="Couldn't load today" message={(error as any)?.message ?? "Network Error"} onRetry={refetch} />
+          <>
+            <ErrorState title="Couldn't load today" message={(error as any)?.message ?? "Network Error"} onRetry={refetch} />
+            {/* Also rendered here, not just in the loaded branch below: being
+                offline is exactly when the queue has something in it *and*
+                when daily-transaction fails, so Sync now has to stay reachable
+                on the error screen too. It self-hides on an empty queue, so
+                only one of the two ever shows anything. */}
+            <PendingSyncBanner />
+          </>
         ) : isLoading ? (
           <TransactionCardSkeleton />
         ) : (
@@ -145,7 +153,7 @@ export default function HomePage() {
                 <View>
                   <View style={styles.inOutLabelRow}>
                     <View style={[styles.dot, { backgroundColor: C.expense }]} />
-                    <Text style={[text.caption, { color: C.textSecondary }]}>Out</Text>
+                    <Text style={[text.caption, { color: C.textSecondary }]}>Expense</Text>
                   </View>
                   <Text style={[text.amountMd, { color: C.expense }]}>−৳{fmt(expense)}</Text>
                 </View>
@@ -153,6 +161,8 @@ export default function HomePage() {
             </View>
 
             {categoryBreakdown.length > 0 && <CategoryBreakdown data={categoryBreakdown} selected={null} onSelect={() => {}} />}
+
+            <PendingSyncBanner />
 
             <View style={styles.entriesHead}>
               <Text style={[text.kicker, { color: C.textSecondary }]}>Entries</Text>

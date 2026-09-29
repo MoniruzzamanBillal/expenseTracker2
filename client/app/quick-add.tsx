@@ -4,7 +4,7 @@ import Keypad from "@/components/main/shared/Keypad";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import TypeToggle from "@/components/main/shared/TypeToggle";
 import { TransactionTypeConst, TTransactionType } from "@/constants/TransactionType.constant";
-import { usePost } from "@/hooks/useApi";
+import { usePostOutcome } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { radius, spacing, text, useTheme } from "@/theme";
 import AuthGuard from "@/utils/AuthGuard";
@@ -38,7 +38,7 @@ function QuickAddSheet() {
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
 
-  const addTransactionMutation = usePost([
+  const addTransactionMutation = usePostOutcome([
     ["daily-transaction"],
     ["monthly-transaction"],
     ["weekly-transaction"],
@@ -60,19 +60,23 @@ function QuickAddSheet() {
     };
 
     try {
-      const result = await addTransactionMutation?.mutateAsync({
+      // categoryId omitted rather than null when nothing is picked — the
+      // server's create schema rejects an explicit null (spec 28).
+      const outcome = await addTransactionMutation?.mutateAsync({
         url: "/transactions/new-transaction",
-        payload: { ...basePayload, categoryId },
+        payload: { ...basePayload, ...(categoryId ? { categoryId } : {}) },
       });
 
-      if (result?.success) {
-        Toast.show({ type: "success", text1: result?.message, position: "top" });
+      if (outcome?.ok) {
+        Toast.show({ type: "success", text1: outcome.body?.message, position: "top" });
         close();
-      } else {
+      } else if (outcome?.offline) {
         await enqueuePendingTransactions?.([{ payload: basePayload, origin: "manual" }]);
         Toast.show({ type: "success", text1: "Saved offline", text2: "It will sync when you're back online", position: "top" });
         close();
       }
+      // A server rejection stays on the sheet with its values — the interceptor
+      // has already shown why. Only a no-response failure is an offline save.
     } catch (error) {
       console.log("error = ", error);
       Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });

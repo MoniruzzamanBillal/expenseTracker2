@@ -12,6 +12,7 @@ import Toast from "react-native-toast-message";
 import PendingTransactionEditModal from "./PendingTransactionEditModal";
 import ReceiptViewerModal from "./ReceiptViewerModal";
 import UpdateTransactionModal from "./UpdateTransactionModal";
+import { formatAmount as fmt } from "@/utils/formatAmount";
 
 const INVALIDATE_KEYS = [
   ["daily-transaction"],
@@ -20,8 +21,6 @@ const INVALIDATE_KEYS = [
   ["yearly-transaction"],
   ["budgets"],
 ];
-
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
 type TProps = {
   transactionData: TTransaction;

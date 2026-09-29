@@ -12,8 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import BudgetFormModal from "./BudgetFormModal";
 import BudgetProgressBar from "./BudgetProgressBar";
+import { formatTotal as fmt } from "@/utils/formatAmount";
 
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 const NEAR_LIMIT_THRESHOLD = 80;
 const CURRENT_MONTH_LABEL = new Date().toLocaleDateString("en-US", { month: "long" });
 

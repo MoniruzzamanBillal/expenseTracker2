@@ -1,4 +1,12 @@
-import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from "@/utils/api";
+import {
+  apiDelete,
+  apiGet,
+  apiPatch,
+  apiPost,
+  apiPostOutcome,
+  apiPut,
+  TWriteOutcome,
+} from "@/utils/api";
 import {
   useMutation,
   useQuery,
@@ -53,6 +61,30 @@ export const usePost = (invalidateQueriesKeys?: string[][]) => {
       //   error?.response?.data?.message || error.message || "Failed to Add.",
       // );
       throw error;
+    },
+  });
+};
+
+// Same shape as usePost, but resolves to a TWriteOutcome so the caller can tell
+// a server rejection from a no-response failure (see utils/api.ts). Used by the
+// save paths that queue offline, which must not queue a request the server
+// actually answered. Invalidates only on a real success.
+export const usePostOutcome = (invalidateQueriesKeys?: string[][]) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: {
+      url: string;
+      payload: Record<string, unknown> | FormData | any;
+    }): Promise<TWriteOutcome> => {
+      return apiPostOutcome(params?.url, params?.payload);
+    },
+    onSuccess: (outcome) => {
+      if (!outcome?.ok) return;
+
+      invalidateQueriesKeys?.forEach((key) => {
+        queryClient?.invalidateQueries({ queryKey: key });
+      });
     },
   });
 };
