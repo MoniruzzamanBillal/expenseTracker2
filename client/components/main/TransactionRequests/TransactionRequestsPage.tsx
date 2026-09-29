@@ -1,3 +1,4 @@
+import ConfirmModal from "@/components/main/shared/ConfirmModal";
 import EmptyState from "@/components/main/shared/EmptyState";
 import ErrorState from "@/components/main/shared/ErrorState";
 import TransactionCardSkeleton from "@/components/main/shared/TransactionCardSkeleton";
@@ -15,7 +16,6 @@ import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -42,6 +42,7 @@ export default function TransactionRequestsPage() {
   const dark = C?.statusBarStyle === "light";
   const router = useRouter();
   const [editRequest, setEditRequest] = useState<TTransactionRequest | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<TTransactionRequest | null>(null);
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useFetchTransactionRequests();
 
@@ -101,23 +102,27 @@ export default function TransactionRequestsPage() {
     }
   };
 
-  const rejectRequest = async (id: string) => {
+  const confirmReject = async () => {
+    if (!rejectTarget) return;
+
     try {
-      const result = await rejectMutation?.mutateAsync({ url: `/transaction-requests/${id}/reject`, payload: {} });
+      const result = await rejectMutation?.mutateAsync({
+        url: `/transaction-requests/${rejectTarget._id}/reject`,
+        payload: {},
+      });
+
       if (result?.success) {
-        Toast.show({ type: "success", text1: result?.message || "Rejected", position: "top" });
+        Toast.show({ type: "success", text1: result?.message || "Request rejected", position: "top" });
       }
+      // A failed call already surfaced its own toast from the axios response
+      // interceptor (which resolves instead of rejecting — known-issues.md#FETCH-1),
+      // so there is nothing to add here beyond leaving the row in place.
     } catch (error) {
       console.log("error = ", error);
       Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
+    } finally {
+      setRejectTarget(null);
     }
-  };
-
-  const handleReject = (request: TTransactionRequest) => {
-    Alert.alert("Reject this request?", request.title, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Reject", style: "destructive", onPress: () => rejectRequest(request._id) },
-    ]);
   };
 
   const handleModalAccept = async (edits: { title: string; description: string; amount: number; categoryId: string | null }) => {
@@ -180,7 +185,7 @@ export default function TransactionRequestsPage() {
                 ) : null}
 
                 <View style={styles.actionsRow}>
-                  <TouchableOpacity onPress={() => handleReject(request)} style={styles.rejectBtn}>
+                  <TouchableOpacity onPress={() => setRejectTarget(request)} style={styles.rejectBtn}>
                     <Ionicons name="close" size={16} color={C?.textSecondary} />
                     <Text style={[text.bodySm, { color: C?.textSecondary }]}>Reject</Text>
                   </TouchableOpacity>
@@ -194,6 +199,20 @@ export default function TransactionRequestsPage() {
           })
         )}
       </ScrollView>
+
+      <ConfirmModal
+        visible={!!rejectTarget}
+        title="Reject this request?"
+        message={
+          rejectTarget
+            ? `"${rejectTarget.title}" will be removed from your inbox and won't be added as a transaction.`
+            : undefined
+        }
+        confirmLabel="Reject"
+        loading={rejectMutation?.isPending}
+        onConfirm={confirmReject}
+        onCancel={() => setRejectTarget(null)}
+      />
 
       {editRequest && (
         <TransactionRequestEditModal
