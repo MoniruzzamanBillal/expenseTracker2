@@ -20,6 +20,7 @@ import {
   Keyboard,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -210,15 +211,19 @@ export default function AddTransactionPage({
 
         <View style={[styles.titleField, { backgroundColor: C.surface, borderColor: titleError ? C.expense : C.border }]}>
           <Ionicons name="text-outline" size={17} color={C.textMuted} />
-          <FormField
-            label=""
+          {/* A bare TextInput, not FormField: this row already draws the border,
+              background and height that FormField's own wrapper would duplicate,
+              and FormField's root has no flex, so nested in a row it collapsed to
+              its content width instead of filling the field. */}
+          <TextInput
             value={title || ""}
             onChangeText={(v) => {
               setTitle(v);
               if (v.trim()) setTitleError(false);
             }}
             placeholder="What was it for?"
-            inputStyle={{ height: 46, paddingHorizontal: 0 }}
+            placeholderTextColor={C.placeholder}
+            style={[styles.titleInput, text.body, { color: C.text }]}
           />
         </View>
         {titleError ? (
@@ -305,6 +310,7 @@ const styles = StyleSheet.create({
   amountRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   currencySymbol: { fontSize: 28 },
   titleField: { flexDirection: "row", alignItems: "center", gap: spacing.sm, height: 46, borderRadius: radius.card, borderWidth: 1, paddingHorizontal: spacing.md },
+  titleInput: { flex: 1, height: "100%", padding: 0 },
   errorRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: -spacing.xs },
   pillRow: { flexDirection: "row", gap: spacing.sm },
   pill: {
