@@ -223,6 +223,7 @@ export default function AddTransactionPage({
             }}
             placeholder="What was it for?"
             placeholderTextColor={C.placeholder}
+            underlineColorAndroid="transparent"
             style={[styles.titleInput, text.body, { color: C.text }]}
           />
         </View>
@@ -310,7 +311,10 @@ const styles = StyleSheet.create({
   amountRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   currencySymbol: { fontSize: 28 },
   titleField: { flexDirection: "row", alignItems: "center", gap: spacing.sm, height: 46, borderRadius: radius.card, borderWidth: 1, paddingHorizontal: spacing.md },
-  titleInput: { flex: 1, height: "100%", padding: 0 },
+  // outlineWidth kills the browser's focus ring on the web target (react-native-web
+  // doesn't reset it); underlineColorAndroid="transparent" on the input does the
+  // same for Android's focus underline. The row's own border is the focus affordance.
+  titleInput: { flex: 1, height: "100%", padding: 0, outlineWidth: 0 },
   errorRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: -spacing.xs },
   pillRow: { flexDirection: "row", gap: spacing.sm },
   pill: {
