@@ -1,4 +1,4 @@
-import { usePost } from "@/hooks/useApi";
+import { usePost, usePostOutcome } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { TransactionTypeConst } from "@/constants/TransactionType.constant";
 import { TTransaction } from "@/types/Transaction.tyes";
@@ -39,7 +39,7 @@ export default function SmartAddPage() {
   const [parseError, setParseError] = useState<string | null>(null);
 
   const parseMutation = usePost([[""]]);
-  const saveMutation = usePost([
+  const saveMutation = usePostOutcome([
     ["daily-transaction"],
     ["monthly-transaction"],
     ["weekly-transaction"],
@@ -92,23 +92,25 @@ export default function SmartAddPage() {
     if (!drafts?.length) return;
 
     try {
-      // spec 22 / G2 — include categoryId in the online save payload
-      const result = await saveMutation?.mutateAsync({
+      // spec 22 / G2 — include categoryId in the online save payload, but omit
+      // the key entirely on an uncategorized draft rather than sending null
+      // (spec 28).
+      const outcome = await saveMutation?.mutateAsync({
         url: "/transactions/many-transaction",
         payload: drafts.map((d) => ({
           type: d.type,
           title: d.title,
           amount: d.amount,
           description: d.description ?? " ",
-          categoryId: d.categoryId ?? null,
+          ...(d.categoryId ? { categoryId: d.categoryId } : {}),
         })),
       });
 
-      if (result?.success) {
+      if (outcome?.ok) {
         setSavedLines(drafts.map((d) => ({ title: d.title, amount: d.amount, type: d.type })));
         setPrompt(null);
         setDrafts(null);
-      } else {
+      } else if (outcome?.offline) {
         // Offline-queue path intentionally omits categoryId (spec 13 scope / spec 22 scope).
         const batchId = createBatchId();
 
@@ -130,6 +132,9 @@ export default function SmartAddPage() {
         setDrafts(null);
         Toast.show({ type: "success", text1: "Saved locally", text2: "It will sync when you're back online", position: "top" });
       }
+      // A server rejection keeps the drafts on screen so they can be corrected;
+      // the interceptor has already toasted why. Only a no-response failure
+      // queues locally.
     } catch (error) {
       console.log("error = ", error);
       Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });

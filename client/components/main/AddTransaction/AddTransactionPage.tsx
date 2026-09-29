@@ -7,7 +7,7 @@ import {
   TransactionTypeConst,
   TTransactionType,
 } from "@/constants/TransactionType.constant";
-import { usePost, usePut } from "@/hooks/useApi";
+import { usePostOutcome, usePut } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,7 +56,7 @@ export default function AddTransactionPage({
 
   const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
 
-  const addTransactionMutation = usePost([
+  const addTransactionMutation = usePostOutcome([
     ["daily-transaction"],
     ["monthly-transaction"],
     ["weekly-transaction"],
@@ -137,12 +137,16 @@ export default function AddTransactionPage({
         description: description?.trim() || " ",
       };
 
-      const result = await addTransactionMutation.mutateAsync({
+      // Omitted rather than sent as null when nothing is picked: the server's
+      // createTransactionSchema has categoryId as .optional(), which admits
+      // undefined but not null, so an explicit null is a 400 (spec 28).
+      const outcome = await addTransactionMutation.mutateAsync({
         url: "/transactions/new-transaction",
-        payload: { ...basePayload, categoryId },
+        payload: { ...basePayload, ...(categoryId ? { categoryId } : {}) },
       });
 
-      if (result?.success) {
+      if (outcome?.ok) {
+        const result = outcome.body;
         const createdId = result?.data?._id;
         if (receipt && createdId) {
           try {
@@ -166,15 +170,17 @@ export default function AddTransactionPage({
         resetForm();
         Toast.show({ type: "success", text1: result?.message, position: "top" });
         setTimeout(() => router.push("/"), 100);
-      } else {
-        // The save didn't reach the server (offline or a server-side failure —
-        // both resolve here rather than throwing, see known-issues.md#FETCH-1).
-        // Queue it locally instead of losing it.
+      } else if (outcome?.offline) {
+        // No response at all — offline, DNS, or the timeout. Queue it rather
+        // than lose it.
         await enqueuePendingTransactions([{ payload: basePayload, origin: "manual" }]);
         resetForm();
         Toast.show({ type: "success", text1: "Saved offline", text2: "It will sync when you're back online", position: "top" });
         setTimeout(() => router.push("/"), 100);
       }
+      // A server that answered with an error is not an offline save: the axios
+      // interceptor has already toasted its message, and the form keeps what
+      // was typed so it can be corrected and resubmitted.
     } catch (error) {
       console.log("error = ", error);
       Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
