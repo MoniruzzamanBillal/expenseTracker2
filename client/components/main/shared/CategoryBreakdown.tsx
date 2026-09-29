@@ -1,7 +1,6 @@
 import { radius, spacing, text, useTheme } from "@/theme";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export type TBreakdownEntry = {
   categoryId: string | null;
@@ -17,86 +16,79 @@ type TProps = {
   onSelect: (key: string | null) => void;
 };
 
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
-
-export default function CategoryBreakdown({
-  data,
-  selected,
-  onSelect,
-}: TProps) {
+/**
+ * Compact stacked bar + wrapped legend, ranked by expense desc, ramp c1→c5 by
+ * rank (6th+ collapse into "Other" in c5). Uncategorized always gets its own
+ * swatch, never a ramp hue, even if it ranks first. Rows are tappable when
+ * onSelect is wired (Activity's filter); Home passes a no-op for read-only.
+ */
+export default function CategoryBreakdown({ data, selected, onSelect }: TProps) {
   const C = useTheme();
 
-  const sorted = useMemo(
-    () => [...data].sort((a, b) => b.expense - a.expense),
-    [data],
-  );
+  const rows = useMemo(() => {
+    const expenseOnly = data.filter((d) => d.expense > 0).sort((a, b) => b.expense - a.expense);
+    const total = expenseOnly.reduce((sum, d) => sum + d.expense, 0);
+    if (total === 0) return [];
 
-  if (sorted.length === 0) return null;
+    const ranked = expenseOnly.slice(0, 5).map((entry, i) => ({
+      key: entry.categoryId ?? "uncategorized",
+      name: entry.name,
+      expense: entry.expense,
+      pct: Math.round((entry.expense / total) * 100),
+      color: entry.categoryId === null ? C?.uncategorized : C?.chartPalette?.[i] ?? C?.chartPalette?.[C?.chartPalette.length - 1],
+    }));
+
+    if (expenseOnly.length > 5) {
+      const otherExpense = expenseOnly.slice(5).reduce((sum, d) => sum + d.expense, 0);
+      ranked.push({
+        key: "__other",
+        name: "Other",
+        expense: otherExpense,
+        pct: Math.round((otherExpense / total) * 100),
+        color: C?.chartPalette?.[C?.chartPalette.length - 1],
+      });
+    }
+    return ranked;
+  }, [data, C]);
+
+  if (rows.length === 0) return null;
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[styles.row, { marginBottom: spacing.base }]}
-    >
-      {sorted.map((entry) => {
-        const key = entry.categoryId ?? "uncategorized";
-        const active = selected === key;
-        return (
-          <TouchableOpacity
-            key={key}
-            onPress={() => onSelect(active ? null : key)}
-            style={[
-              styles.chip,
-              {
-                borderColor: active ? C.accent : C.border,
-                backgroundColor: active ? C.accentDim : C.surface,
-              },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name={(entry.icon as any) ?? "tag-outline"}
-              size={13}
-              color={C.expense}
-            />
-            <Text
-              style={[
-                text.caption,
-                styles.tightLine,
-                { color: active ? C.accent : C.text },
-              ]}
-              numberOfLines={1}
+    <View style={[styles.card, { backgroundColor: C?.surface, borderColor: C?.border }]}>
+      <View style={styles.headRow}>
+        <Text style={[text.kicker, { color: C?.textSecondary }]}>Spent on</Text>
+      </View>
+      <View style={styles.bar}>
+        {rows.map((r) => (
+          <View key={r.key} style={{ flex: r.pct || 1, borderRadius: 2, backgroundColor: r.color }} />
+        ))}
+      </View>
+      <View style={styles.legend}>
+        {rows.map((r) => {
+          const active = selected === r.key;
+          return (
+            <TouchableOpacity
+              key={r.key}
+              onPress={() => onSelect(active ? null : r.key)}
+              activeOpacity={0.7}
+              style={[styles.legendItem, active && { backgroundColor: C?.accentDim, borderRadius: radius.sm }]}
             >
-              {entry.name}
-            </Text>
-            <Text
-              style={[text.caption, styles.tightLine, { color: C.expense }]}
-            >
-              ৳{fmt(entry.expense)}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
+              <View style={[styles.swatch, { backgroundColor: r.color }]} />
+              <Text style={[text.caption, { color: C?.textSecondary }]}>{r.name}</Text>
+              <Text style={[text.caption, { color: C?.text }]}>{r.pct}%</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    gap: spacing.xs,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: radius.full,
-    borderWidth: 0.5,
-  },
-  tightLine: {
-    lineHeight: 14,
-    includeFontPadding: false,
-  },
+  card: { borderRadius: radius.card, borderWidth: 1, padding: 12, paddingHorizontal: 14, gap: spacing.sm, marginBottom: spacing.base },
+  headRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  bar: { flexDirection: "row", gap: 2, height: 8 },
+  legend: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 2, paddingHorizontal: 4 },
+  swatch: { width: 8, height: 8, borderRadius: 2 },
 });

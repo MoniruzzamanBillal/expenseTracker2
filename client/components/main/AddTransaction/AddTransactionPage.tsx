@@ -1,18 +1,22 @@
-import CategorySelectField from "@/components/main/shared/CategorySelectField";
+import CategoryPicker from "@/components/main/shared/CategoryPicker";
 import FormField from "@/components/main/shared/FormField";
+import Keypad from "@/components/main/shared/Keypad";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import TypeToggle from "@/components/main/shared/TypeToggle";
 import {
   TransactionTypeConst,
   TTransactionType,
 } from "@/constants/TransactionType.constant";
-import { usePost } from "@/hooks/useApi";
+import { usePost, usePut } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
-import { spacing, text, useTheme } from "@/theme";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { radius, spacing, text, useTheme } from "@/theme";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   Keyboard,
   StyleSheet,
   Text,
@@ -22,6 +26,13 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+
+const fmt = (n: string) => {
+  if (!n) return "0";
+  const [whole, dec] = n.split(".");
+  const withCommas = Number(whole || 0).toLocaleString("en-IN");
+  return dec !== undefined ? `${withCommas}.${dec}` : withCommas;
+};
 
 export default function AddTransactionPage({
   initialType = TransactionTypeConst.income,
@@ -34,14 +45,15 @@ export default function AddTransactionPage({
   const router = useRouter();
 
   const [type, setType] = useState<TTransactionType>(initialType);
-  const [amount, setAmount] = useState<string | null>(null);
+  const [amount, setAmount] = useState<string>("");
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [receipt, setReceipt] = useState<{ uri: string; name: string; type: string } | null>(null);
+  const [titleError, setTitleError] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
 
-  const accentColor =
-    type === TransactionTypeConst.income ? C.income : C.expense;
+  const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
 
   const addTransactionMutation = usePost([
     ["daily-transaction"],
@@ -50,40 +62,67 @@ export default function AddTransactionPage({
     ["yearly-transaction"],
     ["budgets"],
   ]);
+  const uploadReceiptMutation = usePut([]);
 
   const enqueuePendingTransactions = useEnqueuePendingTransactions();
 
-  // * for handling the number input
-  const handleTextChange = (text: string) => {
-    const regex = /^\d+(\.\d{0,2})?$/; // Accepts integer or up to 2 decimal places
-
-    if (text === "" || regex.test(text)) {
-      setAmount(text);
-    } else {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Amount",
-        text2: "Only numeric values are allowed (e.g. 100 or 50.25)",
-      });
-      setAmount("");
-      return;
+  const pickReceiptFromLibrary = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
+    if (!result.canceled && result.assets?.[0]) {
+      const asset = result.assets[0];
+      setReceipt({ uri: asset?.uri, name: asset?.fileName ?? "receipt.jpg", type: asset?.mimeType ?? "image/jpeg" });
     }
   };
 
-  // ! for adding new transaction
+  const takeReceiptPhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
+    if (!result.canceled && result.assets?.[0]) {
+      const asset = result.assets[0];
+      setReceipt({ uri: asset?.uri, name: asset?.fileName ?? "receipt.jpg", type: asset?.mimeType ?? "image/jpeg" });
+    }
+  };
+
+  const pickReceiptPdf = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: "application/pdf" });
+    if (!result.canceled && result.assets?.[0]) {
+      const asset = result.assets[0];
+      setReceipt({ uri: asset?.uri, name: asset?.name ?? "document.pdf", type: asset?.mimeType ?? "application/pdf" });
+    }
+  };
+
+  const openReceiptSheet = () => {
+    Alert.alert("Attach receipt", "Image or PDF, up to 10 MB", [
+      { text: "Take Photo", onPress: takeReceiptPhoto },
+      { text: "Choose from Library", onPress: pickReceiptFromLibrary },
+      { text: "Choose PDF", onPress: pickReceiptPdf },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setAmount("");
+    setType(TransactionTypeConst.income);
+    setCategoryId(null);
+    setReceipt(null);
+    setTitleError(false);
+    setNoteOpen(false);
+  };
+
   const handleAddTransaction = async () => {
     Keyboard.dismiss();
 
-    const e: Record<string, string> = {};
-    if (!title?.trim()) e.title = "Title is required";
-    if (!amount?.trim()) e.amount = "Enter a valid amount";
-    setErrors(e);
-    if (Object.keys(e).length) {
-      Toast.show({
-        type: "error",
-        text1: "Missing Fields",
-        text2: "Please fill in the required fields",
-      });
+    const finalTitle = title?.trim() || null;
+    if (!finalTitle) {
+      setTitleError(true);
+    }
+    if (!amount) {
+      Toast.show({ type: "error", text1: "Enter an amount", position: "bottom" });
       return;
     }
 
@@ -92,8 +131,8 @@ export default function AddTransactionPage({
       // never carries a category (per direct user instruction, spec 13's Scope).
       const basePayload = {
         type,
-        amount: parseFloat(amount!),
-        title: title!,
+        amount: parseFloat(amount),
+        title: finalTitle ?? "Uncategorized",
         description: description?.trim() || " ",
       };
 
@@ -103,164 +142,141 @@ export default function AddTransactionPage({
       });
 
       if (result?.success) {
-        const successMessage = result?.message;
-        setTitle("");
-        setDescription("");
-        setAmount(null);
-        setType(TransactionTypeConst.income);
-        setCategoryId(null);
+        const createdId = result?.data?._id;
+        if (receipt && createdId) {
+          try {
+            const formData = new FormData();
+            formData.append("file", receipt as any);
+            await uploadReceiptMutation.mutateAsync({
+              url: `/transactions/receipt-file/${createdId}`,
+              payload: formData,
+            });
+          } catch (uploadError) {
+            console.log("receipt upload error = ", uploadError);
+            Toast.show({
+              type: "error",
+              text1: "Entry saved, receipt didn't upload",
+              text2: "File too large. Open the entry to try another file.",
+              position: "top",
+            });
+          }
+        }
 
-        Toast.show({
-          type: "success",
-          text1: successMessage,
-          position: "top",
-        });
-
-        setTimeout(() => {
-          router.push("/");
-        }, 100);
+        resetForm();
+        Toast.show({ type: "success", text1: result?.message, position: "top" });
+        setTimeout(() => router.push("/"), 100);
       } else {
         // The save didn't reach the server (offline or a server-side failure —
         // both resolve here rather than throwing, see known-issues.md#FETCH-1).
         // Queue it locally instead of losing it.
-        await enqueuePendingTransactions([
-          { payload: basePayload, origin: "manual" },
-        ]);
-
-        setTitle("");
-        setDescription("");
-        setAmount(null);
-        setType(TransactionTypeConst.income);
-        setCategoryId(null);
-
-        Toast.show({
-          type: "success",
-          text1: "Saved locally",
-          text2: "It will sync when you're back online",
-          position: "top",
-        });
-
-        setTimeout(() => {
-          router.push("/");
-        }, 100);
+        await enqueuePendingTransactions([{ payload: basePayload, origin: "manual" }]);
+        resetForm();
+        Toast.show({ type: "success", text1: "Saved offline", text2: "It will sync when you're back online", position: "top" });
+        setTimeout(() => router.push("/"), 100);
       }
     } catch (error) {
       console.log("error = ", error);
-      Toast.show({
-        type: "error",
-        text1: "Something went wrong!!",
-        position: "top",
-      });
+      Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
     }
   };
 
+  const saving = addTransactionMutation?.isPending;
+
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]} edges={["top"]}>
       <KeyboardAwareScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingHorizontal: spacing.screenPad },
-        ]}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
         bottomOffset={30}
         extraKeyboardSpace={10}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.nav}>
-          <Text style={[text.navTitle, { color: C.text }]}>
-            Add Transaction
-          </Text>
-          <View style={styles.navButtons}>
-            <TouchableOpacity
-              onPress={() => router.push("/smart-add")}
-              style={[
-                styles.smartAddBtn,
-                { backgroundColor: C.accentDim, borderColor: C.accentBorder },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="creation"
-                size={13}
-                color={C.accent}
-              />
-              <Text style={[text.label, { color: C.accent }]}>Smart Add</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push("/transaction-requests")}
-              style={[
-                styles.smartAddBtn,
-                { backgroundColor: C.accentDim, borderColor: C.accentBorder },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="inbox-arrow-down"
-                size={13}
-                color={C.accent}
-              />
-              <Text style={[text.label, { color: C.accent }]}>Requests</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={[text.h2, { color: C.text }]}>New entry</Text>
+          <TouchableOpacity onPress={() => router.push("/smart-add")} style={[styles.smartAddBtn, { borderColor: C.accentBorder }]}>
+            <Ionicons name="sparkles-outline" size={16} color={C.accent} />
+            <Text style={[text.bodySm, { color: C.accent }]}>Smart Add</Text>
+          </TouchableOpacity>
         </View>
 
         <TypeToggle value={type} onChange={setType} />
 
-        <View style={[styles.amountBlock, { borderBottomColor: accentColor }]}>
-          <Text
-            style={[
-              text.label,
-              {
-                color: C.textSecondary,
-                textAlign: "center",
-                marginVertical: spacing.sm,
-              },
-            ]}
-          >
-            AMOUNT (BDT)
-          </Text>
-          <FormField
-            label=""
-            value={amount || ""}
-            onChangeText={handleTextChange}
-            keyboardType="decimal-pad"
-            placeholder="0.00"
-            error={errors.amount}
-            inputStyle={{
-              fontSize: 40,
-              textAlign: "center",
-              color: accentColor,
-              height: 64,
-            }}
-          />
+        <View style={styles.amountBlock}>
+          <Text style={[text.kicker, { color: C.textSecondary }]}>Amount</Text>
+          <View style={styles.amountRow}>
+            <Text style={[styles.currencySymbol, { color: C.textSecondary }]}>৳</Text>
+            <Text style={[text.amountInput, { color: amount ? C.text : C.textMuted }]}>{fmt(amount) || "0"}</Text>
+          </View>
         </View>
 
-        <FormField
-          label="Title"
-          value={title || ""}
-          onChangeText={setTitle}
-          error={errors.title}
-          placeholder="e.g. Groceries"
-        />
+        <View style={[styles.titleField, { backgroundColor: C.surface, borderColor: titleError ? C.expense : C.border }]}>
+          <Ionicons name="text-outline" size={17} color={C.textMuted} />
+          <FormField
+            label=""
+            value={title || ""}
+            onChangeText={(v) => {
+              setTitle(v);
+              if (v.trim()) setTitleError(false);
+            }}
+            placeholder="What was it for?"
+            inputStyle={{ height: 46, paddingHorizontal: 0 }}
+          />
+        </View>
+        {titleError ? (
+          <View style={styles.errorRow}>
+            <Ionicons name="alert-circle-outline" size={14} color={C.expense} />
+            <Text style={[text.caption, { color: C.expense }]}>Please enter a title</Text>
+          </View>
+        ) : null}
 
-        <CategorySelectField value={categoryId} onChange={setCategoryId} />
+        <CategoryPicker value={categoryId} onChange={setCategoryId} />
 
-        <FormField
-          label="Description"
-          value={description || ""}
-          onChangeText={setDescription}
-          placeholder="Add a note… (optional)"
-          multiline
-          inputStyle={{ height: 80, textAlignVertical: "top", paddingTop: 12 }}
-        />
+        <View style={styles.pillRow}>
+          <TouchableOpacity
+            onPress={() => setNoteOpen((v) => !v)}
+            style={[styles.pill, { borderColor: C.border }, noteOpen && { borderColor: C.accentBorder, backgroundColor: C.accentDim }]}
+          >
+            <Ionicons name="create-outline" size={15} color={noteOpen ? C.accentText : C.textSecondary} />
+            <Text style={[text.bodySm, { color: noteOpen ? C.accentText : C.textSecondary }]}>Note</Text>
+          </TouchableOpacity>
+          {receipt ? (
+            <View style={[styles.pill, styles.receiptPill, { borderColor: C.accentBorder, backgroundColor: C.accentDim }]}>
+              <Ionicons name="document-text-outline" size={15} color={C.accentText} />
+              <Text style={[text.bodySm, { color: C.accentText, flex: 1 }]} numberOfLines={1}>
+                {receipt?.name}
+              </Text>
+              <TouchableOpacity onPress={() => setReceipt(null)} hitSlop={6}>
+                <Ionicons name="close" size={16} color={C.accentText} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity onPress={openReceiptSheet} style={[styles.pill, { borderColor: C.border }]}>
+              <Ionicons name="attach-outline" size={16} color={C.textSecondary} />
+              <Text style={[text.bodySm, { color: C.textSecondary }]}>Receipt</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {noteOpen ? (
+          <FormField
+            label=""
+            value={description || ""}
+            onChangeText={setDescription}
+            placeholder="Add a note… (optional)"
+            multiline
+            autoFocus
+            inputStyle={{ height: 60, textAlignVertical: "top", paddingTop: 12 }}
+          />
+        ) : null}
+
+        <Keypad value={amount} onChange={setAmount} />
 
         <PrimaryButton
-          label={
-            addTransactionMutation?.isPending
-              ? "Saving Transaction..."
-              : "Save Transaction"
-          }
+          label={saving ? "Saving…" : `Save ${type === TransactionTypeConst.income ? "income" : "expense"}`}
           onPress={handleAddTransaction}
-          loading={addTransactionMutation?.isPending}
-          disabled={!title || !amount}
+          loading={saving}
           color={accentColor}
+          height={spacing.cta}
+          style={{ marginTop: spacing.md }}
         />
       </KeyboardAwareScrollView>
     </SafeAreaView>
@@ -269,30 +285,36 @@ export default function AddTransactionPage({
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { flexGrow: 1, paddingTop: spacing.lg, paddingBottom: 40 },
+  content: { flexGrow: 1, paddingTop: spacing.xs, paddingBottom: 40, gap: spacing.md },
   nav: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: spacing.xl,
-  },
-  navButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
+    height: 44,
   },
   smartAddBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
-    borderWidth: 0.5,
-    borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    gap: 6,
+    height: 36,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.sm + 3,
+    borderWidth: 1,
   },
-  amountBlock: {
-    borderBottomWidth: 2,
-    marginBottom: spacing.xl,
-    paddingBottom: spacing.md,
+  amountBlock: { gap: 2, paddingVertical: spacing.xs },
+  amountRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  currencySymbol: { fontSize: 28 },
+  titleField: { flexDirection: "row", alignItems: "center", gap: spacing.sm, height: 46, borderRadius: radius.card, borderWidth: 1, paddingHorizontal: spacing.md },
+  errorRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: -spacing.xs },
+  pillRow: { flexDirection: "row", gap: spacing.sm },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    height: 34,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.sm + 2,
+    borderWidth: 1,
   },
+  receiptPill: { flex: 1, minWidth: 0, paddingLeft: spacing.md, paddingRight: spacing.xs },
 });

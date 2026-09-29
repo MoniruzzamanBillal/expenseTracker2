@@ -61,9 +61,9 @@ const enqueue = async (
 
   const newEntries: TPendingTransaction[] = items.map((item) => ({
     localId: generateId(),
-    payload: item.payload,
-    origin: item.origin,
-    batchId: item.batchId,
+    payload: item?.payload,
+    origin: item?.origin,
+    batchId: item?.batchId,
     status: "pending",
     createdAt: now,
   }));
@@ -74,7 +74,7 @@ const enqueue = async (
 
 const remove = async (localId: string): Promise<void> => {
   const queue = await readQueue();
-  await writeQueue(queue.filter((item) => item.localId !== localId));
+  await writeQueue(queue.filter((item) => item?.localId !== localId));
 };
 
 const updateStatus = async (
@@ -84,7 +84,7 @@ const updateStatus = async (
 ): Promise<void> => {
   const queue = await readQueue();
   const updated = queue.map((item) =>
-    item.localId === localId ? { ...item, status, error } : item,
+    item?.localId === localId ? { ...item, status, error } : item,
   );
   await writeQueue(updated);
 };
@@ -98,7 +98,7 @@ const updatePayload = async (
 ): Promise<void> => {
   const queue = await readQueue();
   const updated = queue.map((item) =>
-    item.localId === localId
+    item?.localId === localId
       ? { ...item, payload, status: "pending" as const, error: undefined }
       : item,
   );

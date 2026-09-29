@@ -14,13 +14,13 @@ function AuthGuard({ children }: { children: ReactNode }) {
       return;
     }
 
-    const isOnAuthPage = pathname.startsWith("/auth");
+    const isOnAuthPage = pathname?.startsWith("/auth");
 
     setTimeout(() => {
       if (!user && !isOnAuthPage) {
-        router.replace("/auth");
+        router?.replace("/auth");
       } else if (user && isOnAuthPage) {
-        router.replace("/");
+        router?.replace("/");
       }
     }, 100);
   }, [user, isLoading, pathname]);
