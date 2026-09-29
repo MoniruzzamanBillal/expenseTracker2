@@ -145,7 +145,7 @@ export default function HomePage() {
                 <View>
                   <View style={styles.inOutLabelRow}>
                     <View style={[styles.dot, { backgroundColor: C.expense }]} />
-                    <Text style={[text.caption, { color: C.textSecondary }]}>Out</Text>
+                    <Text style={[text.caption, { color: C.textSecondary }]}>Expense</Text>
                   </View>
                   <Text style={[text.amountMd, { color: C.expense }]}>−৳{fmt(expense)}</Text>
                 </View>

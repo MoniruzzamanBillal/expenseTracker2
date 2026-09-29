@@ -194,7 +194,7 @@ export default function SmartAddPage() {
               In +৳{fmt(drafts.filter((d) => d.type === TransactionTypeConst.income).reduce((s, d) => s + d.amount, 0))}
             </Text>
             <Text style={[text.bodySm, { color: C?.expense }]}>
-              Out −৳{fmt(drafts.filter((d) => d.type === TransactionTypeConst.expense).reduce((s, d) => s + d.amount, 0))}
+              Expense −৳{fmt(drafts.filter((d) => d.type === TransactionTypeConst.expense).reduce((s, d) => s + d.amount, 0))}
             </Text>
           </View>
         ) : null}

@@ -187,7 +187,7 @@ export default function MonthlyTransactionPage() {
                 <View style={[styles.netCard, { backgroundColor: C.surface }, elevation(C, dark).glow]}>
                   <View style={styles.rowBetween}>
                     <Text style={[text.kicker, { color: C.textSecondary }]}>Net · {MONTHS[selectedMonth - 1]}</Text>
-                    <Text style={[text.caption, { color: C.textMuted }]}>avg out ৳{fmt(monthlyAverageExpense)}/day</Text>
+                    <Text style={[text.caption, { color: C.textMuted }]}>avg expense ৳{fmt(monthlyAverageExpense)}/day</Text>
                   </View>
                   <View style={styles.netAmountRow}>
                     <Text style={[styles.netSign, { color: monthlyNet >= 0 ? C.income : C.expense }]}>{monthlyNet >= 0 ? "+" : "−"}</Text>
@@ -200,7 +200,7 @@ export default function MonthlyTransactionPage() {
                   </View>
                   <View style={styles.inOutRow}>
                     <Text style={[text.bodySm, { color: C.income }]}>In +৳{fmt(monthlyIncome)}</Text>
-                    <Text style={[text.bodySm, { color: C.expense }]}>Out −৳{fmt(monthlyExpense)}</Text>
+                    <Text style={[text.bodySm, { color: C.expense }]}>Expense −৳{fmt(monthlyExpense)}</Text>
                   </View>
                 </View>
 
@@ -240,7 +240,7 @@ export default function MonthlyTransactionPage() {
                   </View>
                   <View style={styles.inOutRow}>
                     <Text style={[text.bodySm, { color: C.income }]}>In +৳{fmt(weeklyIncome)}</Text>
-                    <Text style={[text.bodySm, { color: C.expense }]}>Out −৳{fmt(weeklyExpense)}</Text>
+                    <Text style={[text.bodySm, { color: C.expense }]}>Expense −৳{fmt(weeklyExpense)}</Text>
                   </View>
                 </View>
 

@@ -138,7 +138,7 @@ export default function HistoryPage() {
                 </View>
                 <View style={styles.inOutRow}>
                   <Text style={[text.bodySm, { color: C.income }]}>In +৳{fmt(income)}</Text>
-                  <Text style={[text.bodySm, { color: C.expense }]}>Out −৳{fmt(expense)}</Text>
+                  <Text style={[text.bodySm, { color: C.expense }]}>Expense −৳{fmt(expense)}</Text>
                 </View>
               </View>
             )}
