@@ -13,8 +13,7 @@ import {
   View,
 } from "react-native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
-
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
+import { formatTotal as fmt } from "@/utils/formatAmount";
 
 const MONTH_OPTIONS = [3, 6, 12] as const;
 type TMonths = (typeof MONTH_OPTIONS)[number];

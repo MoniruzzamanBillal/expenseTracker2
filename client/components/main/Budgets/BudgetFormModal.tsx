@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
+import { formatTotal } from "@/utils/formatAmount";
 
 type TProps = {
   open: boolean;
@@ -147,7 +148,7 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
         {categoryId && spentThisMonth !== null ? (
           <Text style={[text.caption, { color: C.textMuted, marginTop: -spacing.md, marginBottom: spacing.lg }]}>
             Spent on {isEdit ? initialValue?.category?.name : availableCategories.find((c) => c?._id === categoryId)?.name} so far this month: ৳
-            {Math.abs(spentThisMonth).toLocaleString("en-IN")}
+            {formatTotal(spentThisMonth)}
           </Text>
         ) : null}
 

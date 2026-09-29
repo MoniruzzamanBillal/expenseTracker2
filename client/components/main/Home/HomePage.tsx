@@ -15,6 +15,7 @@ import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
 import TransactionCard from "../shared/TransactionCard";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
+import { formatTotal as fmt } from "@/utils/formatAmount";
 
 type TData = {
   expense: number;
@@ -22,8 +23,6 @@ type TData = {
   transactions: TTransaction[];
   categoryBreakdown: TBreakdownEntry[];
 };
-
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
 function initials(name?: string | null) {
   if (!name) return "?";

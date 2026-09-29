@@ -12,6 +12,7 @@ import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
 import TransactionAccordion from "./TransactionAccordion";
+import { formatTotal as fmt } from "@/utils/formatAmount";
 
 type TView = "monthly" | "weekly";
 
@@ -45,7 +46,6 @@ const MONTHS = ["January", "February", "March", "April", "May", "June", "July", 
 const startMonth = 1;
 const endMonth = 12;
 
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 export default function MonthlyTransactionPage() {

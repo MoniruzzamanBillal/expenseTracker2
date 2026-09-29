@@ -24,10 +24,9 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
+import { formatAmount as fmt, formatTotal } from "@/utils/formatAmount";
 
 type TDraftTransaction = TTransaction;
-
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
 export default function SmartAddPage() {
   const C = useTheme();
@@ -191,10 +190,10 @@ export default function SmartAddPage() {
               {drafts.length} draft{drafts.length > 1 ? "s" : ""}
             </Text>
             <Text style={[text.bodySm, { color: C?.income }]}>
-              In +৳{fmt(drafts.filter((d) => d.type === TransactionTypeConst.income).reduce((s, d) => s + d.amount, 0))}
+              In +৳{formatTotal(drafts.filter((d) => d.type === TransactionTypeConst.income).reduce((s, d) => s + d.amount, 0))}
             </Text>
             <Text style={[text.bodySm, { color: C?.expense }]}>
-              Expense −৳{fmt(drafts.filter((d) => d.type === TransactionTypeConst.expense).reduce((s, d) => s + d.amount, 0))}
+              Expense −৳{formatTotal(drafts.filter((d) => d.type === TransactionTypeConst.expense).reduce((s, d) => s + d.amount, 0))}
             </Text>
           </View>
         ) : null}

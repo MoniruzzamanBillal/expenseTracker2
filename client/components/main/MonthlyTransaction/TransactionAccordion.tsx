@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import TransactionCard from "../shared/TransactionCard";
+import { formatTotal as fmt } from "@/utils/formatAmount";
 
 type TDailyData = {
   date: string;
@@ -16,8 +17,6 @@ type TDailyData = {
 type TProps = {
   dailyData: TDailyData[];
 };
-
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
 /**
  * Day-grouped transaction list, every day open (Nocturne's Activity screen

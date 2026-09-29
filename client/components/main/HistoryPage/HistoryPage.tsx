@@ -11,6 +11,7 @@ import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
 import TrendTab from "../MonthlyTransaction/TrendTab";
 import HistoryCardSkeleton from "./HistoryCardSkeleton";
+import { formatTotal as fmt } from "@/utils/formatAmount";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -23,8 +24,6 @@ type TData = {
 const startYear = 2025;
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth();
-
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
 
 type TSegment = "year" | "trend";
 

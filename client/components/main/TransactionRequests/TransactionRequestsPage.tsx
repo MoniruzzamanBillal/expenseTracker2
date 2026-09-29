@@ -25,8 +25,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
+import { formatAmount as fmt } from "@/utils/formatAmount";
 
 const SOURCE_META: Record<
   TTransactionRequest["sourceType"],
