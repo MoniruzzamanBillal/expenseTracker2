@@ -80,7 +80,7 @@ export default function HomePage() {
 
   const categoryBreakdown = dailyTransaction?.data?.categoryBreakdown ?? [];
 
-  console.log("categoryBreakdown = ", categoryBreakdown);
+  // console.log("categoryBreakdown = ", categoryBreakdown);
 
   const entryCount = transactions.length;
 
