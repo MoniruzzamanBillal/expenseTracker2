@@ -1,4 +1,5 @@
 import EmptyState from "@/components/main/shared/EmptyState";
+import ConfirmModal from "@/components/main/shared/ConfirmModal";
 import ErrorState from "@/components/main/shared/ErrorState";
 import { useDeleteData, useFetchData } from "@/hooks/useApi";
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
@@ -9,7 +10,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -38,6 +38,7 @@ export default function BudgetsPage() {
   const dark = C.statusBarStyle === "light";
   const router = useRouter();
   const [formOpen, setFormOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<TBudget | null>(null);
   const [editBudget, setEditBudget] = useState<TBudget | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -88,30 +89,24 @@ export default function BudgetsPage() {
     setFormOpen(true);
   };
 
-  const handleDelete = (budget: TBudget) => {
-    Alert.alert("Delete this budget?", budget?.category?.name, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const result = await deleteMutation.mutateAsync({
-              url: `/budgets/${budget?._id}`,
-            });
-            if (result?.success) {
-              Toast.show({
-                type: "success",
-                text1: result?.message,
-                position: "top",
-              });
-            }
-          } catch (error) {
-            console.log("error = ", error);
-          }
-        },
-      },
-    ]);
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      const result = await deleteMutation.mutateAsync({
+        url: `/budgets/${deleteTarget?._id}`,
+      });
+      if (result?.success) {
+        Toast.show({
+          type: "success",
+          text1: result?.message,
+          position: "top",
+        });
+      }
+    } catch (error) {
+      console.log("error = ", error);
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -371,7 +366,7 @@ export default function BudgetsPage() {
                         />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        onPress={() => handleDelete(budget)}
+                        onPress={() => setDeleteTarget(budget)}
                         hitSlop={8}
                         style={{ marginLeft: spacing.sm }}
                       >
@@ -396,6 +391,16 @@ export default function BudgetsPage() {
           </>
         )}
       </ScrollView>
+
+      <ConfirmModal
+        visible={!!deleteTarget}
+        title="Delete this budget?"
+        message={deleteTarget?.category?.name ? `The monthly limit on ${deleteTarget?.category?.name} will be removed.` : undefined}
+        confirmLabel="Delete"
+        loading={deleteMutation?.isPending}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       {formOpen && (
         <BudgetFormModal

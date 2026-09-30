@@ -1,5 +1,6 @@
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
+import ConfirmModal from "@/components/main/shared/ConfirmModal";
 import Sheet from "@/components/main/shared/Sheet";
 import { useDeleteData, useFetchData, usePatch, usePost } from "@/hooks/useApi";
 import { spacing, text, useTheme } from "@/theme";
@@ -8,7 +9,7 @@ import { TCategory } from "@/types/Category.types";
 import { TBreakdownEntry } from "@/components/main/shared/CategoryBreakdown";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { formatTotal } from "@/utils/formatAmount";
@@ -26,6 +27,7 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
 
   const [categoryId, setCategoryId] = useState<string | null>(initialValue?.categoryId ?? null);
   const [limit, setLimit] = useState(initialValue ? String(initialValue?.monthlyLimit) : "");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -91,25 +93,17 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
     }
   };
 
-  const confirmDelete = () => {
-    Alert.alert("Delete this budget?", initialValue?.category?.name, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const result = await deleteMutation.mutateAsync({ url: `/budgets/${initialValue?._id}` });
-            if (result?.success) {
-              Toast.show({ type: "success", text1: result?.message, position: "top" });
-              hideModal();
-            }
-          } catch (error) {
-            console.log("error = ", error);
-          }
-        },
-      },
-    ]);
+  const handleDelete = async () => {
+    try {
+      const result = await deleteMutation.mutateAsync({ url: `/budgets/${initialValue?._id}` });
+      if (result?.success) {
+        Toast.show({ type: "success", text1: result?.message, position: "top" });
+        setConfirmOpen(false);
+        hideModal();
+      }
+    } catch (error) {
+      console.log("error = ", error);
+    }
   };
 
   return (
@@ -154,11 +148,21 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
 
         <View style={styles.actionRow}>
           {isEdit ? (
-            <PrimaryButton label="Delete" onPress={confirmDelete} variant="destructive" style={{ flexGrow: 0, flexShrink: 0, minWidth: 100 }} height={spacing.field} />
+            <PrimaryButton label="Delete" onPress={() => setConfirmOpen(true)} variant="destructive" style={{ flexGrow: 0, flexShrink: 0, minWidth: 100 }} height={spacing.field} />
           ) : null}
           <PrimaryButton label={isPending ? "Saving…" : isEdit ? "Save changes" : "Save budget"} onPress={handleSubmit} loading={isPending} style={{ flex: 1 }} height={spacing.field} />
         </View>
       </KeyboardAwareScrollView>
+
+      <ConfirmModal
+        visible={confirmOpen}
+        title="Delete this budget?"
+        message={initialValue?.category?.name ? `The monthly limit on ${initialValue?.category?.name} will be removed.` : undefined}
+        confirmLabel="Delete"
+        loading={deleteMutation?.isPending}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Sheet>
   );
 }
