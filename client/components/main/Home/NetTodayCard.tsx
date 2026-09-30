@@ -24,13 +24,27 @@ export default function NetTodayCard({ income, expense, entryCount }: TProps) {
 
   const net = income - expense;
   const isPositive = net >= 0;
-  const netColor = net === 0 ? C?.textMuted : isPositive ? C?.income : C?.expense;
+  const netColor =
+    net === 0 ? C?.textMuted : isPositive ? C?.income : C?.expense;
 
   return (
-    <View style={[styles.netCard, { backgroundColor: C?.surface }, elevation(C, dark).glow]}>
+    <View
+      style={[
+        styles.netCard,
+        { backgroundColor: C?.surface },
+        elevation(C, dark).glow,
+      ]}
+    >
       <View style={styles.rowBetween}>
-        <Text style={[text.kicker, { color: C?.textSecondary }]}>Net today</Text>
-        <Text style={[text.caption, { color: C?.textMuted }]}>{entryCount} entries</Text>
+        {/* Both labels sit one step up the text hierarchy from the usual
+            kicker/caption pairing — textSecondary -> text and textMuted ->
+            textSecondary — so the card header reads clearly rather than
+            receding. Tokens, not literals, so light mode steps toward its own
+            near-black instead of going pale. */}
+        <Text style={[text.kicker, { color: C?.text }]}>Net today</Text>
+        <Text style={[text.caption, { color: C?.textSecondary }]}>
+          {entryCount} entries
+        </Text>
       </View>
 
       <View style={styles.netAmountRow}>
@@ -38,17 +52,34 @@ export default function NetTodayCard({ income, expense, entryCount }: TProps) {
           {net === 0 ? "" : isPositive ? "+" : "−"}
         </Text>
         <Text style={[styles.netCurrency, { color: netColor }]}>৳</Text>
-        <Text style={[text.display, { color: netColor }]}>{fmt(net)}</Text>
+        <Text style={[text.amountLg, { color: netColor }]}>{fmt(net)}</Text>
       </View>
 
       {income + expense > 0 ? (
         <View style={styles.splitBar}>
           {/* 0.001 keeps a zero-value side from collapsing the other to full width */}
-          <View style={{ flex: income || 0.001, borderRadius: 3, backgroundColor: C?.income }} />
-          <View style={{ flex: expense || 0.001, borderRadius: 3, backgroundColor: C?.expense }} />
+          <View
+            style={{
+              flex: income || 0.001,
+              borderRadius: 3,
+              backgroundColor: C?.income,
+            }}
+          />
+          <View
+            style={{
+              flex: expense || 0.001,
+              borderRadius: 3,
+              backgroundColor: C?.expense,
+            }}
+          />
         </View>
       ) : (
-        <View style={[styles.splitBarEmpty, { backgroundColor: C?.surface2, borderColor: C?.border }]} />
+        <View
+          style={[
+            styles.splitBarEmpty,
+            { backgroundColor: C?.surface2, borderColor: C?.border },
+          ]}
+        />
       )}
 
       <View style={styles.inOutRow}>
@@ -57,14 +88,20 @@ export default function NetTodayCard({ income, expense, entryCount }: TProps) {
             <View style={[styles.dot, { backgroundColor: C?.income }]} />
             <Text style={[text.caption, { color: C?.textSecondary }]}>In</Text>
           </View>
-          <Text style={[text.amountMd, { color: C?.income }]}>+৳{fmt(income)}</Text>
+          <Text style={[text.amountMd, { color: C?.income }]}>
+            +৳{fmt(income)}
+          </Text>
         </View>
         <View>
           <View style={styles.inOutLabelRow}>
             <View style={[styles.dot, { backgroundColor: C?.expense }]} />
-            <Text style={[text.caption, { color: C?.textSecondary }]}>Expense</Text>
+            <Text style={[text.caption, { color: C?.textSecondary }]}>
+              Expense
+            </Text>
           </View>
-          <Text style={[text.amountMd, { color: C?.expense }]}>−৳{fmt(expense)}</Text>
+          <Text style={[text.amountMd, { color: C?.expense }]}>
+            −৳{fmt(expense)}
+          </Text>
         </View>
       </View>
     </View>
@@ -79,13 +116,24 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.base,
   },
-  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   netAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
-  netSign: { fontSize: 26 },
-  netCurrency: { fontSize: 26 },
+  // 22 keeps the ~0.55 ratio these had against the old 48px display; they
+  // are sized off the amount, not the type scale, so they move with it.
+  netSign: { fontSize: 22 },
+  netCurrency: { fontSize: 22 },
   splitBar: { flexDirection: "row", gap: 3, height: 6 },
   splitBarEmpty: { height: 6, borderRadius: 3, borderWidth: 1 },
   inOutRow: { flexDirection: "row", gap: spacing.xl },
-  inOutLabelRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 1 },
+  inOutLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 1,
+  },
   dot: { width: 6, height: 6, borderRadius: 1 },
 });
