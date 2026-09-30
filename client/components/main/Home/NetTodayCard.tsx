@@ -52,7 +52,9 @@ export default function NetTodayCard({ income, expense, entryCount }: TProps) {
           {net === 0 ? "" : isPositive ? "+" : "−"}
         </Text>
         <Text style={[styles.netCurrency, { color: netColor }]}>৳</Text>
-        <Text style={[text.amountLg, { color: netColor }]}>{fmt(net)}</Text>
+        <Text style={[text.amountLg, styles.netAmount, { color: netColor }]}>
+          {fmt(net)}
+        </Text>
       </View>
 
       {income + expense > 0 ? (
@@ -88,7 +90,7 @@ export default function NetTodayCard({ income, expense, entryCount }: TProps) {
             <View style={[styles.dot, { backgroundColor: C?.income }]} />
             <Text style={[text.caption, { color: C?.textSecondary }]}>In</Text>
           </View>
-          <Text style={[text.amountMd, { color: C?.income }]}>
+          <Text style={[text.amount, { color: C?.income }]}>
             +৳{fmt(income)}
           </Text>
         </View>
@@ -99,7 +101,7 @@ export default function NetTodayCard({ income, expense, entryCount }: TProps) {
               Expense
             </Text>
           </View>
-          <Text style={[text.amountMd, { color: C?.expense }]}>
+          <Text style={[text.amount, { color: C?.expense }]}>
             −৳{fmt(expense)}
           </Text>
         </View>
@@ -122,10 +124,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   netAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
-  // 22 keeps the ~0.55 ratio these had against the old 48px display; they
-  // are sized off the amount, not the type scale, so they move with it.
-  netSign: { fontSize: 22 },
-  netCurrency: { fontSize: 22 },
+  // The type scale jumps 40 (amountLg) straight to 18 (amountMd) with nothing
+  // between, so the headline overrides amountLg's metrics instead of reaching
+  // for another token — fontFamily.medium and tabular-nums still come from the
+  // token, only size/leading/tracking change. Leading and tracking are scaled
+  // with the size (44 -> 38, -0.8 -> -0.68) so the figure keeps its proportions.
+  netAmount: { fontSize: 34, lineHeight: 38, letterSpacing: -0.68 },
+  // Sized off the amount at half its size, not off the type scale, so they
+  // track netAmount instead of drifting when it changes.
+  netSign: { fontSize: 17 },
+  netCurrency: { fontSize: 17 },
   splitBar: { flexDirection: "row", gap: 3, height: 6 },
   splitBarEmpty: { height: 6, borderRadius: 3, borderWidth: 1 },
   inOutRow: { flexDirection: "row", gap: spacing.xl },
