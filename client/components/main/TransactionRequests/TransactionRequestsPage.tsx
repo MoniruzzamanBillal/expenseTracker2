@@ -184,9 +184,12 @@ export default function TransactionRequestsPage() {
                 ) : null}
 
                 <View style={styles.actionsRow}>
-                  <TouchableOpacity onPress={() => setRejectTarget(request)} style={styles.rejectBtn}>
-                    <Ionicons name="close" size={16} color={C?.textSecondary} />
-                    <Text style={[text.bodySm, { color: C?.textSecondary }]}>Reject</Text>
+                  <TouchableOpacity
+                    onPress={() => setRejectTarget(request)}
+                    style={[styles.rejectBtn, { borderColor: `${C?.expense}8c` }]}
+                  >
+                    <Ionicons name="close" size={16} color={C?.expense} />
+                    <Text style={[text.bodySm, { color: C?.expense }]}>Reject</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => setEditRequest(request)} style={[styles.reviewBtn, { borderColor: C?.accent }]}>
                     <Text style={[text.bodySm, { color: C?.accent }]}>Review</Text>
@@ -235,6 +238,6 @@ const styles = StyleSheet.create({
   icon: { width: 24, height: 24, borderRadius: radius.sm, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   titleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
   actionsRow: { flexDirection: "row", justifyContent: "flex-end", alignItems: "center", gap: spacing.sm, marginTop: spacing.xs },
-  rejectBtn: { flexDirection: "row", alignItems: "center", gap: 5, height: 36, paddingHorizontal: spacing.sm },
+  rejectBtn: { flexDirection: "row", alignItems: "center", gap: 5, height: 36, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1 },
   reviewBtn: { flexDirection: "row", alignItems: "center", gap: 5, height: 36, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1 },
 });
