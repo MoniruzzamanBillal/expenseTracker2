@@ -135,18 +135,18 @@ export default function BudgetsPage() {
         ) : (
           <>
             <View style={[styles.summaryCard, { backgroundColor: C.surface }, elevation(C, dark).glow]}>
-              <Text style={[text.kicker, { color: C.textSecondary }]}>Spent against {budgets.length} budget{budgets.length > 1 ? "s" : ""}</Text>
+              <Text style={[text.kicker, styles.summaryKicker, { color: C.textSecondary }]}>Spent against {budgets.length} budget{budgets.length > 1 ? "s" : ""}</Text>
               <View style={styles.summaryAmountRow}>
-                <Text style={[text.amountLg, { color: C.text }]}>৳{fmt(totalSpent)}</Text>
-                <Text style={[text.body, { color: C.textSecondary }]}>of ৳{fmt(totalLimit)}</Text>
+                <Text style={[text.amountLg, styles.summaryAmount, { color: C.text }]}>৳{fmt(totalSpent)}</Text>
+                <Text style={[text.bodySm, { color: C.textSecondary }]}>of ৳{fmt(totalLimit)}</Text>
               </View>
               <View style={[styles.summaryTrack, { backgroundColor: C.surface2 }]}>
                 <View style={[styles.summaryFill, { width: `${totalLimit > 0 ? Math.min((totalSpent / totalLimit) * 100, 100) : 0}%`, backgroundColor: C.accent }]} />
               </View>
               <View style={styles.statusRow}>
-                {overCount > 0 ? <Text style={[text.caption, { color: C.expense }]}>{overCount} over</Text> : null}
-                {nearCount > 0 ? <Text style={[text.caption, { color: C.warning }]}>{nearCount} near limit</Text> : null}
-                {onTrackCount > 0 ? <Text style={[text.caption, { color: C.textSecondary }]}>{onTrackCount} on track</Text> : null}
+                {overCount > 0 ? <Text style={[text.caption, styles.summaryCaption, { color: C.expense }]}>{overCount} over</Text> : null}
+                {nearCount > 0 ? <Text style={[text.caption, styles.summaryCaption, { color: C.warning }]}>{nearCount} near limit</Text> : null}
+                {onTrackCount > 0 ? <Text style={[text.caption, styles.summaryCaption, { color: C.textSecondary }]}>{onTrackCount} on track</Text> : null}
               </View>
             </View>
 
@@ -195,6 +195,15 @@ const styles = StyleSheet.create({
   nav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 44, marginBottom: spacing.base },
   addBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   summaryCard: { borderRadius: radius.card, padding: spacing.base, gap: spacing.sm, marginBottom: spacing.base },
+  // The scale jumps 40 (amountLg) straight to 18, so the headline overrides
+  // amountLg's metrics rather than reaching for another token — medium weight
+  // and tabular-nums still come from it, only size, leading and tracking
+  // change. Matches Activity's net cards.
+  summaryAmount: { fontSize: 27, lineHeight: 31, letterSpacing: -0.54 },
+  // Label and status counts step below their tokens too, so the card shrinks
+  // as one block instead of the headline pulling away from it.
+  summaryKicker: { fontSize: 10, lineHeight: 13, letterSpacing: 0.9 },
+  summaryCaption: { fontSize: 11, lineHeight: 15 },
   summaryAmountRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
   summaryTrack: { height: 6, borderRadius: 3, overflow: "hidden" },
   summaryFill: { height: "100%", borderRadius: 3 },
