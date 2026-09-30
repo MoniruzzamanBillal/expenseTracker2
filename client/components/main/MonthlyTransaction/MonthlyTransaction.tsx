@@ -94,6 +94,8 @@ export default function MonthlyTransactionPage() {
     setRefreshing(false);
   };
 
+  const goToCurrentMonth = () => setSelectedMonth(currentMonth);
+
   const handleMonthChange = (direction: keyof typeof monthChangeDirection) => {
     if (direction === monthChangeDirection.prev && selectedMonth > startMonth) {
       setSelectedMonth(selectedMonth - 1);
@@ -166,16 +168,41 @@ export default function MonthlyTransactionPage() {
 
         {view === "monthly" ? (
           <>
-            <View style={styles.monthSelectorContainer}>
-              <TouchableOpacity style={styles.navChevron} onPress={() => handleMonthChange(monthChangeDirection.prev)} disabled={selectedMonth === startMonth}>
-                <Ionicons name="chevron-back" size={18} color={selectedMonth === startMonth ? C.textMuted : C.text} />
-              </TouchableOpacity>
-              <Text style={[text.h3, { color: C.text }]}>
-                {MONTHS[selectedMonth - 1]} <Text style={{ color: C.textMuted }}>{currentYear}</Text>
-              </Text>
-              <TouchableOpacity style={styles.navChevron} onPress={() => handleMonthChange(monthChangeDirection.next)} disabled={selectedMonth === endMonth}>
-                <Ionicons name="chevron-forward" size={18} color={selectedMonth === endMonth ? C.textMuted : C.text} />
-              </TouchableOpacity>
+            <View style={styles.monthNav}>
+              <View style={styles.monthSelectorContainer}>
+                <TouchableOpacity style={styles.navChevron} onPress={() => handleMonthChange(monthChangeDirection.prev)} disabled={selectedMonth === startMonth}>
+                  <Ionicons name="chevron-back" size={18} color={selectedMonth === startMonth ? C.textMuted : C.text} />
+                </TouchableOpacity>
+                <Text style={[text.h3, { color: C.text }]}>
+                  {MONTHS[selectedMonth - 1]} <Text style={{ color: C.textMuted }}>{currentYear}</Text>
+                </Text>
+                <TouchableOpacity style={styles.navChevron} onPress={() => handleMonthChange(monthChangeDirection.next)} disabled={selectedMonth === endMonth}>
+                  <Ionicons name="chevron-forward" size={18} color={selectedMonth === endMonth ? C.textMuted : C.text} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Only rendered once you have navigated away, so it reads as "you are
+                  somewhere else, here is the way back" rather than as a permanent
+                  control. Borrows CategoryPicker's active-chip treatment (accent
+                  border + accentDim fill + accentText) so the screen's one accent
+                  affordance looks the same everywhere. Comparing months alone is
+                  correct: there is no year navigation — every fetch is a
+                  `targetMonth` inside currentYear. */}
+              {selectedMonth !== currentMonth ? (
+                <TouchableOpacity
+                  onPress={goToCurrentMonth}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Jump to ${MONTHS[currentMonth - 1]}`}
+                  // The pill is 22pt tall, well under spacing.hitTarget — hitSlop
+                  // buys back the touch area without inflating the visual.
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={[styles.jumpPill, { borderColor: C.accent, backgroundColor: C.accentDim }]}
+                >
+                  <Ionicons name="today-outline" size={11} color={C.accentText} />
+                  <Text style={[text.captionMd, { color: C.accentText }]}>This month</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
 
             {isError ? (
@@ -278,8 +305,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
   },
-  monthSelectorContainer: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.lg, marginBottom: spacing.base },
+  // The bottom margin moved off the selector row onto this wrapper, so the pill
+  // appearing extends the block downward instead of being pushed clear of it.
+  monthNav: { alignItems: "center", gap: spacing.sm, marginBottom: spacing.base },
+  monthSelectorContainer: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.lg },
   navChevron: { padding: 4 },
+  // Much smaller than CategoryPicker's 34pt chip: this is a secondary way back,
+  // and the h3 above it should stay the anchor of the block. captionMd rather
+  // than caption because medium weight is what still reads as a button at 12pt.
+  jumpPill: { flexDirection: "row", alignItems: "center", gap: 4, height: 22, paddingHorizontal: spacing.sm, borderRadius: radius.pill, borderWidth: 1 },
   netCard: { borderRadius: radius.card, padding: spacing.base, paddingBottom: spacing.lg, gap: spacing.md, marginBottom: spacing.base },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   netAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
