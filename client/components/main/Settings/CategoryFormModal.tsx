@@ -4,11 +4,12 @@ import { radius, spacing, text, useTheme } from "@/theme";
 import { TCategory } from "@/types/Category.types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import FormField from "../shared/FormField";
 import PrimaryButton from "../shared/PrimaryButton";
+import ConfirmModal from "../shared/ConfirmModal";
 import Sheet from "../shared/Sheet";
 
 type TProps = {
@@ -23,6 +24,7 @@ export default function CategoryFormModal({ open, setOpen, initialValue }: TProp
 
   const [name, setName] = useState(initialValue?.name ?? "");
   const [icon, setIcon] = useState<string | undefined>(initialValue?.icon);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -64,25 +66,17 @@ export default function CategoryFormModal({ open, setOpen, initialValue }: TProp
     }
   };
 
-  const confirmDelete = () => {
-    Alert.alert("Delete category?", initialValue?.name, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const result = await deleteMutation?.mutateAsync({ url: `/categories/${initialValue?._id}/delete`, payload: {} });
-            if (result?.success) {
-              Toast.show({ type: "success", text1: result?.message, position: "top" });
-              hideModal();
-            }
-          } catch (error) {
-            console.log("error = ", error);
-          }
-        },
-      },
-    ]);
+  const handleDelete = async () => {
+    try {
+      const result = await deleteMutation?.mutateAsync({ url: `/categories/${initialValue?._id}/delete`, payload: {} });
+      if (result?.success) {
+        Toast.show({ type: "success", text1: result?.message, position: "top" });
+        setConfirmOpen(false);
+        hideModal();
+      }
+    } catch (error) {
+      console.log("error = ", error);
+    }
   };
 
   return (
@@ -112,11 +106,21 @@ export default function CategoryFormModal({ open, setOpen, initialValue }: TProp
 
         <View style={styles.actionRow}>
           {isEdit ? (
-            <PrimaryButton label="Delete" onPress={confirmDelete} variant="destructive" style={{ flex: 0, paddingHorizontal: spacing.base }} height={spacing.field} />
+            <PrimaryButton label="Delete" onPress={() => setConfirmOpen(true)} variant="destructive" style={{ flexGrow: 0, flexShrink: 0, minWidth: 100 }} height={spacing.field} />
           ) : null}
           <PrimaryButton label={isPending ? "Saving…" : isEdit ? "Save" : "Add Category"} onPress={handleSubmit} loading={isPending} style={{ flex: 1 }} height={spacing.field} />
         </View>
       </KeyboardAwareScrollView>
+
+      <ConfirmModal
+        visible={confirmOpen}
+        title="Delete category?"
+        message={initialValue?.name ? `"${initialValue?.name}" will no longer be available when adding a transaction.` : undefined}
+        confirmLabel="Delete"
+        loading={deleteMutation?.isPending}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Sheet>
   );
 }

@@ -52,14 +52,35 @@ export default function ConfirmModal({
           <Ionicons name={icon} size={22} color={C?.expense} />
         </View>
 
-        <Text style={[text.h3, { color: C?.text, textAlign: "center" }]}>{title}</Text>
+        <Text style={[text.h3, { color: C?.text, textAlign: "center" }]}>
+          {title}
+        </Text>
         {message ? (
-          <Text style={[text.bodySm, { color: C?.textSecondary, textAlign: "center" }]}>{message}</Text>
+          <Text
+            style={[
+              text.bodySm,
+              { color: C?.textSecondary, textAlign: "center" },
+            ]}
+          >
+            {message}
+          </Text>
         ) : null}
 
         <View style={styles.actions}>
-          <PrimaryButton label={cancelLabel} onPress={onCancel} variant="outline" disabled={loading} style={styles.action} />
-          <PrimaryButton label={confirmLabel} onPress={onConfirm} variant="destructive" loading={loading} style={styles.action} />
+          <PrimaryButton
+            label={cancelLabel}
+            onPress={onCancel}
+            variant="outline"
+            disabled={loading}
+            style={styles.action}
+          />
+          <PrimaryButton
+            label={confirmLabel}
+            onPress={onConfirm}
+            variant="destructive"
+            loading={loading}
+            style={styles.action}
+          />
         </View>
       </Modal>
     </Portal>
@@ -78,7 +99,19 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 380,
   },
-  icon: { width: 44, height: 44, borderRadius: radius.pill, alignItems: "center", justifyContent: "center", marginBottom: spacing.xs },
-  actions: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.base, alignSelf: "stretch" },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.base,
+    alignSelf: "stretch",
+  },
   action: { flex: 1 },
 });

@@ -11,8 +11,8 @@ import { usePostOutcome, usePut } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -50,11 +50,16 @@ export default function AddTransactionPage({
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [receipt, setReceipt] = useState<{ uri: string; name: string; type: string } | null>(null);
+  const [receipt, setReceipt] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
   const [titleError, setTitleError] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
 
-  const accentColor = type === TransactionTypeConst.income ? C.income : C.expense;
+  const accentColor =
+    type === TransactionTypeConst.income ? C.income : C.expense;
 
   const addTransactionMutation = usePostOutcome([
     ["daily-transaction"],
@@ -70,28 +75,48 @@ export default function AddTransactionPage({
   const pickReceiptFromLibrary = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      setReceipt({ uri: asset?.uri, name: asset?.fileName ?? "receipt.jpg", type: asset?.mimeType ?? "image/jpeg" });
+      setReceipt({
+        uri: asset?.uri,
+        name: asset?.fileName ?? "receipt.jpg",
+        type: asset?.mimeType ?? "image/jpeg",
+      });
     }
   };
 
   const takeReceiptPhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) return;
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      setReceipt({ uri: asset?.uri, name: asset?.fileName ?? "receipt.jpg", type: asset?.mimeType ?? "image/jpeg" });
+      setReceipt({
+        uri: asset?.uri,
+        name: asset?.fileName ?? "receipt.jpg",
+        type: asset?.mimeType ?? "image/jpeg",
+      });
     }
   };
 
   const pickReceiptPdf = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: "application/pdf" });
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "application/pdf",
+    });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      setReceipt({ uri: asset?.uri, name: asset?.name ?? "document.pdf", type: asset?.mimeType ?? "application/pdf" });
+      setReceipt({
+        uri: asset?.uri,
+        name: asset?.name ?? "document.pdf",
+        type: asset?.mimeType ?? "application/pdf",
+      });
     }
   };
 
@@ -123,7 +148,11 @@ export default function AddTransactionPage({
       setTitleError(true);
     }
     if (!amount) {
-      Toast.show({ type: "error", text1: "Enter an amount", position: "bottom" });
+      Toast.show({
+        type: "error",
+        text1: "Enter an amount",
+        position: "bottom",
+      });
       return;
     }
 
@@ -168,14 +197,25 @@ export default function AddTransactionPage({
         }
 
         resetForm();
-        Toast.show({ type: "success", text1: result?.message, position: "top" });
+        Toast.show({
+          type: "success",
+          text1: result?.message,
+          position: "top",
+        });
         setTimeout(() => router.push("/"), 100);
       } else if (outcome?.offline) {
         // No response at all — offline, DNS, or the timeout. Queue it rather
         // than lose it.
-        await enqueuePendingTransactions([{ payload: basePayload, origin: "manual" }]);
+        await enqueuePendingTransactions([
+          { payload: basePayload, origin: "manual" },
+        ]);
         resetForm();
-        Toast.show({ type: "success", text1: "Saved offline", text2: "It will sync when you're back online", position: "top" });
+        Toast.show({
+          type: "success",
+          text1: "Saved offline",
+          text2: "It will sync when you're back online",
+          position: "top",
+        });
         setTimeout(() => router.push("/"), 100);
       }
       // A server that answered with an error is not an offline save: the axios
@@ -183,23 +223,36 @@ export default function AddTransactionPage({
       // was typed so it can be corrected and resubmitted.
     } catch (error) {
       console.log("error = ", error);
-      Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong!!",
+        position: "top",
+      });
     }
   };
 
   const saving = addTransactionMutation?.isPending;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.safe, { backgroundColor: C.background }]}
+      edges={["top"]}
+    >
       <KeyboardAwareScrollView
-        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingHorizontal: spacing.screenPad },
+        ]}
         bottomOffset={30}
         extraKeyboardSpace={10}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.nav}>
           <Text style={[text.h2, { color: C.text }]}>New entry</Text>
-          <TouchableOpacity onPress={() => router.push("/smart-add")} style={[styles.smartAddBtn, { borderColor: C.accentBorder }]}>
+          <TouchableOpacity
+            onPress={() => router.push("/smart-add")}
+            style={[styles.smartAddBtn, { borderColor: C.accentBorder }]}
+          >
             <Ionicons name="sparkles-outline" size={16} color={C.accent} />
             <Text style={[text.bodySm, { color: C.accent }]}>Smart Add</Text>
           </TouchableOpacity>
@@ -210,12 +263,29 @@ export default function AddTransactionPage({
         <View style={styles.amountBlock}>
           <Text style={[text.kicker, { color: C.textSecondary }]}>Amount</Text>
           <View style={styles.amountRow}>
-            <Text style={[styles.currencySymbol, { color: C.textSecondary }]}>৳</Text>
-            <Text style={[text.amountInput, { color: amount ? C.text : C.textMuted }]}>{fmt(amount) || "0"}</Text>
+            <Text style={[styles.currencySymbol, { color: C.textSecondary }]}>
+              ৳
+            </Text>
+            <Text
+              style={[
+                text.amountInput,
+                { color: amount ? C.text : C.textMuted },
+              ]}
+            >
+              {fmt(amount) || "0"}
+            </Text>
           </View>
         </View>
 
-        <View style={[styles.titleField, { backgroundColor: C.surface, borderColor: titleError ? C.expense : C.border }]}>
+        <View
+          style={[
+            styles.titleField,
+            {
+              backgroundColor: C.surface,
+              borderColor: titleError ? C.expense : C.border,
+            },
+          ]}
+        >
           <Ionicons name="text-outline" size={17} color={C.textMuted} />
           {/* A bare TextInput, not FormField: this row already draws the border,
               background and height that FormField's own wrapper would duplicate,
@@ -236,7 +306,9 @@ export default function AddTransactionPage({
         {titleError ? (
           <View style={styles.errorRow}>
             <Ionicons name="alert-circle-outline" size={14} color={C.expense} />
-            <Text style={[text.caption, { color: C.expense }]}>Please enter a title</Text>
+            <Text style={[text.caption, { color: C.expense }]}>
+              Please enter a title
+            </Text>
           </View>
         ) : null}
 
@@ -245,15 +317,46 @@ export default function AddTransactionPage({
         <View style={styles.pillRow}>
           <TouchableOpacity
             onPress={() => setNoteOpen((v) => !v)}
-            style={[styles.pill, { borderColor: C.border }, noteOpen && { borderColor: C.accentBorder, backgroundColor: C.accentDim }]}
+            style={[
+              styles.pill,
+              { borderColor: C.border },
+              noteOpen && {
+                borderColor: C.accentBorder,
+                backgroundColor: C.accentDim,
+              },
+            ]}
           >
-            <Ionicons name="create-outline" size={15} color={noteOpen ? C.accentText : C.textSecondary} />
-            <Text style={[text.bodySm, { color: noteOpen ? C.accentText : C.textSecondary }]}>Note</Text>
+            <Ionicons
+              name="create-outline"
+              size={15}
+              color={noteOpen ? C.accentText : C.textSecondary}
+            />
+            <Text
+              style={[
+                text.bodySm,
+                { color: noteOpen ? C.accentText : C.textSecondary },
+              ]}
+            >
+              Note
+            </Text>
           </TouchableOpacity>
           {receipt ? (
-            <View style={[styles.pill, styles.receiptPill, { borderColor: C.accentBorder, backgroundColor: C.accentDim }]}>
-              <Ionicons name="document-text-outline" size={15} color={C.accentText} />
-              <Text style={[text.bodySm, { color: C.accentText, flex: 1 }]} numberOfLines={1}>
+            <View
+              style={[
+                styles.pill,
+                styles.receiptPill,
+                { borderColor: C.accentBorder, backgroundColor: C.accentDim },
+              ]}
+            >
+              <Ionicons
+                name="document-text-outline"
+                size={15}
+                color={C.accentText}
+              />
+              <Text
+                style={[text.bodySm, { color: C.accentText, flex: 1 }]}
+                numberOfLines={1}
+              >
                 {receipt?.name}
               </Text>
               <TouchableOpacity onPress={() => setReceipt(null)} hitSlop={6}>
@@ -261,9 +364,18 @@ export default function AddTransactionPage({
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity onPress={openReceiptSheet} style={[styles.pill, { borderColor: C.border }]}>
-              <Ionicons name="attach-outline" size={16} color={C.textSecondary} />
-              <Text style={[text.bodySm, { color: C.textSecondary }]}>Receipt</Text>
+            <TouchableOpacity
+              onPress={openReceiptSheet}
+              style={[styles.pill, { borderColor: C.border }]}
+            >
+              <Ionicons
+                name="attach-outline"
+                size={16}
+                color={C.textSecondary}
+              />
+              <Text style={[text.bodySm, { color: C.textSecondary }]}>
+                Receipt
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -276,19 +388,28 @@ export default function AddTransactionPage({
             placeholder="Add a note… (optional)"
             multiline
             autoFocus
-            inputStyle={{ height: 60, textAlignVertical: "top", paddingTop: 12 }}
+            inputStyle={{
+              height: 60,
+              textAlignVertical: "top",
+              paddingTop: 12,
+            }}
           />
         ) : null}
 
         <Keypad value={amount} onChange={setAmount} />
 
         <PrimaryButton
-          label={saving ? "Saving…" : `Save ${type === TransactionTypeConst.income ? "income" : "expense"}`}
+          label={
+            saving
+              ? "Saving…"
+              : `Save ${type === TransactionTypeConst.income ? "income" : "expense"}`
+          }
           onPress={handleAddTransaction}
           loading={saving}
           color={accentColor}
           height={spacing.cta}
           style={{ marginTop: spacing.md }}
+          disabled={addTransactionMutation?.isPending}
         />
       </KeyboardAwareScrollView>
     </SafeAreaView>
@@ -297,7 +418,12 @@ export default function AddTransactionPage({
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { flexGrow: 1, paddingTop: spacing.xs, paddingBottom: 40, gap: spacing.md },
+  content: {
+    flexGrow: 1,
+    paddingTop: spacing.xs,
+    paddingBottom: 40,
+    gap: spacing.md,
+  },
   nav: {
     flexDirection: "row",
     alignItems: "center",
@@ -316,12 +442,25 @@ const styles = StyleSheet.create({
   amountBlock: { gap: 2, paddingVertical: spacing.xs },
   amountRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   currencySymbol: { fontSize: 28 },
-  titleField: { flexDirection: "row", alignItems: "center", gap: spacing.sm, height: 46, borderRadius: radius.card, borderWidth: 1, paddingHorizontal: spacing.md },
+  titleField: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    height: 46,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+  },
   // outlineWidth kills the browser's focus ring on the web target (react-native-web
   // doesn't reset it); underlineColorAndroid="transparent" on the input does the
   // same for Android's focus underline. The row's own border is the focus affordance.
   titleInput: { flex: 1, height: "100%", padding: 0, outlineWidth: 0 },
-  errorRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: -spacing.xs },
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: -spacing.xs,
+  },
   pillRow: { flexDirection: "row", gap: spacing.sm },
   pill: {
     flexDirection: "row",
@@ -332,5 +471,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm + 2,
     borderWidth: 1,
   },
-  receiptPill: { flex: 1, minWidth: 0, paddingLeft: spacing.md, paddingRight: spacing.xs },
+  receiptPill: {
+    flex: 1,
+    minWidth: 0,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
+  },
 });

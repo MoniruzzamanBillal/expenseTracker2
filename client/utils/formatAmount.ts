@@ -26,3 +26,22 @@ export const formatAmount = (n: number): string => {
  */
 export const formatTotal = (n: number): string => group(n, 2);
 
+/**
+ * A figure that has to fit a chart axis tick or another few-character slot,
+ * where `formatTotal`'s grouped two decimals ("1,23,456.00") would need a row
+ * of its own. Steps at thousand and lakh because the rest of the app groups
+ * en-IN, and uses U+2212 for negatives like every other negative figure in the
+ * UI. Lossy by design — never use it where the exact amount matters.
+ */
+export const formatCompact = (n: number): string => {
+  const value = Number(n) || 0;
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "−" : "";
+  // One decimal below 10 of a unit ("1.2k"), none above ("12k"), so a tick is
+  // at most four characters wide.
+  const trim = (v: number) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
+  if (abs >= 1e5) return `${sign}${trim(abs / 1e5)}L`;
+  if (abs >= 1e3) return `${sign}${trim(abs / 1e3)}k`;
+  return `${sign}${Math.round(abs)}`;
+};
+
