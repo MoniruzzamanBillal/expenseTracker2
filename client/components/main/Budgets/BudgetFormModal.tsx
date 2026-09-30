@@ -154,7 +154,7 @@ export default function BudgetFormModal({ open, setOpen, initialValue, available
 
         <View style={styles.actionRow}>
           {isEdit ? (
-            <PrimaryButton label="Delete" onPress={confirmDelete} variant="destructive" style={{ flex: 0, paddingHorizontal: spacing.base }} height={spacing.field} />
+            <PrimaryButton label="Delete" onPress={confirmDelete} variant="destructive" style={{ flexGrow: 0, flexShrink: 0, minWidth: 100 }} height={spacing.field} />
           ) : null}
           <PrimaryButton label={isPending ? "Saving…" : isEdit ? "Save changes" : "Save budget"} onPress={handleSubmit} loading={isPending} style={{ flex: 1 }} height={spacing.field} />
         </View>
