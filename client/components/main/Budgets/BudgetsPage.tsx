@@ -138,7 +138,7 @@ export default function BudgetsPage() {
               <Text style={[text.kicker, styles.summaryKicker, { color: C.textSecondary }]}>Spent against {budgets.length} budget{budgets.length > 1 ? "s" : ""}</Text>
               <View style={styles.summaryAmountRow}>
                 <Text style={[text.amountLg, styles.summaryAmount, { color: C.text }]}>৳{fmt(totalSpent)}</Text>
-                <Text style={[text.bodySm, { color: C.textSecondary }]}>of ৳{fmt(totalLimit)}</Text>
+                <Text style={[text.caption, styles.summaryCaption, { color: C.textSecondary }]}>of ৳{fmt(totalLimit)}</Text>
               </View>
               <View style={[styles.summaryTrack, { backgroundColor: C.surface2 }]}>
                 <View style={[styles.summaryFill, { width: `${totalLimit > 0 ? Math.min((totalSpent / totalLimit) * 100, 100) : 0}%`, backgroundColor: C.accent }]} />
@@ -199,11 +199,11 @@ const styles = StyleSheet.create({
   // amountLg's metrics rather than reaching for another token — medium weight
   // and tabular-nums still come from it, only size, leading and tracking
   // change. Matches Activity's net cards.
-  summaryAmount: { fontSize: 27, lineHeight: 31, letterSpacing: -0.54 },
+  summaryAmount: { fontSize: 23, lineHeight: 27, letterSpacing: -0.46 },
   // Label and status counts step below their tokens too, so the card shrinks
   // as one block instead of the headline pulling away from it.
-  summaryKicker: { fontSize: 10, lineHeight: 13, letterSpacing: 0.9 },
-  summaryCaption: { fontSize: 11, lineHeight: 15 },
+  summaryKicker: { fontSize: 9, lineHeight: 12, letterSpacing: 0.81 },
+  summaryCaption: { fontSize: 10, lineHeight: 14 },
   summaryAmountRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
   summaryTrack: { height: 6, borderRadius: 3, overflow: "hidden" },
   summaryFill: { height: "100%", borderRadius: 3 },
