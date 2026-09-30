@@ -74,7 +74,13 @@ export default function CategoryBreakdown({ data, selected, onSelect }: TProps) 
               style={[styles.legendItem, active && { backgroundColor: C?.accentDim, borderRadius: radius.sm }]}
             >
               <View style={[styles.swatch, { backgroundColor: r.color }]} />
-              <Text style={[text.caption, { color: C?.textSecondary }]}>{r.name}</Text>
+              {/* Category name sits at the primary text token, not textSecondary:
+                  in dark mode the muted step (#9397ab) recedes too far behind the
+                  swatch to be read at caption size. The percentage keeps the same
+                  token, so the pair reads as one unit and the swatch carries the
+                  colour distinction. Tokens, not literals — light mode resolves to
+                  its own near-black (#1f2130) instead of turning pale. */}
+              <Text style={[text.caption, { color: C?.text }]}>{r.name}</Text>
               <Text style={[text.caption, { color: C?.text }]}>{r.pct}%</Text>
             </TouchableOpacity>
           );
