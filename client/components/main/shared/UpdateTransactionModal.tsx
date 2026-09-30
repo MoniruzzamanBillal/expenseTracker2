@@ -4,10 +4,11 @@ import { useTheme, spacing, text } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import CategoryPicker from "./CategoryPicker";
+import ConfirmModal from "./ConfirmModal";
 import FormField from "./FormField";
 import PrimaryButton from "./PrimaryButton";
 import ReceiptImagePicker from "./ReceiptImagePicker";
@@ -53,6 +54,7 @@ export default function UpdateTransactionModal({
   );
 
   const patchMutation = usePatch(INVALIDATE_KEYS);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const accentColor = type === TransactionTypeConst.income ? C?.income : C?.expense;
 
@@ -150,6 +152,7 @@ export default function UpdateTransactionModal({
 
   const handleDeleteTransaction = async () => {
     try {
+      setConfirmOpen(false);
       const result = await patchMutation?.mutateAsync({
         url: `/transactions/delete-transaction/${initialValue?._id}`,
         payload: initialValue ?? {},
@@ -164,12 +167,6 @@ export default function UpdateTransactionModal({
     }
   };
 
-  const confirmDelete = () => {
-    Alert.alert("Delete transaction?", initialValue?.title, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: handleDeleteTransaction },
-    ]);
-  };
 
   return (
     <Sheet visible={open} onDismiss={hideModal}>
@@ -224,7 +221,7 @@ export default function UpdateTransactionModal({
         ) : null}
 
         <View style={styles.actionRow}>
-          <PrimaryButton label="Delete" onPress={confirmDelete} variant="destructive" style={{ flex: 0, paddingHorizontal: spacing.base }} height={spacing.field} />
+          <PrimaryButton label="Delete" onPress={() => setConfirmOpen(true)} variant="destructive" style={{ flex: 0, paddingHorizontal: spacing.base }} height={spacing.field} />
           <PrimaryButton
             label={patchMutation?.isPending ? "Saving…" : "Save changes"}
             onPress={handleUpdateTransaction}
@@ -234,6 +231,16 @@ export default function UpdateTransactionModal({
           />
         </View>
       </KeyboardAwareScrollView>
+
+      <ConfirmModal
+        visible={confirmOpen}
+        title="Delete transaction?"
+        message={initialValue?.title ? `"${initialValue?.title}" will be removed from your transactions.` : undefined}
+        confirmLabel="Delete"
+        loading={patchMutation?.isPending}
+        onConfirm={handleDeleteTransaction}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Sheet>
   );
 }

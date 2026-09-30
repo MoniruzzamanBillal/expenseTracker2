@@ -6,9 +6,10 @@ import { TTransaction } from "@/types/Transaction.tyes";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useRef, useState } from "react";
-import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
+import ConfirmModal from "./ConfirmModal";
 import PendingTransactionEditModal from "./PendingTransactionEditModal";
 import ReceiptViewerModal from "./ReceiptViewerModal";
 import UpdateTransactionModal from "./UpdateTransactionModal";
@@ -36,6 +37,9 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
   const C = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [receiptViewerOpen, setReceiptViewerOpen] = useState(false);
+  // Drives ConfirmModal for both branches below. Declared above the pending
+  // early-return so the hook order is identical either way.
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
   const isIncome = transactionData?.type === TransactionTypeConst.income;
 
@@ -56,15 +60,9 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
   // TxRow with a "Waiting to sync" second line and tap-driven edit/delete
   // instead of the normal Swipeable/modal-editable card below.
   if (pending) {
-    const handleDeletePending = () => {
-      Alert.alert("Delete transaction?", "This item will be deleted from the list", [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => await removePendingTransaction(transactionData?._id as string),
-        },
-      ]);
+    const handleDeletePending = async () => {
+      setConfirmOpen(false);
+      await removePendingTransaction(transactionData?._id as string);
     };
 
     return (
@@ -90,7 +88,7 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
               </Text>
             </View>
           </View>
-          <TouchableOpacity onPress={handleDeletePending} hitSlop={8} style={{ padding: 4 }}>
+          <TouchableOpacity onPress={() => setConfirmOpen(true)} hitSlop={8} style={{ padding: 4 }}>
             <Ionicons name="trash-outline" size={16} color={C?.textMuted} />
           </TouchableOpacity>
           <Text style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}>
@@ -101,12 +99,22 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
         </TouchableOpacity>
 
         {modalOpen && <PendingTransactionEditModal open={modalOpen} setOpen={setModalOpen} initialValue={transactionData} />}
+
+        <ConfirmModal
+          visible={confirmOpen}
+          title="Delete transaction?"
+          message="This entry hasn't synced yet. It will be removed from the list."
+          confirmLabel="Delete"
+          onConfirm={handleDeletePending}
+          onCancel={() => setConfirmOpen(false)}
+        />
       </>
     );
   }
 
   const handleDeleteTransaction = async () => {
     try {
+      setConfirmOpen(false);
       const result = await patchMutation?.mutateAsync({
         url: `/transactions/delete-transaction/${transactionData?._id}`,
         payload: transactionData,
@@ -121,22 +129,16 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
     }
   };
 
-  const confirmDelete = () => {
-    Alert.alert("Delete transaction?", transactionData?.title, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: handleDeleteTransaction },
-    ]);
-  };
-
   const renderLeftActions = (_progress: any, dragX: any) => {
     const scale = dragX?.interpolate({ inputRange: [0, 100], outputRange: [0, 1], extrapolate: "clamp" });
     return (
       <Animated.View style={[styles.leftAction, { backgroundColor: C?.expenseBg, transform: [{ scale }] }]}>
         <TouchableOpacity
           activeOpacity={0.6}
+          style={styles.actionBtn}
           onPress={() => {
             swipeableRef.current?.close();
-            confirmDelete();
+            setConfirmOpen(true);
           }}
         >
           <Ionicons name="trash-outline" size={18} color={C?.expense} />
@@ -152,6 +154,7 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
       <Animated.View style={[styles.rightAction, { backgroundColor: C?.accentDim, transform: [{ scale }] }]}>
         <TouchableOpacity
           activeOpacity={0.6}
+          style={styles.actionBtn}
           onPress={() => {
             swipeableRef.current?.close();
             setModalOpen(true);
@@ -168,8 +171,8 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
     <>
       <Swipeable
         ref={swipeableRef}
-        renderLeftActions={renderRightActions}
-        renderRightActions={renderLeftActions}
+        renderLeftActions={renderLeftActions}
+        renderRightActions={renderRightActions}
         overshootLeft={false}
         overshootRight={false}
         onSwipeableOpen={() => {
@@ -220,6 +223,16 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
       ) : null}
 
       {modalOpen && <UpdateTransactionModal open={modalOpen} setOpen={setModalOpen} initialValue={transactionData} />}
+
+      <ConfirmModal
+        visible={confirmOpen}
+        title="Delete transaction?"
+        message={transactionData?.title ? `"${transactionData?.title}" will be removed from your transactions.` : undefined}
+        confirmLabel="Delete"
+        loading={patchMutation?.isPending}
+        onConfirm={handleDeleteTransaction}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </>
   );
 }
@@ -247,6 +260,9 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: "row", alignItems: "center", gap: 5, minWidth: 0 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   receiptIconBtn: { padding: 2 },
+  // alignItems centres the glyph over its wider label — without it the icon
+  // sits flush left against the text's edge.
+  actionBtn: { alignItems: "center", justifyContent: "center" },
   leftAction: { width: 64, justifyContent: "center", alignItems: "center" },
   rightAction: { width: 64, justifyContent: "center", alignItems: "center" },
 });
