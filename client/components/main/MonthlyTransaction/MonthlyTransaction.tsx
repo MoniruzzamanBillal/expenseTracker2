@@ -332,10 +332,10 @@ export default function MonthlyTransactionPage() {
                   ]}
                 >
                   <View style={styles.rowBetween}>
-                    <Text style={[text.kicker, { color: C.textSecondary }]}>
+                    <Text style={[text.kicker, styles.cardKicker, { color: C.textSecondary }]}>
                       Net · {MONTHS[selectedMonth - 1]}
                     </Text>
-                    <Text style={[text.caption, { color: C.textMuted }]}>
+                    <Text style={[text.caption, styles.cardCaption, { color: C.textMuted }]}>
                       avg expense ৳{fmt(monthlyAverageExpense)}/day
                     </Text>
                   </View>
@@ -383,10 +383,10 @@ export default function MonthlyTransactionPage() {
                     />
                   </View>
                   <View style={styles.inOutRow}>
-                    <Text style={[text.caption, { color: C.income }]}>
+                    <Text style={[text.caption, styles.cardCaption, { color: C.income }]}>
                       In +৳{fmt(monthlyIncome)}
                     </Text>
-                    <Text style={[text.caption, { color: C.expense }]}>
+                    <Text style={[text.caption, styles.cardCaption, { color: C.expense }]}>
                       Expense −৳{fmt(monthlyExpense)}
                     </Text>
                   </View>
@@ -440,7 +440,7 @@ export default function MonthlyTransactionPage() {
                     elevation(C, dark).glow,
                   ]}
                 >
-                  <Text style={[text.kicker, { color: C.textSecondary }]}>
+                  <Text style={[text.kicker, styles.cardKicker, { color: C.textSecondary }]}>
                     Net this week
                   </Text>
                   <View style={styles.netAmountRow}>
@@ -471,10 +471,10 @@ export default function MonthlyTransactionPage() {
                     </Text>
                   </View>
                   <View style={styles.inOutRow}>
-                    <Text style={[text.caption, { color: C.income }]}>
+                    <Text style={[text.caption, styles.cardCaption, { color: C.income }]}>
                       In +৳{fmt(weeklyIncome)}
                     </Text>
-                    <Text style={[text.caption, { color: C.expense }]}>
+                    <Text style={[text.caption, styles.cardCaption, { color: C.expense }]}>
                       Expense −৳{fmt(weeklyExpense)}
                     </Text>
                   </View>
@@ -566,10 +566,14 @@ const styles = StyleSheet.create({
   // fontFamily.medium and tabular-nums still come from it, only size, leading
   // and tracking change, scaled together so the figure keeps its proportions.
   // Same size as the Today and Insights net cards.
-  netAmount: { fontSize: 32, lineHeight: 36, letterSpacing: -0.64 },
+  netAmount: { fontSize: 27, lineHeight: 31, letterSpacing: -0.54 },
+  // The card's label and figures step below their tokens too, so the whole
+  // block shrinks together instead of the headline pulling away from it.
+  cardKicker: { fontSize: 10, lineHeight: 13, letterSpacing: 0.9 },
+  cardCaption: { fontSize: 11, lineHeight: 15 },
   // Half the amount, tracking it rather than the type scale.
-  netSign: { fontSize: 16 },
-  netCurrency: { fontSize: 16 },
+  netSign: { fontSize: 14 },
+  netCurrency: { fontSize: 14 },
   splitBar: { flexDirection: "row", gap: 3, height: 6 },
   inOutRow: { flexDirection: "row", gap: spacing.xl },
   weekHeader: { marginBottom: spacing.base, gap: 3, alignItems: "center" },
