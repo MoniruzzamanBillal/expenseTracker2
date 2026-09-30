@@ -137,10 +137,36 @@ export default function HomePage() {
             </Text>
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={[text.kicker, { color: C.textSecondary }]}>
+            {/* Both lines sit one step under their tokens, local to this header
+                so the other screen titles keep text.h2/text.kicker. lineHeight
+                and letterSpacing are scaled with the size — the tokens set both,
+                so overriding fontSize alone would leave the original leading. */}
+            <Text
+              style={[
+                text.kicker,
+                {
+                  color: C.textSecondary,
+                  fontSize: 10,
+                  lineHeight: 13,
+                  letterSpacing: 0.9,
+                },
+              ]}
+            >
               {todayLabel}
             </Text>
-            <Text style={[text.h2, { color: C.text }]}>Today</Text>
+            <Text
+              style={[
+                text.h2,
+                {
+                  color: C.text,
+                  fontSize: 18,
+                  lineHeight: 22,
+                  letterSpacing: -0.27,
+                },
+              ]}
+            >
+              Today
+            </Text>
           </View>
           <TouchableOpacity
             onPress={() => router.push("/transaction-requests")}
