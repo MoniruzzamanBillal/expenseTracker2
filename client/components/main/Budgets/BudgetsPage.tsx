@@ -167,11 +167,18 @@ export default function BudgetsPage() {
                           <Text style={[text.caption, { color: t === "over" ? C.expense : C.warning, fontSize: 10 }]}>{t === "over" ? "OVER" : "NEAR LIMIT"}</Text>
                         </View>
                       ) : null}
+                      {/* Both were textSecondary, so the destructive action looked
+                          exactly like the safe one. Now the same pairing the swipe
+                          panes on TransactionCard use: edit on the accent, delete
+                          on the expense red. C.accent rather than C.accentText
+                          because these sit on C.surface, not on an accentDim
+                          chip — it is the token the add button on this same page
+                          already uses. */}
                       <TouchableOpacity onPress={() => openEdit(budget)} hitSlop={8} style={{ marginLeft: spacing.sm }}>
-                        <Ionicons name="create-outline" size={16} color={C.textSecondary} />
+                        <Ionicons name="create-outline" size={16} color={C.accent} />
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => handleDelete(budget)} hitSlop={8} style={{ marginLeft: spacing.sm }}>
-                        <Ionicons name="trash-outline" size={16} color={C.textSecondary} />
+                        <Ionicons name="trash-outline" size={16} color={C.expense} />
                       </TouchableOpacity>
                     </View>
 
