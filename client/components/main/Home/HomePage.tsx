@@ -22,10 +22,10 @@ import CategoryBreakdown, {
 } from "../shared/CategoryBreakdown";
 import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
-import NetTodayCard from "./NetTodayCard";
 import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TransactionCard from "../shared/TransactionCard";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
+import NetTodayCard from "./NetTodayCard";
 
 type TData = {
   expense: number;
@@ -80,7 +80,7 @@ export default function HomePage() {
 
   const categoryBreakdown = dailyTransaction?.data?.categoryBreakdown ?? [];
 
-  // console.log("categoryBreakdown = ", categoryBreakdown);
+  console.log("categoryBreakdown = ", categoryBreakdown);
 
   const entryCount = transactions.length;
 
@@ -202,7 +202,11 @@ export default function HomePage() {
           <TransactionCardSkeleton />
         ) : (
           <>
-            <NetTodayCard income={income} expense={expense} entryCount={entryCount} />
+            <NetTodayCard
+              income={income}
+              expense={expense}
+              entryCount={entryCount}
+            />
 
             {categoryBreakdown.length > 0 && (
               <CategoryBreakdown
@@ -223,7 +227,7 @@ export default function HomePage() {
               </Text>
             </View>
 
-            {allRows.length === 0 ? (
+            {allRows?.length === 0 ? (
               <EmptyState
                 title="Nothing logged today"
                 subtitle="Entries you add today show up here, newest first."
@@ -237,24 +241,27 @@ export default function HomePage() {
                   elevation(C, dark).card,
                 ]}
               >
-                {pendingAsTransactions.map((t, i) => (
-                  <TransactionCard
-                    key={t?._id}
-                    transactionData={t}
-                    pending
-                    isLast={i === allRows.length - 1}
-                  />
-                ))}
-                {transactions.map((t, i) => (
-                  <TransactionCard
-                    key={t?._id}
-                    transactionData={t}
-                    isLast={
-                      pendingAsTransactions.length + i === allRows.length - 1
-                    }
-                    onSwipeOpen={handleSwipeOpen}
-                  />
-                ))}
+                {pendingAsTransactions &&
+                  pendingAsTransactions?.map((t, i) => (
+                    <TransactionCard
+                      key={t?._id}
+                      transactionData={t}
+                      pending
+                      isLast={i === allRows?.length - 1}
+                    />
+                  ))}
+                {transactions &&
+                  transactions?.map((t, i) => (
+                    <TransactionCard
+                      key={t?._id}
+                      transactionData={t}
+                      isLast={
+                        pendingAsTransactions?.length + i ===
+                        allRows?.length - 1
+                      }
+                      onSwipeOpen={handleSwipeOpen}
+                    />
+                  ))}
               </View>
             )}
           </>

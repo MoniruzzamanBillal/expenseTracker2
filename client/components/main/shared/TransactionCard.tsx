@@ -3,17 +3,23 @@ import { usePatch } from "@/hooks/useApi";
 import { useRemovePendingTransaction } from "@/hooks/usePendingTransactions";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
+import { formatAmount as fmt } from "@/utils/formatAmount";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useRef, useState } from "react";
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import ConfirmModal from "./ConfirmModal";
 import PendingTransactionEditModal from "./PendingTransactionEditModal";
 import ReceiptViewerModal from "./ReceiptViewerModal";
 import UpdateTransactionModal from "./UpdateTransactionModal";
-import { formatAmount as fmt } from "@/utils/formatAmount";
 
 const INVALIDATE_KEYS = [
   ["daily-transaction"],
@@ -33,7 +39,12 @@ type TProps = {
   isLast?: boolean;
 };
 
-export default function TransactionCard({ transactionData, onSwipeOpen, pending = false, isLast = false }: TProps) {
+export default function TransactionCard({
+  transactionData,
+  onSwipeOpen,
+  pending = false,
+  isLast = false,
+}: TProps) {
   const C = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [receiptViewerOpen, setReceiptViewerOpen] = useState(false);
@@ -49,11 +60,17 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
   const removePendingTransaction = useRemovePendingTransaction();
 
   const time = transactionData?.createdAt
-    ? new Date(transactionData?.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    ? new Date(transactionData?.createdAt).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
     : "";
   const categoryIcon = transactionData?.category?.icon ?? null;
   const categoryName = transactionData?.category?.name ?? null;
-  const meta = categoryName ? `${categoryName} · ${time}` : `Uncategorized · ${time}`;
+  const meta = categoryName
+    ? `${categoryName} · ${time}`
+    : `Uncategorized · ${time}`;
 
   // Pending (not-yet-synced, offline-queued) items have no server _id and are
   // edited/deleted purely locally (transactionQueue) — render a plain, dimmed
@@ -70,35 +87,70 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => setModalOpen(true)}
-          style={[styles.row, { borderBottomColor: C?.divider, borderBottomWidth: isLast ? 0 : 1, opacity: 0.85 }]}
+          style={[
+            styles.row,
+            {
+              borderBottomColor: C?.divider,
+              borderBottomWidth: isLast ? 0 : 1,
+              opacity: 0.85,
+            },
+          ]}
         >
           <View style={[styles.uncatIcon, { borderColor: C?.border }]}>
-            <MaterialCommunityIcons name="clock-outline" size={18} color={C?.textMuted} />
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={18}
+              color={C?.textMuted}
+            />
           </View>
           <View style={styles.info}>
             <Text style={[text.bodyMd, { color: C?.text }]} numberOfLines={1}>
               {transactionData?.title}
             </Text>
             <View style={styles.metaRow}>
-              <Ionicons name="cloud-upload-outline" size={13} color={C?.warning} />
-              <Text style={[text.caption, { color: C?.warning }]}>Waiting to sync</Text>
+              <Ionicons
+                name="cloud-upload-outline"
+                size={13}
+                color={C?.warning}
+              />
+              <Text style={[text.caption, { color: C?.warning }]}>
+                Waiting to sync
+              </Text>
               <Text style={[text.caption, { color: C?.textSecondary }]}>·</Text>
-              <Text style={[text.caption, { color: C?.textSecondary }]} numberOfLines={1}>
-                {format(new Date(transactionData?.createdAt as string), "d MMM")}
+              <Text
+                style={[text.caption, { color: C?.textSecondary }]}
+                numberOfLines={1}
+              >
+                {format(
+                  new Date(transactionData?.createdAt as string),
+                  "d MMM",
+                )}
               </Text>
             </View>
           </View>
-          <TouchableOpacity onPress={() => setConfirmOpen(true)} hitSlop={8} style={{ padding: 4 }}>
+          <TouchableOpacity
+            onPress={() => setConfirmOpen(true)}
+            hitSlop={8}
+            style={{ padding: 4 }}
+          >
             <Ionicons name="trash-outline" size={16} color={C?.textMuted} />
           </TouchableOpacity>
-          <Text style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}>
+          <Text
+            style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}
+          >
             {isIncome ? "+" : "−"}
             <Text style={{ opacity: 0.75 }}>৳</Text>
             {fmt(transactionData?.amount)}
           </Text>
         </TouchableOpacity>
 
-        {modalOpen && <PendingTransactionEditModal open={modalOpen} setOpen={setModalOpen} initialValue={transactionData} />}
+        {modalOpen && (
+          <PendingTransactionEditModal
+            open={modalOpen}
+            setOpen={setModalOpen}
+            initialValue={transactionData}
+          />
+        )}
 
         <ConfirmModal
           visible={confirmOpen}
@@ -121,18 +173,35 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
       });
 
       if (result?.success) {
-        Toast.show({ type: "success", text1: result?.message, position: "top" });
+        Toast.show({
+          type: "success",
+          text1: result?.message,
+          position: "top",
+        });
       }
     } catch (error) {
       console.log("error = ", error);
-      Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong!!",
+        position: "top",
+      });
     }
   };
 
   const renderLeftActions = (_progress: any, dragX: any) => {
-    const scale = dragX?.interpolate({ inputRange: [0, 100], outputRange: [0, 1], extrapolate: "clamp" });
+    const scale = dragX?.interpolate({
+      inputRange: [0, 100],
+      outputRange: [0, 1],
+      extrapolate: "clamp",
+    });
     return (
-      <Animated.View style={[styles.leftAction, { backgroundColor: C?.expenseBg, transform: [{ scale }] }]}>
+      <Animated.View
+        style={[
+          styles.leftAction,
+          { backgroundColor: C?.expenseBg, transform: [{ scale }] },
+        ]}
+      >
         <TouchableOpacity
           activeOpacity={0.6}
           style={styles.actionBtn}
@@ -142,16 +211,27 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
           }}
         >
           <Ionicons name="trash-outline" size={18} color={C?.expense} />
-          <Text style={[text.caption, { color: C?.expense, marginTop: 2 }]}>Delete</Text>
+          <Text style={[text.caption, { color: C?.expense, marginTop: 2 }]}>
+            Delete
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     );
   };
 
   const renderRightActions = (_progress: any, dragX: any) => {
-    const scale = dragX?.interpolate({ inputRange: [-100, 0], outputRange: [1, 0], extrapolate: "clamp" });
+    const scale = dragX?.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: "clamp",
+    });
     return (
-      <Animated.View style={[styles.rightAction, { backgroundColor: C?.accentDim, transform: [{ scale }] }]}>
+      <Animated.View
+        style={[
+          styles.rightAction,
+          { backgroundColor: C?.accentDim, transform: [{ scale }] },
+        ]}
+      >
         <TouchableOpacity
           activeOpacity={0.6}
           style={styles.actionBtn}
@@ -161,7 +241,9 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
           }}
         >
           <Ionicons name="create-outline" size={18} color={C?.accentText} />
-          <Text style={[text.caption, { color: C?.accentText, marginTop: 2 }]}>Edit</Text>
+          <Text style={[text.caption, { color: C?.accentText, marginTop: 2 }]}>
+            Edit
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     );
@@ -179,33 +261,72 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
           if (swipeableRef.current) onSwipeOpen?.(swipeableRef.current);
         }}
       >
-        <View style={[styles.row, { borderBottomColor: C?.divider, borderBottomWidth: isLast ? 0 : 1, backgroundColor: C?.background }]}>
+        <View
+          style={[
+            styles.row,
+            {
+              borderBottomColor: C?.divider,
+              borderBottomWidth: isLast ? 0 : 1,
+              backgroundColor: C?.background,
+            },
+          ]}
+        >
           {categoryIcon ? (
             <View style={[styles.catIcon, { backgroundColor: C?.accentDim }]}>
-              <MaterialCommunityIcons name={categoryIcon as any} size={19} color={C?.accentText} />
+              <MaterialCommunityIcons
+                name={categoryIcon as any}
+                size={19}
+                color={C?.accentText}
+              />
             </View>
           ) : (
             <View style={[styles.uncatIcon, { borderColor: C?.border }]}>
-              <MaterialCommunityIcons name="shape-outline" size={18} color={C?.textMuted} />
+              <MaterialCommunityIcons
+                name="shape-outline"
+                size={18}
+                color={C?.textMuted}
+              />
             </View>
           )}
           <View style={styles.info}>
             <View style={styles.titleRow}>
-              <Text style={[text.bodyMd, { color: C?.text, flexShrink: 1 }]} numberOfLines={1}>
+              <Text
+                style={[text.bodyMd, { color: C?.text, flexShrink: 1 }]}
+                numberOfLines={1}
+              >
                 {transactionData?.title}
               </Text>
-              {transactionData?.receiptFileUrl ? <Ionicons name="attach-outline" size={15} color={C?.textSecondary} /> : null}
+              {transactionData?.receiptFileUrl ? (
+                <Ionicons
+                  name="attach-outline"
+                  size={15}
+                  color={C?.textSecondary}
+                />
+              ) : null}
             </View>
-            <Text style={[text.caption, { color: C?.textSecondary }]} numberOfLines={1}>
+            <Text
+              style={[text.caption, { color: C?.textSecondary }]}
+              numberOfLines={1}
+            >
               {meta}
             </Text>
           </View>
           {transactionData?.receiptFileUrl ? (
-            <TouchableOpacity onPress={() => setReceiptViewerOpen(true)} style={styles.receiptIconBtn} hitSlop={8}>
-              <Ionicons name="image-outline" size={16} color={C?.textSecondary} />
+            <TouchableOpacity
+              onPress={() => setReceiptViewerOpen(true)}
+              style={styles.receiptIconBtn}
+              hitSlop={8}
+            >
+              <Ionicons
+                name="image-outline"
+                size={16}
+                color={C?.textSecondary}
+              />
             </TouchableOpacity>
           ) : null}
-          <Text style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}>
+          <Text
+            style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}
+          >
             {isIncome ? "+" : "−"}
             <Text style={{ opacity: 0.75 }}>৳</Text>
             {fmt(transactionData?.amount)}
@@ -222,12 +343,22 @@ export default function TransactionCard({ transactionData, onSwipeOpen, pending 
         />
       ) : null}
 
-      {modalOpen && <UpdateTransactionModal open={modalOpen} setOpen={setModalOpen} initialValue={transactionData} />}
+      {modalOpen && (
+        <UpdateTransactionModal
+          open={modalOpen}
+          setOpen={setModalOpen}
+          initialValue={transactionData}
+        />
+      )}
 
       <ConfirmModal
         visible={confirmOpen}
         title="Delete transaction?"
-        message={transactionData?.title ? `"${transactionData?.title}" will be removed from your transactions.` : undefined}
+        message={
+          transactionData?.title
+            ? `"${transactionData?.title}" will be removed from your transactions.`
+            : undefined
+        }
         confirmLabel="Delete"
         loading={patchMutation?.isPending}
         onConfirm={handleDeleteTransaction}
@@ -245,7 +376,14 @@ const styles = StyleSheet.create({
     minHeight: spacing.rowMinHeight,
     paddingHorizontal: spacing.md + 2,
   },
-  catIcon: { width: 36, height: 36, borderRadius: radius.md, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  catIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
   uncatIcon: {
     width: 36,
     height: 36,
