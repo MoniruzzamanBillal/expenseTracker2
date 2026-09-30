@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
-import { formatTotal as fmt } from "@/utils/formatAmount";
+import { formatCompact as compact, formatTotal as fmt } from "@/utils/formatAmount";
 
 const MONTH_OPTIONS = [3, 6, 12] as const;
 type TMonths = (typeof MONTH_OPTIONS)[number];
@@ -22,21 +22,6 @@ type TMonths = (typeof MONTH_OPTIONS)[number];
 const Y_AXIS_WIDTH = 46;
 const BAR_MIN_WIDTH = 8;
 const BAR_MAX_WIDTH = 26;
-
-/**
- * Axis ticks have ~46pt to live in, so `formatTotal`'s grouped two-decimal
- * output ("1,23,456.00") is far too wide — it is built for figures that get a
- * whole row. Compact, with the lakh step because the rest of the app groups
- * en-IN. The − is U+2212, matching every other negative figure in the UI.
- */
-const compact = (n: number) => {
-  const a = Math.abs(n);
-  const sign = n < 0 ? "−" : "";
-  const trim = (v: number) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
-  if (a >= 1e5) return `${sign}${trim(a / 1e5)}L`;
-  if (a >= 1e3) return `${sign}${trim(a / 1e3)}k`;
-  return `${sign}${Math.round(a)}`;
-};
 
 /** 1/2/5 × 10^k, so tick values land on numbers a person reads as round. */
 const niceStep = (raw: number) => {
