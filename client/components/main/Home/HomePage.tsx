@@ -4,7 +4,6 @@ import { usePendingTransactions } from "@/hooks/usePendingTransactions";
 import { useFetchTransactionRequests } from "@/hooks/useTransactionRequests";
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
-import { formatTotal as fmt } from "@/utils/formatAmount";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useRef } from "react";
@@ -23,6 +22,7 @@ import CategoryBreakdown, {
 } from "../shared/CategoryBreakdown";
 import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
+import NetTodayCard from "./NetTodayCard";
 import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TransactionCard from "../shared/TransactionCard";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
@@ -76,8 +76,6 @@ export default function HomePage() {
 
   const income = dailyTransaction?.data?.income ?? 0;
   const expense = dailyTransaction?.data?.expense ?? 0;
-  const net = income - expense;
-  const isPositive = net >= 0;
   const transactions = dailyTransaction?.data?.transactions ?? [];
 
   const categoryBreakdown = dailyTransaction?.data?.categoryBreakdown ?? [];
@@ -204,120 +202,7 @@ export default function HomePage() {
           <TransactionCardSkeleton />
         ) : (
           <>
-            <View
-              style={[
-                styles.netCard,
-                { backgroundColor: C.surface },
-                elevation(C, dark).glow,
-              ]}
-            >
-              <View style={styles.rowBetween}>
-                <Text style={[text.kicker, { color: C.textSecondary }]}>
-                  Net today
-                </Text>
-                <Text style={[text.caption, { color: C.textMuted }]}>
-                  {entryCount} entries
-                </Text>
-              </View>
-              <View style={styles.netAmountRow}>
-                <Text
-                  style={[
-                    styles.netSign,
-                    {
-                      color:
-                        net === 0
-                          ? C.textMuted
-                          : isPositive
-                            ? C.income
-                            : C.expense,
-                    },
-                  ]}
-                >
-                  {net === 0 ? "" : isPositive ? "+" : "−"}
-                </Text>
-                <Text
-                  style={[
-                    styles.netCurrency,
-                    {
-                      color:
-                        net === 0
-                          ? C.textMuted
-                          : isPositive
-                            ? C.income
-                            : C.expense,
-                    },
-                  ]}
-                >
-                  ৳
-                </Text>
-                <Text
-                  style={[
-                    text.display,
-                    {
-                      color:
-                        net === 0
-                          ? C.textMuted
-                          : isPositive
-                            ? C.income
-                            : C.expense,
-                    },
-                  ]}
-                >
-                  {fmt(net)}
-                </Text>
-              </View>
-              {income + expense > 0 ? (
-                <View style={styles.splitBar}>
-                  <View
-                    style={{
-                      flex: income || 0.001,
-                      borderRadius: 3,
-                      backgroundColor: C.income,
-                    }}
-                  />
-                  <View
-                    style={{
-                      flex: expense || 0.001,
-                      borderRadius: 3,
-                      backgroundColor: C.expense,
-                    }}
-                  />
-                </View>
-              ) : (
-                <View
-                  style={[
-                    styles.splitBarEmpty,
-                    { backgroundColor: C.surface2, borderColor: C.border },
-                  ]}
-                />
-              )}
-              <View style={styles.inOutRow}>
-                <View>
-                  <View style={styles.inOutLabelRow}>
-                    <View style={[styles.dot, { backgroundColor: C.income }]} />
-                    <Text style={[text.caption, { color: C.textSecondary }]}>
-                      In
-                    </Text>
-                  </View>
-                  <Text style={[text.amountMd, { color: C.income }]}>
-                    +৳{fmt(income)}
-                  </Text>
-                </View>
-                <View>
-                  <View style={styles.inOutLabelRow}>
-                    <View
-                      style={[styles.dot, { backgroundColor: C.expense }]}
-                    />
-                    <Text style={[text.caption, { color: C.textSecondary }]}>
-                      Expense
-                    </Text>
-                  </View>
-                  <Text style={[text.amountMd, { color: C.expense }]}>
-                    −৳{fmt(expense)}
-                  </Text>
-                </View>
-              </View>
-            </View>
+            <NetTodayCard income={income} expense={expense} entryCount={entryCount} />
 
             {categoryBreakdown.length > 0 && (
               <CategoryBreakdown
@@ -415,31 +300,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  netCard: {
-    borderRadius: radius.card,
-    padding: spacing.base,
-    paddingBottom: spacing.lg,
-    gap: spacing.md,
-    marginBottom: spacing.base,
-  },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  netAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
-  netSign: { fontSize: 26 },
-  netCurrency: { fontSize: 26 },
-  splitBar: { flexDirection: "row", gap: 3, height: 6 },
-  splitBarEmpty: { height: 6, borderRadius: 3, borderWidth: 1 },
-  inOutRow: { flexDirection: "row", gap: spacing.xl },
-  inOutLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 1,
-  },
-  dot: { width: 6, height: 6, borderRadius: 1 },
   entriesHead: {
     flexDirection: "row",
     justifyContent: "space-between",
