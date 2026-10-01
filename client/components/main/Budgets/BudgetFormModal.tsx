@@ -1,15 +1,18 @@
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
-import { usePatch, usePost } from "@/hooks/useApi";
-import { radius, spacing, text, useTheme } from "@/theme";
+import ConfirmModal from "@/components/main/shared/ConfirmModal";
+import Sheet from "@/components/main/shared/Sheet";
+import { useDeleteData, useFetchData, usePatch, usePost } from "@/hooks/useApi";
+import { spacing, text, useTheme } from "@/theme";
 import { TBudget } from "@/types/Budget.types";
 import { TCategory } from "@/types/Category.types";
+import { TBreakdownEntry } from "@/components/main/shared/CategoryBreakdown";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { Modal, Portal } from "react-native-paper";
 import Toast from "react-native-toast-message";
+import { formatTotal } from "@/utils/formatAmount";
 
 type TProps = {
   open: boolean;
@@ -18,32 +21,39 @@ type TProps = {
   availableCategories: TCategory[];
 };
 
-export default function BudgetFormModal({
-  open,
-  setOpen,
-  initialValue,
-  availableCategories,
-}: TProps) {
+export default function BudgetFormModal({ open, setOpen, initialValue, availableCategories }: TProps) {
   const C = useTheme();
   const isEdit = !!initialValue;
 
-  const [categoryId, setCategoryId] = useState<string | null>(
-    initialValue?.categoryId ?? null,
-  );
-  const [limit, setLimit] = useState(
-    initialValue ? String(initialValue.monthlyLimit) : "",
-  );
+  const [categoryId, setCategoryId] = useState<string | null>(initialValue?.categoryId ?? null);
+  const [limit, setLimit] = useState(initialValue ? String(initialValue?.monthlyLimit) : "");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
       setCategoryId(initialValue?.categoryId ?? null);
-      setLimit(initialValue ? String(initialValue.monthlyLimit) : "");
+      setLimit(initialValue ? String(initialValue?.monthlyLimit) : "");
     }
   }, [open, initialValue]);
 
   const createMutation = usePost([["budgets"]]);
   const updateMutation = usePatch([["budgets"]]);
+  const deleteMutation = useDeleteData([["budgets"]]);
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  // Diverged: "spent this month" reference for the category being picked
+  // comes from the cached monthly categoryBreakdown (already fetched by
+  // Activity), not a fresh dedicated call.
+  const { data: monthlyData } = useFetchData<{ categoryBreakdown: TBreakdownEntry[] }>(
+    ["monthly-transaction", `monthly-transaction-${new Date().getMonth() + 1}`, String(new Date().getMonth() + 1)],
+    `/transactions/monthly-transaction?targetMonth=${new Date().getMonth() + 1}`,
+  );
+  const spentThisMonth = useMemo(() => {
+    const key = categoryId;
+    if (!key) return null;
+    const entry = monthlyData?.data?.categoryBreakdown?.find((c) => c?.categoryId === key);
+    return entry?.expense ?? 0;
+  }, [monthlyData, categoryId]);
 
   const hideModal = () => setOpen(false);
 
@@ -52,52 +62,27 @@ export default function BudgetFormModal({
     if (value === "" || regex.test(value)) {
       setLimit(value);
     } else {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Amount",
-        text2: "Only numeric values are allowed (e.g. 5000 or 5000.50)",
-        position: "bottom",
-      });
+      Toast.show({ type: "error", text1: "Invalid Amount", text2: "Only numeric values are allowed (e.g. 5000 or 5000.50)", position: "bottom" });
     }
   };
 
   const handleSubmit = async () => {
     if (!isEdit && !categoryId) {
-      Toast.show({
-        type: "error",
-        text1: "Missing Field",
-        text2: "Please pick a category",
-        position: "bottom",
-      });
+      Toast.show({ type: "error", text1: "Missing Field", text2: "Please pick a category", position: "bottom" });
       return;
     }
     if (!limit.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Missing Field",
-        text2: "Please enter a monthly limit",
-        position: "bottom",
-      });
+      Toast.show({ type: "error", text1: "Missing Field", text2: "Please enter a monthly limit", position: "bottom" });
       return;
     }
 
     try {
       const result = isEdit
-        ? await updateMutation.mutateAsync({
-            url: `/budgets/${initialValue!._id}`,
-            payload: { monthlyLimit: parseFloat(limit) },
-          })
-        : await createMutation.mutateAsync({
-            url: "/budgets",
-            payload: { categoryId, monthlyLimit: parseFloat(limit) },
-          });
+        ? await updateMutation.mutateAsync({ url: `/budgets/${initialValue!._id}`, payload: { monthlyLimit: parseFloat(limit) } })
+        : await createMutation.mutateAsync({ url: "/budgets", payload: { categoryId, monthlyLimit: parseFloat(limit) } });
 
       if (result?.success) {
-        Toast.show({
-          type: "success",
-          text1: result?.message,
-          position: "top",
-        });
+        Toast.show({ type: "success", text1: result?.message, position: "top" });
         hideModal();
       }
       // On failure (including a 409 category-already-budgeted conflict),
@@ -108,114 +93,81 @@ export default function BudgetFormModal({
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      const result = await deleteMutation.mutateAsync({ url: `/budgets/${initialValue?._id}` });
+      if (result?.success) {
+        Toast.show({ type: "success", text1: result?.message, position: "top" });
+        setConfirmOpen(false);
+        hideModal();
+      }
+    } catch (error) {
+      console.log("error = ", error);
+    }
+  };
+
   return (
-    <Portal>
-      <Modal
-        visible={open}
-        onDismiss={hideModal}
-        contentContainerStyle={[
-          styles.modalContent,
-          { backgroundColor: C.surface, borderColor: C.border },
-        ]}
-      >
-        <KeyboardAwareScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-          bottomOffset={20}
-          extraKeyboardSpace={10}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.pageWrapper}>
-            {isEdit ? (
-              <View
-                style={[
-                  styles.lockedCategory,
-                  { borderColor: C.border, backgroundColor: C.surface2 },
-                ]}
-              >
-                <MaterialCommunityIcons
-                  name={(initialValue?.category?.icon as any) ?? "shape"}
-                  size={18}
-                  color={C.textSecondary}
-                />
-                <Text style={[text.bodyMd, { color: C.text }]}>
-                  {initialValue?.category?.name}
-                </Text>
-              </View>
-            ) : (
-              <View style={[styles.grid, { marginBottom: spacing.lg }]}>
-                {availableCategories.map((cat) => {
-                  const active = categoryId === cat._id;
-                  return (
-                    <TouchableOpacity
-                      key={cat._id}
-                      onPress={() => setCategoryId(cat._id)}
-                      style={[
-                        styles.chip,
-                        {
-                          borderColor: active ? C.accent : C.border,
-                          backgroundColor: active
-                            ? C.accentDim
-                            : "transparent",
-                        },
-                      ]}
-                    >
-                      {cat.icon ? (
-                        <MaterialCommunityIcons
-                          name={cat.icon as any}
-                          size={14}
-                          color={active ? C.accent : C.textSecondary}
-                        />
-                      ) : null}
-                      <Text
-                        style={[
-                          text.caption,
-                          { color: active ? C.accent : C.textSecondary },
-                        ]}
-                      >
-                        {cat.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
+    <Sheet visible={open} onDismiss={hideModal}>
+      <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }} bottomOffset={20} extraKeyboardSpace={10} showsVerticalScrollIndicator={false}>
+        <Text style={[text.h3, { color: C.text, marginBottom: spacing.md }]}>{isEdit ? "Edit budget" : "New budget"}</Text>
 
-            <FormField
-              label="Monthly Limit"
-              value={limit}
-              onChangeText={handleLimitChange}
-              keyboardType="decimal-pad"
-              placeholder="0.00"
-            />
-
-            <PrimaryButton
-              label={
-                isPending
-                  ? "Saving..."
-                  : isEdit
-                    ? "Save Changes"
-                    : "Set Budget"
-              }
-              onPress={handleSubmit}
-              loading={isPending}
-            />
+        {isEdit ? (
+          <View style={[styles.lockedCategory, { borderColor: C.border, backgroundColor: C.surface2 }]}>
+            <MaterialCommunityIcons name={(initialValue?.category?.icon as any) ?? "shape"} size={18} color={C.textSecondary} />
+            <Text style={[text.bodyMd, { color: C.text }]}>{initialValue?.category?.name}</Text>
           </View>
-        </KeyboardAwareScrollView>
-      </Modal>
-    </Portal>
+        ) : (
+          <View style={{ marginBottom: spacing.lg }}>
+            <Text style={[text.captionMd, { color: C.textSecondary, marginBottom: spacing.xs }]}>Category · only ones without a budget</Text>
+            <View style={styles.grid}>
+              {availableCategories.map((cat) => {
+                const active = categoryId === cat?._id;
+                return (
+                  <TouchableOpacity
+                    key={cat?._id}
+                    onPress={() => setCategoryId(cat?._id)}
+                    style={[styles.chip, { borderColor: active ? C.accent : C.border, backgroundColor: active ? C.accentDim : "transparent" }]}
+                  >
+                    {cat?.icon ? <MaterialCommunityIcons name={cat?.icon as any} size={14} color={active ? C.accentText : C.textSecondary} /> : null}
+                    <Text style={[text.caption, { color: active ? C.accentText : C.textSecondary }]}>{cat?.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        <FormField label="Monthly limit" value={limit} onChangeText={handleLimitChange} keyboardType="decimal-pad" placeholder="0.00" inSheet inputStyle={{ fontSize: 20, fontWeight: "500" }} />
+
+        {categoryId && spentThisMonth !== null ? (
+          <Text style={[text.caption, { color: C.textMuted, marginTop: -spacing.md, marginBottom: spacing.lg }]}>
+            Spent on {isEdit ? initialValue?.category?.name : availableCategories.find((c) => c?._id === categoryId)?.name} so far this month: ৳
+            {formatTotal(spentThisMonth)}
+          </Text>
+        ) : null}
+
+        <View style={styles.actionRow}>
+          {isEdit ? (
+            <PrimaryButton label="Delete" onPress={() => setConfirmOpen(true)} variant="destructive" style={{ flexGrow: 0, flexShrink: 0, minWidth: 100 }} height={spacing.field} />
+          ) : null}
+          <PrimaryButton label={isPending ? "Saving…" : isEdit ? "Save changes" : "Save budget"} onPress={handleSubmit} loading={isPending} style={{ flex: 1 }} height={spacing.field} />
+        </View>
+      </KeyboardAwareScrollView>
+
+      <ConfirmModal
+        visible={confirmOpen}
+        title="Delete this budget?"
+        message={initialValue?.category?.name ? `The monthly limit on ${initialValue?.category?.name} will be removed.` : undefined}
+        confirmLabel="Delete"
+        loading={deleteMutation?.isPending}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  modalContent: {
-    marginHorizontal: spacing.xl,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.lg,
-  },
-  pageWrapper: {
-    width: "100%" as const,
-  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -225,9 +177,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    height: 34,
     paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: 17,
     borderWidth: 1,
   },
   lockedCategory: {
@@ -236,8 +188,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: 10,
     borderWidth: 1,
     marginBottom: spacing.lg,
   },
+  actionRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs },
 });

@@ -1,13 +1,13 @@
 import { TransactionTypeConst } from "@/constants/TransactionType.constant";
 import { usePatch } from "@/hooks/useApi";
 import { useRemovePendingTransaction } from "@/hooks/usePendingTransactions";
-import { fontFamily, radius, spacing, text, useTheme } from "@/theme";
+import { radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { formatAmount as fmt } from "@/utils/formatAmount";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   StyleSheet,
   Text,
@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
+import ConfirmModal from "./ConfirmModal";
 import PendingTransactionEditModal from "./PendingTransactionEditModal";
 import ReceiptViewerModal from "./ReceiptViewerModal";
 import UpdateTransactionModal from "./UpdateTransactionModal";
@@ -28,16 +29,12 @@ const INVALIDATE_KEYS = [
   ["budgets"],
 ];
 
-const fmt = (n: number) => Math.abs(n).toLocaleString("en-IN");
-
 type TProps = {
   transactionData: TTransaction;
   /** "only one swipeable open at a time" callback, driven by HomePage/TransactionAccordion. */
   onSwipeOpen?: (ref: Swipeable) => void;
   /** Not-yet-synced, offline-queued item — dashed/dimmed card, icon buttons instead of swipe. */
   pending?: boolean;
-  /** Denser row (Monthly/Weekly's nested accordion rows). */
-  compact?: boolean;
   /** Omit the bottom divider — pass true for the last row in a list/section. */
   isLast?: boolean;
 };
@@ -46,12 +43,14 @@ export default function TransactionCard({
   transactionData,
   onSwipeOpen,
   pending = false,
-  compact = false,
   isLast = false,
 }: TProps) {
   const C = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [receiptViewerOpen, setReceiptViewerOpen] = useState(false);
+  // Drives ConfirmModal for both branches below. Declared above the pending
+  // early-return so the hook order is identical either way.
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
   const isIncome = transactionData?.type === TransactionTypeConst.income;
 
@@ -60,122 +59,90 @@ export default function TransactionCard({
   const patchMutation = usePatch(INVALIDATE_KEYS);
   const removePendingTransaction = useRemovePendingTransaction();
 
-  const iconSize = compact ? 38 : 40;
   const time = transactionData?.createdAt
-    ? new Date(transactionData.createdAt).toLocaleTimeString("en-US", {
+    ? new Date(transactionData?.createdAt).toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
       })
     : "";
+  const categoryIcon = transactionData?.category?.icon ?? null;
+  const categoryName = transactionData?.category?.name ?? null;
+  const meta = categoryName
+    ? `${categoryName} · ${time}`
+    : `Uncategorized · ${time}`;
 
   // Pending (not-yet-synced, offline-queued) items have no server _id and are
   // edited/deleted purely locally (transactionQueue) — render a plain, dimmed
-  // card with icon actions instead of the normal Swipeable/modal-editable card
-  // below.
+  // TxRow with a "Waiting to sync" second line and tap-driven edit/delete
+  // instead of the normal Swipeable/modal-editable card below.
   if (pending) {
-    const handleDeletePending = () => {
-      Alert.alert(
-        "Delete transaction?",
-        "This item will be deleted from the list",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: async () =>
-              await removePendingTransaction(transactionData?._id as string),
-          },
-        ],
-      );
+    const handleDeletePending = async () => {
+      setConfirmOpen(false);
+      await removePendingTransaction(transactionData?._id as string);
     };
 
     return (
       <>
-        <View
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setModalOpen(true)}
           style={[
             styles.row,
-            styles.pendingRow,
-
-            { borderColor: C.border, backgroundColor: C.surface },
+            {
+              borderBottomColor: C?.divider,
+              borderBottomWidth: isLast ? 0 : 1,
+              opacity: 0.85,
+            },
           ]}
         >
-          <View
-            style={[
-              styles.icon,
-              {
-                width: iconSize,
-                height: iconSize,
-                backgroundColor: isIncome ? C.incomeBg : C.expenseBg,
-              },
-            ]}
-          >
+          <View style={[styles.uncatIcon, { borderColor: C?.border }]}>
             <MaterialCommunityIcons
               name="clock-outline"
               size={18}
-              color={C.textSecondary}
+              color={C?.textMuted}
             />
           </View>
           <View style={styles.info}>
-            <Text
-              style={[
-                compact
-                  ? { fontSize: 14, fontFamily: fontFamily.medium }
-                  : text.bodyMd,
-                { color: C.text },
-              ]}
-              numberOfLines={1}
-            >
+            <Text style={[text.bodyMd, { color: C?.text }]} numberOfLines={1}>
               {transactionData?.title}
             </Text>
-            <Text
-              style={[text.caption, { color: C.textSecondary, marginTop: 2 }]}
-              numberOfLines={1}
-            >
-              <MaterialCommunityIcons name="tag-outline" size={11} />{" "}
-              Uncategorized · Pending sync ·{" "}
-              {format(new Date(transactionData?.createdAt as string), "d MMM")}
-            </Text>
-          </View>
-          <View style={styles.pendingRight}>
-            <View style={styles.pendingActions}>
-              <TouchableOpacity
-                onPress={() => setModalOpen(true)}
-                style={[
-                  styles.pendingActionButton,
-                  { backgroundColor: C.accentDim },
-                ]}
+            <View style={styles.metaRow}>
+              <Ionicons
+                name="cloud-upload-outline"
+                size={13}
+                color={C?.warning}
+              />
+              <Text style={[text.caption, { color: C?.warning }]}>
+                Waiting to sync
+              </Text>
+              <Text style={[text.caption, { color: C?.textSecondary }]}>·</Text>
+              <Text
+                style={[text.caption, { color: C?.textSecondary }]}
+                numberOfLines={1}
               >
-                <MaterialCommunityIcons
-                  name="pencil-outline"
-                  size={14}
-                  color={C.accent}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleDeletePending}
-                style={[
-                  styles.pendingActionButton,
-                  { backgroundColor: C.expenseBg },
-                ]}
-              >
-                <MaterialCommunityIcons
-                  name="delete-outline"
-                  size={14}
-                  color={C.expense}
-                />
-              </TouchableOpacity>
+                {format(
+                  new Date(transactionData?.createdAt as string),
+                  "d MMM",
+                )}
+              </Text>
             </View>
-            <Text
-              style={[
-                text.amountSm,
-                { color: isIncome ? C.income : C.expense },
-              ]}
-            >
-              {isIncome ? "+" : "−"}৳{fmt(transactionData?.amount)}
-            </Text>
           </View>
-        </View>
+          <TouchableOpacity
+            onPress={() => setConfirmOpen(true)}
+            hitSlop={8}
+            style={{ padding: 4 }}
+          >
+            <Ionicons name="trash-outline" size={16} color={C?.textMuted} />
+          </TouchableOpacity>
+          <Text
+            style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}
+          >
+            {isIncome ? "+" : "−"}
+            <Text style={{ opacity: 0.75 }}>৳</Text>
+            {fmt(transactionData?.amount)}
+          </Text>
+        </TouchableOpacity>
 
         {modalOpen && (
           <PendingTransactionEditModal
@@ -184,13 +151,23 @@ export default function TransactionCard({
             initialValue={transactionData}
           />
         )}
+
+        <ConfirmModal
+          visible={confirmOpen}
+          title="Delete transaction?"
+          message="This entry hasn't synced yet. It will be removed from the list."
+          confirmLabel="Delete"
+          onConfirm={handleDeletePending}
+          onCancel={() => setConfirmOpen(false)}
+        />
       </>
     );
   }
 
   const handleDeleteTransaction = async () => {
     try {
-      const result = await patchMutation.mutateAsync({
+      setConfirmOpen(false);
+      const result = await patchMutation?.mutateAsync({
         url: `/transactions/delete-transaction/${transactionData?._id}`,
         payload: transactionData,
       });
@@ -212,19 +189,8 @@ export default function TransactionCard({
     }
   };
 
-  const confirmDelete = () => {
-    Alert.alert("Delete transaction?", transactionData?.title, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: handleDeleteTransaction,
-      },
-    ]);
-  };
-
   const renderLeftActions = (_progress: any, dragX: any) => {
-    const scale = dragX.interpolate({
+    const scale = dragX?.interpolate({
       inputRange: [0, 100],
       outputRange: [0, 1],
       extrapolate: "clamp",
@@ -233,48 +199,51 @@ export default function TransactionCard({
       <Animated.View
         style={[
           styles.leftAction,
-          { backgroundColor: C.expense, transform: [{ scale }] },
+          { backgroundColor: C?.expenseBg, transform: [{ scale }] },
         ]}
       >
         <TouchableOpacity
           activeOpacity={0.6}
+          style={styles.actionBtn}
           onPress={() => {
             swipeableRef.current?.close();
-            confirmDelete();
+            setConfirmOpen(true);
           }}
         >
-          <MaterialCommunityIcons name="delete" size={26} color="#fff" />
+          <Ionicons name="trash-outline" size={18} color={C?.expense} />
+          <Text style={[text.caption, { color: C?.expense, marginTop: 2 }]}>
+            Delete
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     );
   };
 
   const renderRightActions = (_progress: any, dragX: any) => {
-    const scale = dragX.interpolate({
+    const scale = dragX?.interpolate({
       inputRange: [-100, 0],
       outputRange: [1, 0],
       extrapolate: "clamp",
     });
-
     return (
       <Animated.View
         style={[
           styles.rightAction,
-          { backgroundColor: C.income, transform: [{ scale }] },
+          { backgroundColor: C?.accentDim, transform: [{ scale }] },
         ]}
       >
         <TouchableOpacity
           activeOpacity={0.6}
+          style={styles.actionBtn}
           onPress={() => {
             swipeableRef.current?.close();
             setModalOpen(true);
           }}
         >
-          <MaterialCommunityIcons
-            name="book-edit-outline"
-            size={26}
-            color="#fff"
-          />
+          <Ionicons name="create-outline" size={18} color={C?.accentText} />
+          <Text style={[text.caption, { color: C?.accentText, marginTop: 2 }]}>
+            Edit
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     );
@@ -289,99 +258,88 @@ export default function TransactionCard({
         overshootLeft={false}
         overshootRight={false}
         onSwipeableOpen={() => {
-          if (swipeableRef.current) {
-            onSwipeOpen?.(swipeableRef.current);
-          }
+          if (swipeableRef.current) onSwipeOpen?.(swipeableRef.current);
         }}
       >
         <View
           style={[
             styles.row,
             {
-              paddingVertical: compact ? 12 : 13,
-              paddingHorizontal: spacing.sm,
-              borderBottomColor: C.divider,
+              borderBottomColor: C?.divider,
               borderBottomWidth: isLast ? 0 : 1,
-              backgroundColor: C.background,
+              backgroundColor: C?.background,
             },
           ]}
         >
-          <View
-            style={[
-              styles.icon,
-              {
-                width: iconSize,
-                height: iconSize,
-                backgroundColor: isIncome ? C.incomeBg : C.expenseBg,
-              },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name={isIncome ? "cash-multiple" : "cash-minus"}
-              size={compact ? 18 : 20}
-              color={isIncome ? C.income : C.expense}
-            />
-          </View>
-          <View style={styles.info}>
-            <Text
-              style={[
-                compact
-                  ? { fontSize: 14, fontFamily: fontFamily.medium }
-                  : text.bodyMd,
-                { color: C.text },
-              ]}
-              numberOfLines={1}
-            >
-              {transactionData?.title}
-            </Text>
-            <Text
-              style={[
-                text.caption,
-                { color: C.textSecondary, marginTop: compact ? 1 : 2 },
-              ]}
-              numberOfLines={1}
-            >
+          {categoryIcon ? (
+            <View style={[styles.catIcon, { backgroundColor: C?.accentDim }]}>
               <MaterialCommunityIcons
-                name={(transactionData?.category?.icon as any) ?? "tag-outline"}
-                size={11}
-              />{" "}
-              {transactionData?.category?.name ?? "Uncategorized"} ·{" "}
-              {compact
-                ? time
-                : transactionData?.description
-                  ? `${transactionData.description} · ${time}`
-                  : time}
+                name={categoryIcon as any}
+                size={19}
+                color={C?.accentText}
+              />
+            </View>
+          ) : (
+            <View style={[styles.uncatIcon, { borderColor: C?.border }]}>
+              <MaterialCommunityIcons
+                name="shape-outline"
+                size={18}
+                color={C?.textMuted}
+              />
+            </View>
+          )}
+          <View style={styles.info}>
+            <View style={styles.titleRow}>
+              <Text
+                style={[text.bodyMd, { color: C?.text, flexShrink: 1 }]}
+                numberOfLines={1}
+              >
+                {transactionData?.title}
+              </Text>
+              {transactionData?.receiptFileUrl ? (
+                <Ionicons
+                  name="attach-outline"
+                  size={15}
+                  color={C?.textSecondary}
+                />
+              ) : null}
+            </View>
+            <Text
+              style={[text.caption, { color: C?.textSecondary }]}
+              numberOfLines={1}
+            >
+              {meta}
             </Text>
           </View>
-          {!compact && transactionData?.receiptFileUrl ? (
+          {transactionData?.receiptFileUrl ? (
             <TouchableOpacity
               onPress={() => setReceiptViewerOpen(true)}
               style={styles.receiptIconBtn}
+              hitSlop={8}
             >
-              <MaterialCommunityIcons
-                name="paperclip"
+              <Ionicons
+                name="image-outline"
                 size={16}
-                color={C.textSecondary}
+                color={C?.textSecondary}
               />
             </TouchableOpacity>
           ) : null}
           <Text
-            style={[
-              compact ? text.amountXs : text.amountSm,
-              { color: isIncome ? C.income : C.expense },
-            ]}
+            style={[text.amount, { color: isIncome ? C?.income : C?.expense }]}
           >
-            {isIncome ? "+" : "−"}৳{fmt(transactionData?.amount)}
+            {isIncome ? "+" : "−"}
+            <Text style={{ opacity: 0.75 }}>৳</Text>
+            {fmt(transactionData?.amount)}
           </Text>
         </View>
       </Swipeable>
 
-      {!compact && transactionData?.receiptFileUrl ? (
+      {transactionData?.receiptFileUrl ? (
         <ReceiptViewerModal
           visible={receiptViewerOpen}
           imageUrl={transactionData.receiptFileUrl}
           onDismiss={() => setReceiptViewerOpen(false)}
-          fileName={transactionData.receiptFileOriginalName}
+          fileName={transactionData?.receiptFileOriginalName}
         />
       ) : null}
 
@@ -392,6 +350,20 @@ export default function TransactionCard({
           initialValue={transactionData}
         />
       )}
+
+      <ConfirmModal
+        visible={confirmOpen}
+        title="Delete transaction?"
+        message={
+          transactionData?.title
+            ? `"${transactionData?.title}" will be removed from your transactions.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        loading={patchMutation?.isPending}
+        onConfirm={handleDeleteTransaction}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </>
   );
 }
@@ -401,44 +373,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
+    minHeight: spacing.rowMinHeight,
+    paddingHorizontal: spacing.md + 2,
   },
-  receiptIconBtn: { padding: 2 },
-  pendingRow: {
-    paddingVertical: 12,
-    paddingHorizontal: spacing.md,
-    borderWidth: 1,
-    borderStyle: "dashed",
+  catIcon: {
+    width: 36,
+    height: 36,
     borderRadius: radius.md,
-    opacity: 0.75,
-    marginBottom: 4,
-  },
-  icon: {
-    borderRadius: radius.sm,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  info: { flex: 1, minWidth: 0 },
-  pendingRight: { alignItems: "flex-end", gap: 2 },
-  pendingActions: { flexDirection: "row", alignItems: "center" },
-  pendingActionButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  uncatIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: 4,
+    flexShrink: 0,
   },
-  leftAction: {
-    width: 70,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: radius.sm,
-  },
-  rightAction: {
-    width: 70,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: radius.sm,
-  },
+  info: { flex: 1, minWidth: 0, gap: 1 },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: 5, minWidth: 0 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  receiptIconBtn: { padding: 2 },
+  // alignItems centres the glyph over its wider label — without it the icon
+  // sits flush left against the text's edge.
+  actionBtn: { alignItems: "center", justifyContent: "center" },
+  leftAction: { width: 64, justifyContent: "center", alignItems: "center" },
+  rightAction: { width: 64, justifyContent: "center", alignItems: "center" },
 });

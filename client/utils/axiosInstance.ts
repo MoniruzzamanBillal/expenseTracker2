@@ -19,7 +19,7 @@ instance.interceptors.request.use(
     // If the request is a POST request and the data is not FormData,
     // set Content-Type to application/json
     // ========>
-    if (!(config.data instanceof FormData)) {
+    if (!(config?.data instanceof FormData)) {
       config.headers["Content-Type"] = "application/json";
     } else {
       // Let the browser set the correct multipart boundary

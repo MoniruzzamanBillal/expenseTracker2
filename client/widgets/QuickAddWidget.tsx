@@ -8,25 +8,26 @@ import { FlexWidget, TextWidget } from "react-native-android-widget";
 
 // Hardcoded palette (not theme/colors.ts) — this renders outside the React
 // tree via a headless task, with no access to ThemeProvider context. Values
-// mirror theme/colors.ts's light/dark income/expense/surface/text tokens.
+// mirror theme/colors.ts's light/dark income/expense/surface/border tokens;
+// tints are pre-mixed since widgets have no alpha blending of tokens.
 const palette = {
   light: {
-    surface: "#ffffff",
-    text: "#1a1b2e",
-    textMuted: "#6b6d88",
-    income: "#1fa861",
-    incomeBg: "#e3f5ec",
-    expense: "#d94444",
-    expenseBg: "#fbe7e7",
+    surface: "#f7f8fe",
+    border: "#dcdfee",
+    textMuted: "#595d6c",
+    income: "#3b7650",
+    incomeBg: "#e6efeb",
+    expense: "#b4453d",
+    expenseBg: "#f6e9ea",
   },
   dark: {
-    surface: "#161824",
-    text: "#e8e9f4",
-    textMuted: "#676985",
-    income: "#52d48a",
-    incomeBg: "#1c3529",
-    expense: "#f07272",
-    expenseBg: "#3a2323",
+    surface: "#232532",
+    border: "#3f424d",
+    textMuted: "#9397ab",
+    income: "#7cbf8e",
+    incomeBg: "#26352f",
+    expense: "#e0786e",
+    expenseBg: "#3a2a31",
   },
 } as const;
 
@@ -46,15 +47,18 @@ export function QuickAddWidget({
         justifyContent: "center",
         backgroundColor: C.surface,
         borderRadius: 16,
+        borderColor: C.border,
+        borderWidth: 1,
         padding: 12,
       }}
     >
       <TextWidget
-        text="Quick Add"
+        text="QUICK ADD"
         style={{
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: "600",
           color: C.textMuted,
+          letterSpacing: 1,
           marginBottom: 8,
         }}
       />
@@ -75,12 +79,14 @@ export function QuickAddWidget({
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: C.expenseBg,
+            borderColor: C.expense,
+            borderWidth: 1,
             borderRadius: 12,
             paddingVertical: 12,
           }}
         >
           <TextWidget
-            text="+ Expense"
+            text="− Expense"
             style={{ fontSize: 13, fontWeight: "700", color: C.expense }}
           />
         </FlexWidget>
@@ -94,6 +100,8 @@ export function QuickAddWidget({
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: C.incomeBg,
+            borderColor: C.income,
+            borderWidth: 1,
             borderRadius: 12,
             paddingVertical: 12,
           }}

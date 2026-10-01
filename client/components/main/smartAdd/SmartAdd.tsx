@@ -1,4 +1,4 @@
-import { usePost } from "@/hooks/useApi";
+import { usePost, usePostOutcome } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { TransactionTypeConst } from "@/constants/TransactionType.constant";
 import { TTransaction } from "@/types/Transaction.tyes";
@@ -22,8 +22,9 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
+import { formatAmount as fmt, formatTotal } from "@/utils/formatAmount";
 
 type TDraftTransaction = TTransaction;
 
@@ -33,9 +34,12 @@ export default function SmartAddPage() {
 
   const [prompt, setPrompt] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<TDraftTransaction[] | null>(null);
+  const [savedLines, setSavedLines] = useState<{ title: string; amount: number; type: string }[] | null>(null);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
 
   const parseMutation = usePost([[""]]);
-  const saveMutation = usePost([
+  const saveMutation = usePostOutcome([
     ["daily-transaction"],
     ["monthly-transaction"],
     ["weekly-transaction"],
@@ -46,40 +50,26 @@ export default function SmartAddPage() {
   const enqueuePendingTransactions = useEnqueuePendingTransactions();
 
   const handleParse = async () => {
-    if (!prompt?.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Give a valid prompt!!!",
-        position: "top",
-      });
-      return;
-    }
+    if (!prompt?.trim()) return;
 
     Keyboard.dismiss();
+    setParseError(null);
 
     try {
-      const result = await parseMutation.mutateAsync({
+      const result = await parseMutation?.mutateAsync({
         url: "/transactions/manage-money",
         payload: { prompt },
       });
 
       if (result?.success) {
-        Toast.show({
-          type: "success",
-          text1: result?.message,
-          position: "top",
-        });
-
-        setPrompt(null);
-        setDrafts(result?.data ?? []);
+        const parsed = result?.data ?? [];
+        setDrafts(parsed);
+        setExpandedIndex(parsed.length > 0 ? 0 : null);
+        if (parsed.length === 0) setParseError("empty");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("error = ", error);
-      Toast.show({
-        type: "error",
-        text1: "Something went wrong!!",
-        position: "top",
-      });
+      setParseError(error?.message ?? "AI returned invalid transaction data");
     }
   };
 
@@ -88,10 +78,10 @@ export default function SmartAddPage() {
   };
 
   const removeDraft = (i: number) => {
-    Alert.alert("Remove transaction?", "This item will be removed from the list", [
+    Alert.alert("Discard entry?", "This one won't be saved", [
       { text: "Cancel", style: "cancel" },
       {
-        text: "Remove",
+        text: "Discard",
         style: "destructive",
         onPress: () => setDrafts((prev) => (prev ? prev.filter((_, idx) => idx !== i) : prev)),
       },
@@ -99,40 +89,28 @@ export default function SmartAddPage() {
   };
 
   const handleSaveAll = async () => {
-    if (!drafts?.length) {
-      Toast.show({
-        type: "error",
-        text1: "No response data available",
-        position: "top",
-      });
-      return;
-    }
+    if (!drafts?.length) return;
 
     try {
-      // spec 22 / G2 — include categoryId in the online save payload
-      const result = await saveMutation.mutateAsync({
+      // spec 22 / G2 — include categoryId in the online save payload, but omit
+      // the key entirely on an uncategorized draft rather than sending null
+      // (spec 28).
+      const outcome = await saveMutation?.mutateAsync({
         url: "/transactions/many-transaction",
         payload: drafts.map((d) => ({
           type: d.type,
           title: d.title,
           amount: d.amount,
           description: d.description ?? " ",
-          categoryId: d.categoryId ?? null,
+          ...(d.categoryId ? { categoryId: d.categoryId } : {}),
         })),
       });
 
-      if (result?.success) {
-        Toast.show({
-          type: "success",
-          text1: result?.message,
-          position: "top",
-        });
-
+      if (outcome?.ok) {
+        setSavedLines(drafts.map((d) => ({ title: d.title, amount: d.amount, type: d.type })));
         setPrompt(null);
         setDrafts(null);
-
-        setTimeout(() => router.push("/"), 100);
-      } else {
+      } else if (outcome?.offline) {
         // Offline-queue path intentionally omits categoryId (spec 13 scope / spec 22 scope).
         const batchId = createBatchId();
 
@@ -149,30 +127,55 @@ export default function SmartAddPage() {
           })),
         );
 
+        setSavedLines(drafts.map((d) => ({ title: d.title, amount: d.amount, type: d.type })));
         setPrompt(null);
         setDrafts(null);
-
-        Toast.show({
-          type: "success",
-          text1: "Saved locally",
-          text2: "It will sync when you're back online",
-          position: "top",
-        });
-
-        setTimeout(() => router.push("/"), 100);
+        Toast.show({ type: "success", text1: "Saved locally", text2: "It will sync when you're back online", position: "top" });
       }
+      // A server rejection keeps the drafts on screen so they can be corrected;
+      // the interceptor has already toasted why. Only a no-response failure
+      // queues locally.
     } catch (error) {
       console.log("error = ", error);
-      Toast.show({
-        type: "error",
-        text1: "Something went wrong!!",
-        position: "top",
-      });
+      Toast.show({ type: "error", text1: "Something went wrong!!", position: "top" });
     }
   };
 
+  // S4 — saved success screen
+  if (savedLines) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: C?.background }]} edges={["top"]}>
+        <View style={[styles.content, { paddingHorizontal: spacing.screenPad, paddingTop: 100 }]}>
+          <Ionicons name="checkmark-circle-outline" size={44} color={C?.income} />
+          <Text style={[text.h1, { color: C?.text, marginTop: spacing.md }]}>
+            {savedLines.length} {savedLines.length === 1 ? "entry" : "entries"} saved
+          </Text>
+          <Text style={[text.body, { color: C?.textSecondary, marginTop: 4 }]}>They&apos;re in today&apos;s list now.</Text>
+
+          <View style={[styles.savedCard, { backgroundColor: C?.surface, borderColor: C?.border }]}>
+            {savedLines.map((s, i) => (
+              <View key={i} style={[styles.savedLine, i !== savedLines.length - 1 && { borderBottomWidth: 1, borderBottomColor: C?.divider }]}>
+                <Text style={[text.body, { color: C?.text, flex: 1 }]} numberOfLines={1}>
+                  {s.title}
+                </Text>
+                <Text style={[text.bodyMd, { color: s.type === TransactionTypeConst.income ? C?.income : C?.expense }]}>
+                  {s.type === TransactionTypeConst.income ? "+" : "−"}৳{fmt(s.amount)}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.savedActions}>
+            <PrimaryButton label="View today" onPress={() => router?.push("/")} variant="outline" style={{ flex: 1 }} />
+            <PrimaryButton label="Add more" onPress={() => setSavedLines(null)} variant="ghost" icon={<Ionicons name="add" size={18} color={C?.textSecondary} />} style={{ flex: 1 }} />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: C?.background }]} edges={["top"]}>
       <KeyboardAwareScrollView
         contentContainerStyle={[styles.content, { paddingHorizontal: spacing.screenPad }]}
         bottomOffset={30}
@@ -180,99 +183,155 @@ export default function SmartAddPage() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heading}>
-          <Text style={[text.navTitle, { color: C.text }]}>Smart Add</Text>
-          <View style={[styles.aiBadge, { backgroundColor: C.accentDim, borderColor: C.accentBorder }]}>
-            <Text style={[text.label, { color: C.accent }]}>AI</Text>
-          </View>
+          <TouchableOpacity onPress={() => router?.back()} hitSlop={8} style={{ marginLeft: -10, marginRight: 4 }}>
+            <Ionicons name="chevron-back" size={22} color={C?.text} />
+          </TouchableOpacity>
+          <Text style={[text.h2, { color: C?.text }]}>{drafts !== null ? "Review" : "Smart Add"}</Text>
         </View>
-        <Text style={[text.bodySm, { color: C.textSecondary, marginBottom: spacing.lg }]}>
-          Describe transactions in plain text
-        </Text>
 
-        <TextInput
-          value={prompt || ""}
-          onChangeText={setPrompt}
-          multiline
-          style={[styles.textarea, { backgroundColor: C.inputBg, borderColor: C.accentBorder, color: C.text }, text.body]}
-          placeholder="bought groceries for 850 taka and got 5000 taka salary"
-          placeholderTextColor={C.placeholder}
-        />
+        {drafts !== null && drafts.length > 0 ? (
+          <View style={styles.summaryRow}>
+            <Text style={[text.bodySm, { color: C?.textSecondary }]}>
+              {drafts.length} draft{drafts.length > 1 ? "s" : ""}
+            </Text>
+            <Text style={[text.bodySm, { color: C?.income }]}>
+              In +৳{formatTotal(drafts.filter((d) => d.type === TransactionTypeConst.income).reduce((s, d) => s + d.amount, 0))}
+            </Text>
+            <Text style={[text.bodySm, { color: C?.expense }]}>
+              Expense −৳{formatTotal(drafts.filter((d) => d.type === TransactionTypeConst.expense).reduce((s, d) => s + d.amount, 0))}
+            </Text>
+          </View>
+        ) : null}
 
-        <PrimaryButton
-          label={parseMutation?.isPending ? "Parsing..." : "Parse with AI"}
-          onPress={handleParse}
-          loading={parseMutation?.isPending}
-          disabled={!prompt?.trim()}
-          style={{ marginBottom: spacing.xl }}
-        />
+        {drafts === null ? (
+          <>
+            <TextInput
+              value={prompt || ""}
+              onChangeText={setPrompt}
+              multiline
+              style={[styles.textarea, { backgroundColor: C?.surface, borderColor: C?.accent, color: C?.text }, text.body]}
+              placeholder="Spent 250 on coffee and 450 on lunch, paid 1,200 for the electricity bill…"
+              placeholderTextColor={C?.placeholder}
+            />
+            <Text style={[text.bodySm, { color: C?.textSecondary, marginBottom: spacing.lg }]}>You&apos;ll review every entry before anything is saved.</Text>
 
-        {drafts !== null && (
-          <ScrollView contentContainerStyle={{ paddingBottom: 12 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <View style={styles.resultsHeader}>
-              <Text style={[text.label, { color: C.textSecondary }]}>PARSED RESULTS</Text>
-              <View style={[styles.countBadge, { backgroundColor: C.accentDim }]}>
-                <Text style={[text.label, { color: C.accent }]}>{drafts.length} found</Text>
+            {parseError && parseError !== "empty" ? (
+              <View style={[styles.errorCard, { backgroundColor: C?.expenseBg }]}>
+                <Ionicons name="alert-circle-outline" size={19} color={C?.expense} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[text.bodyMd, { color: C?.text }]}>Couldn&apos;t find entries</Text>
+                  <Text style={[text.bodySm, { color: C?.textSecondary, marginTop: 2 }]}>{parseError}</Text>
+                </View>
               </View>
-            </View>
+            ) : null}
+            {parseError === "empty" ? (
+              <View style={[styles.errorCard, { backgroundColor: C?.expenseBg }]}>
+                <Ionicons name="alert-circle-outline" size={19} color={C?.expense} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[text.bodyMd, { color: C?.text }]}>Couldn&apos;t find entries</Text>
+                  <Text style={[text.bodySm, { color: C?.textSecondary, marginTop: 2 }]}>No amounts found in that text.</Text>
+                </View>
+              </View>
+            ) : null}
 
-            {drafts.length === 0 && (
-              <Text style={[text.body, { color: C.textSecondary, textAlign: "center", marginBottom: spacing.xl }]}>
-                Couldn&apos;t parse any transactions — try rephrasing.
-              </Text>
-            )}
-
+            <PrimaryButton
+              label={parseMutation?.isPending ? "Reading your text…" : "Find entries"}
+              onPress={handleParse}
+              loading={parseMutation?.isPending}
+              disabled={!prompt?.trim()}
+              variant="outline"
+              icon={!parseMutation?.isPending ? <Ionicons name="sparkles-outline" size={18} color={C?.accent} /> : undefined}
+              height={spacing.cta}
+            />
+          </>
+        ) : (
+          <ScrollView contentContainerStyle={{ paddingBottom: 12 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             {drafts.map((draft, i) => {
               const isIncome = draft.type === TransactionTypeConst.income;
-              const typeBorder = isIncome ? C.incomeBg : C.expenseBg;
-              return (
-                <View key={i} style={[styles.draftCard, { backgroundColor: C.surface, borderColor: typeBorder }]}>
-                  <View style={styles.draftHeaderRow}>
-                    <View style={{ flex: 1 }}>
-                      <TypeToggle value={draft.type} onChange={(v) => updateDraft(i, "type", v)} />
+              const isExpanded = expandedIndex === i;
+              const hasCategory = !!draft.categoryId;
+
+              if (!isExpanded) {
+                return (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => setExpandedIndex(i)}
+                    activeOpacity={0.8}
+                    style={[styles.draftSummary, { backgroundColor: C?.surface, borderColor: C?.border }]}
+                  >
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <View style={styles.draftSummaryTitleRow}>
+                        <Text style={[text.bodyMd, { color: C?.text, flexShrink: 1 }]} numberOfLines={1}>
+                          {draft.title}
+                        </Text>
+                        <Text style={[text.bodyMd, { color: isIncome ? C?.income : C?.expense }]}>
+                          {isIncome ? "+" : "−"}৳{fmt(draft.amount)}
+                        </Text>
+                      </View>
+                      {draft.description ? (
+                        <Text style={[text.bodySm, { color: C?.textSecondary }]} numberOfLines={1}>
+                          {draft.description}
+                        </Text>
+                      ) : null}
+                      <View
+                        style={[
+                          styles.draftCatChip,
+                          hasCategory ? { borderColor: C?.accentBorder, backgroundColor: C?.accentDim } : { borderColor: C?.warning, borderStyle: "dashed" },
+                        ]}
+                      >
+                        <Text style={[text.caption, { color: hasCategory ? C?.accentText : C?.warning }]}>{hasCategory ? "Categorized" : "No category"}</Text>
+                      </View>
                     </View>
-                    <TouchableOpacity
-                      onPress={() => removeDraft(i)}
-                      hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-                      style={styles.draftDeleteBtn}
-                    >
-                      <MaterialCommunityIcons name="close" size={18} color={C.textMuted} />
-                    </TouchableOpacity>
+                    <Ionicons name="create-outline" size={18} color={C?.textSecondary} />
+                  </TouchableOpacity>
+                );
+              }
+
+              return (
+                <View key={i} style={[styles.draftCard, { backgroundColor: C?.surface, borderColor: C?.accent }]}>
+                  <TypeToggle value={draft.type} onChange={(v) => updateDraft(i, "type", v)} />
+
+                  <View style={styles.draftRow}>
+                    <View style={[styles.draftAmountBox, { backgroundColor: C?.background, borderColor: C?.border }]}>
+                      <Text style={[text.bodySm, { color: C?.textSecondary }]}>৳</Text>
+                      <TextInput
+                        value={String(draft.amount)}
+                        onChangeText={(v) => updateDraft(i, "amount", parseFloat(v.replace(/[^0-9.]/g, "")) || 0)}
+                        keyboardType="decimal-pad"
+                        style={[text.bodyMd, { color: C?.text, flex: 1, padding: 0 }]}
+                      />
+                    </View>
+                    <FormField label="" value={draft.title} onChangeText={(v) => updateDraft(i, "title", v)} inputStyle={{ height: 42 }} />
                   </View>
 
-                  {/* spec 22 / G2 — category picker on each draft card */}
-                  <CategoryPicker
-                    value={draft.categoryId ?? null}
-                    onChange={(v) => updateDraft(i, "categoryId", v)}
-                  />
+                  <FormField label="" value={draft.description ?? ""} onChangeText={(v) => updateDraft(i, "description", v)} placeholder="Add a note…" inputStyle={{ height: 42 }} />
 
-                  <FormField
-                    label="Title"
-                    value={draft.title}
-                    onChangeText={(v) => updateDraft(i, "title", v)}
-                  />
+                  <CategoryPicker value={draft.categoryId ?? null} onChange={(v) => updateDraft(i, "categoryId", v)} />
 
-                  <FormField
-                    label="Amount (৳)"
-                    value={String(draft.amount)}
-                    onChangeText={(v) => updateDraft(i, "amount", parseFloat(v.replace(/[^0-9.]/g, "")) || 0)}
-                    keyboardType="decimal-pad"
-                  />
-
-                  <FormField
-                    label="Note"
-                    value={draft.description ?? ""}
-                    onChangeText={(v) => updateDraft(i, "description", v)}
-                    placeholder="Add note…"
-                  />
+                  <View style={styles.draftActionsRow}>
+                    <TouchableOpacity onPress={() => removeDraft(i)} style={styles.discardBtn}>
+                      <Ionicons name="trash-outline" size={16} color={C?.expense} />
+                      <Text style={[text.bodySm, { color: C?.expense }]}>Discard</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setExpandedIndex(null)} style={[styles.doneBtn, { borderColor: C?.accent }]}>
+                      <Ionicons name="checkmark" size={16} color={C?.accent} />
+                      <Text style={[text.bodySm, { color: C?.accent }]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               );
             })}
 
+            {drafts.length === 0 ? (
+              <Text style={[text.body, { color: C?.textSecondary, textAlign: "center", marginVertical: spacing.xl }]}>No amounts found in that text.</Text>
+            ) : null}
+
             {drafts.length > 0 && (
               <PrimaryButton
-                label={saveMutation?.isPending ? "Saving..." : `Save ${drafts.length} Transaction${drafts.length > 1 ? "s" : ""}`}
+                label={saveMutation?.isPending ? "Saving…" : `Save ${drafts.length} ${drafts.length > 1 ? "entries" : "entry"}`}
                 onPress={handleSaveAll}
                 loading={saveMutation?.isPending}
+                height={spacing.cta}
               />
             )}
           </ScrollView>
@@ -284,13 +343,21 @@ export default function SmartAddPage() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { flexGrow: 1, paddingTop: spacing.lg, paddingBottom: 40 },
-  heading: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.xs },
-  aiBadge: { borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  textarea: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, minHeight: 96, marginBottom: spacing.md, textAlignVertical: "top" },
-  resultsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
-  countBadge: { borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  draftCard: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.base, marginBottom: spacing.sm },
-  draftHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.md },
-  draftDeleteBtn: { marginLeft: spacing.sm, padding: 4 },
+  content: { flexGrow: 1, paddingTop: spacing.xs, paddingBottom: 40 },
+  heading: { flexDirection: "row", alignItems: "center", height: 44, marginBottom: spacing.sm },
+  summaryRow: { flexDirection: "row", gap: spacing.base, marginBottom: spacing.sm },
+  textarea: { borderWidth: 1, borderRadius: radius.card, padding: spacing.base, minHeight: 140, marginBottom: spacing.sm, textAlignVertical: "top" },
+  errorCard: { flexDirection: "row", gap: spacing.sm, alignItems: "flex-start", borderRadius: radius.card, padding: spacing.md, marginBottom: spacing.base },
+  draftSummary: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, borderWidth: 1, borderRadius: radius.card, padding: spacing.md, marginBottom: spacing.sm },
+  draftSummaryTitleRow: { flexDirection: "row", justifyContent: "space-between", gap: spacing.sm },
+  draftCatChip: { alignSelf: "flex-start", marginTop: spacing.xs, height: 22, paddingHorizontal: spacing.sm, borderRadius: radius.pill, borderWidth: 1, justifyContent: "center" },
+  draftCard: { borderWidth: 1, borderRadius: radius.card, padding: spacing.md, marginBottom: spacing.sm, gap: spacing.sm },
+  draftRow: { flexDirection: "row", gap: spacing.sm },
+  draftAmountBox: { width: 108, height: 42, borderRadius: radius.md, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: spacing.sm },
+  draftActionsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 2 },
+  discardBtn: { flexDirection: "row", alignItems: "center", gap: 6, height: 36 },
+  doneBtn: { flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1 },
+  savedCard: { borderRadius: radius.card, borderWidth: 1, paddingHorizontal: spacing.base, marginTop: spacing.md },
+  savedLine: { flexDirection: "row", alignItems: "center", height: 42 },
+  savedActions: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.base },
 });

@@ -1,24 +1,68 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { useTheme, text, spacing } from "@/theme";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useTheme, text, spacing, radius } from "@/theme";
+import { Ionicons } from "@expo/vector-icons";
 
-type TProps = { title: string; subtitle?: string };
+type TProps = {
+  title: string;
+  subtitle?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  actionLabel?: string;
+  actionIcon?: keyof typeof Ionicons.glyphMap;
+  onAction?: () => void;
+};
 
-export default function EmptyState({ title, subtitle }: TProps) {
+export default function EmptyState({
+  title,
+  subtitle,
+  icon = "receipt-outline",
+  actionLabel,
+  actionIcon = "add",
+  onAction,
+}: TProps) {
   const C = useTheme();
   return (
     <View style={styles.wrap}>
-      <View style={[styles.icon, { borderColor: C.border }]}>
-        <MaterialCommunityIcons name="tray-arrow-down" size={26} color={C.textMuted} />
+      <View style={[styles.icon, { borderColor: C?.border }]}>
+        <Ionicons name={icon} size={22} color={C?.textMuted} />
       </View>
-      <Text style={[text.bodyMd, { color: C.textSecondary, marginBottom: spacing.xs }]}>{title}</Text>
-      {subtitle ? <Text style={[text.caption, { color: C.textMuted, textAlign: "center" }]}>{subtitle}</Text> : null}
+      <Text style={[text.h3, { color: C?.text, marginTop: spacing.md }]}>{title}</Text>
+      {subtitle ? (
+        <Text style={[text.body, { color: C?.textSecondary, marginTop: spacing.xs }]}>{subtitle}</Text>
+      ) : null}
+      {actionLabel && onAction ? (
+        <TouchableOpacity
+          onPress={onAction}
+          activeOpacity={0.8}
+          style={[styles.action, { borderColor: C?.accent }]}
+        >
+          <Ionicons name={actionIcon} size={16} color={C?.accent} />
+          <Text style={[text.bodyMd, { color: C?.accent }]}>{actionLabel}</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: "center", paddingVertical: 64, paddingHorizontal: 32 },
-  icon: { width: 56, height: 56, borderRadius: 999, borderWidth: 1.5, alignItems: "center", justifyContent: "center", marginBottom: spacing.base },
+  wrap: { alignItems: "flex-start", paddingTop: 28, paddingHorizontal: 2 },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  action: {
+    marginTop: spacing.md,
+    height: spacing.hitTarget,
+    paddingHorizontal: spacing.base,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
 });

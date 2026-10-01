@@ -1,4 +1,12 @@
-import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from "@/utils/api";
+import {
+  apiDelete,
+  apiGet,
+  apiPatch,
+  apiPost,
+  apiPostOutcome,
+  apiPut,
+  TWriteOutcome,
+} from "@/utils/api";
 import {
   useMutation,
   useQuery,
@@ -38,12 +46,12 @@ export const usePost = (invalidateQueriesKeys?: string[][]) => {
       url: string;
       payload: Record<string, unknown> | FormData | any;
     }) => {
-      return apiPost(params.url, params.payload);
+      return apiPost(params?.url, params?.payload);
     },
     onSuccess: (data) => {
       if (invalidateQueriesKeys) {
-        invalidateQueriesKeys.forEach((key) => {
-          queryClient.invalidateQueries({ queryKey: key });
+        invalidateQueriesKeys?.forEach((key) => {
+          queryClient?.invalidateQueries({ queryKey: key });
         });
       }
     },
@@ -57,13 +65,37 @@ export const usePost = (invalidateQueriesKeys?: string[][]) => {
   });
 };
 
+// Same shape as usePost, but resolves to a TWriteOutcome so the caller can tell
+// a server rejection from a no-response failure (see utils/api.ts). Used by the
+// save paths that queue offline, which must not queue a request the server
+// actually answered. Invalidates only on a real success.
+export const usePostOutcome = (invalidateQueriesKeys?: string[][]) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: {
+      url: string;
+      payload: Record<string, unknown> | FormData | any;
+    }): Promise<TWriteOutcome> => {
+      return apiPostOutcome(params?.url, params?.payload);
+    },
+    onSuccess: (outcome) => {
+      if (!outcome?.ok) return;
+
+      invalidateQueriesKeys?.forEach((key) => {
+        queryClient?.invalidateQueries({ queryKey: key });
+      });
+    },
+  });
+};
+
 // Update Hook
 export const useUpdateData = (key: string[], endPoint: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: any) => apiPut(endPoint, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: key });
+      queryClient?.invalidateQueries({ queryKey: key });
     },
   });
 };
@@ -76,12 +108,12 @@ export const usePut = (invalidateQueriesKeys?: string[][]) => {
 
   return useMutation({
     mutationFn: (params: { url: string; payload: FormData }) => {
-      return apiPut(params.url, params.payload);
+      return apiPut(params?.url, params?.payload);
     },
     onSuccess: () => {
       if (invalidateQueriesKeys) {
-        invalidateQueriesKeys.forEach((key) => {
-          queryClient.invalidateQueries({ queryKey: key });
+        invalidateQueriesKeys?.forEach((key) => {
+          queryClient?.invalidateQueries({ queryKey: key });
         });
       }
     },
@@ -99,12 +131,12 @@ export const usePatch = (invalidateQueriesKeys?: string[][]) => {
       url: string;
       payload: Record<string, unknown> | FormData;
     }) => {
-      return apiPatch(params.url, params.payload);
+      return apiPatch(params?.url, params?.payload);
     },
     onSuccess: () => {
       if (invalidateQueriesKeys) {
-        invalidateQueriesKeys.forEach((key) => {
-          queryClient.invalidateQueries({ queryKey: key });
+        invalidateQueriesKeys?.forEach((key) => {
+          queryClient?.invalidateQueries({ queryKey: key });
         });
       }
     },
@@ -124,8 +156,8 @@ export const useDeleteData = (invalidateQueriesKeys?: string[][]) => {
     },
     onSuccess: () => {
       if (invalidateQueriesKeys) {
-        invalidateQueriesKeys.forEach((key) => {
-          queryClient.invalidateQueries({ queryKey: key });
+        invalidateQueriesKeys?.forEach((key) => {
+          queryClient?.invalidateQueries({ queryKey: key });
         });
       }
     },

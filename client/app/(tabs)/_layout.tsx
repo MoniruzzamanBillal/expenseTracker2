@@ -3,46 +3,37 @@ import React from "react";
 import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { fontFamily, useTheme } from "@/theme";
+import { fontFamily, radius, spacing, useTheme } from "@/theme";
 import AuthGuard from "@/utils/AuthGuard";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
 function TabIcon({
   name,
   color,
 }: {
-  name: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+  name: React.ComponentProps<typeof Ionicons>["name"];
   color: string;
 }) {
-  return <MaterialCommunityIcons name={name} size={22} color={color} />;
+  return <Ionicons name={name} size={21} color={color} />;
 }
 
-function AddTabIcon({ focused }: { focused: boolean }) {
+function AddTabIcon() {
   const C = useTheme();
   return (
     <View
       style={{
-        width: 22,
-        height: 22,
+        marginTop: 8,
+        width: 52,
+        height: 38,
+        borderRadius: radius.card,
+        borderWidth: 1,
+        borderColor: C?.accent,
+        backgroundColor: C?.accentDim,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      <View
-        style={{
-          position: "absolute",
-          width: 44,
-          height: 44,
-          borderRadius: 14,
-          borderWidth: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: C.accentDim,
-          borderColor: focused ? C.accent : C.accentBorder,
-        }}
-      >
-        <MaterialCommunityIcons name="plus" size={22} color={C.accent} />
-      </View>
+      <Ionicons name="add" size={22} color={C?.accent} />
     </View>
   );
 }
@@ -52,11 +43,11 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
   const tabBarStyle = {
-    backgroundColor: C.tabBarBg,
-    borderTopColor: C.border,
+    backgroundColor: C?.background,
+    borderTopColor: C?.border,
     borderTopWidth: 1,
-    height: (Platform.OS === "ios" ? 56 : 54) + insets.bottom,
-    paddingBottom: insets.bottom + (Platform.OS === "ios" ? 8 : 10),
+    height: spacing.tabBar + insets?.bottom,
+    paddingBottom: insets?.bottom + (Platform.OS === "ios" ? 8 : 10),
     paddingTop: 10,
   };
 
@@ -66,10 +57,10 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
           tabBarStyle,
-          tabBarActiveTintColor: C.accent,
-          tabBarInactiveTintColor: C.textMuted,
+          tabBarActiveTintColor: C?.accent,
+          tabBarInactiveTintColor: C?.textMuted,
           tabBarLabelStyle: {
-            fontSize: 9,
+            fontSize: 10,
             fontFamily: fontFamily.medium,
             letterSpacing: 0.2,
           },
@@ -78,8 +69,16 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Home",
-            tabBarIcon: ({ color }) => <TabIcon name="home" color={color} />,
+            title: "Today",
+            tabBarIcon: ({ color, focused }) => <TabIcon name={focused ? "home" : "home-outline"} color={color} />,
+          }}
+        />
+
+        <Tabs.Screen
+          name="monthlyTransactions"
+          options={{
+            title: "Activity",
+            tabBarIcon: ({ color, focused }) => <TabIcon name={focused ? "calendar-clear" : "calendar-clear-outline"} color={color} />,
           }}
         />
 
@@ -87,41 +86,34 @@ export default function TabLayout() {
           name="addTransaction"
           options={{
             title: "",
-            tabBarIcon: ({ focused }) => <AddTabIcon focused={focused} />,
-          }}
-        />
-
-        <Tabs.Screen
-          name="monthlyTransactions"
-          options={{
-            title: "Monthly",
-            tabBarIcon: ({ color }) => (
-              <TabIcon name="calendar" color={color} />
-            ),
+            tabBarIcon: () => <AddTabIcon />,
           }}
         />
 
         <Tabs.Screen
           name="history"
           options={{
-            title: "History",
-            tabBarIcon: ({ color }) => (
-              <TabIcon name="chart-line" color={color} />
-            ),
+            title: "Insights",
+            tabBarIcon: ({ color, focused }) => <TabIcon name={focused ? "stats-chart" : "stats-chart-outline"} color={color} />,
           }}
         />
 
-        {/* Reached only via the gear icon on Home — not shown in the tab bar. */}
+        <Tabs.Screen
+          name="budgets"
+          options={{
+            title: "Budgets",
+            tabBarIcon: ({ color, focused }) => <TabIcon name={focused ? "pie-chart" : "pie-chart-outline"} color={color} />,
+          }}
+        />
+
+        {/* Reached only via the avatar on Today — not shown in the tab bar. */}
         <Tabs.Screen name="settings" options={{ href: null }} />
 
-        {/* Reached only via the "Smart Add" button on Add Transaction — not shown in the tab bar. */}
+        {/* Reached only via the "Smart Add" button on Add — not shown in the tab bar. */}
         <Tabs.Screen name="smart-add" options={{ href: null }} />
 
-        {/* Reached only via the "Requests" button on Add Transaction — not shown in the tab bar. */}
+        {/* Reached only via the tray icon on Today — not shown in the tab bar. */}
         <Tabs.Screen name="transaction-requests" options={{ href: null }} />
-
-        {/* Reached only via the "Budgets" button on Settings — not shown in the tab bar. */}
-        <Tabs.Screen name="budgets" options={{ href: null }} />
       </Tabs>
     </AuthGuard>
   );
