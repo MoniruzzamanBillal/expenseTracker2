@@ -45,6 +45,10 @@ export default function AuthScreen() {
           _id: userData?._id,
           name: userData?.name,
           email: userData?.email,
+          // Login is the only place this is available — loginFromDb returns the whole row,
+          // while /auth/me's select omits userRole. Dropping it here is what made the admin
+          // check impossible on the client before spec 36.
+          userRole: userData?.userRole,
         };
 
         handleSetToken(token);
