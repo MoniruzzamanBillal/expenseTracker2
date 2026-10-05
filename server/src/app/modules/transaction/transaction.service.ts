@@ -358,6 +358,15 @@ const uploadReceiptFile = async (
   userId: string,
   file: Express.Multer.File, // memoryStorage — file.buffer is populated, file.path/filename are not
 ) => {
+  // ! multer leaves req.file undefined when it parsed no "file" part at all (wrong field
+  // ! name, malformed multipart body, a boundary-less Content-Type), and the controller
+  // ! casts it through unchecked — so without this guard `file.buffer` below is a raw
+  // ! TypeError, i.e. a 500 with a leaked stack (#ERR-1) for what is a client mistake.
+  // ! Cheapest check, so it runs before the ownership query.
+  if (!file) {
+    throw new AppError(httpStatus.BAD_REQUEST, "No receipt file received");
+  }
+
   const existing = await prisma.transaction.findFirst({
     where: { id: transactionId, userId, isDeleted: false },
   });
