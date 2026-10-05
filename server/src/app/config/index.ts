@@ -11,6 +11,9 @@ export default {
   jwt_secret: process.env.JWT_ACCESS_SECRET,
   openRouterApiKey: process.env.openRouterApiKey,
   integrationApiKey: process.env.INTEGRATION_API_KEY,
+  // ! shared secret for the daily error-log cleanup cron (spec 17). Deliberately NOT
+  // ! integrationApiKey: that one is shared with the bikelog project, a different trust boundary.
+  cronSecret: process.env.CRON_SECRET,
 
   cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   cloudinary_api_key: process.env.CLOUDINARY_API_KEY,

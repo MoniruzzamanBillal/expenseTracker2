@@ -1,0 +1,29 @@
+name: Daily Error Log Cleanup
+
+# Fires the backend's POST /api/cron/cleanup-error-logs endpoint once a day, deleting error_logs
+# rows older than 30 days. Postgres has no built-in equivalent to Mongo's TTL-index background
+# sweep, so this replaces that with an externally-triggered cleanup — see
+# server/ai context/specs/17-error-log-module-with-30-day-retention.md (D5/D7) for why a cron
+# endpoint was chosen over pg_cron, and over Vercel Cron (vercel.json here still uses the
+# legacy builds/routes format, against which a "crons" block is unverified).
+#
+# Requires 2 repository secrets:
+#   - API_BASE_URL — the deployed API's base URL, e.g. https://exp2server.vercel.app/api
+#   - CRON_SECRET  — must match the server's own CRON_SECRET env var (Vercel project settings)
+on:
+  schedule:
+    # 03:00 Asia/Dhaka (UTC+6) daily = 21:00 UTC the previous day
+    - cron: "0 21 * * *"
+  workflow_dispatch: {} # manual "Run workflow" button, handy for testing
+
+jobs:
+  trigger:
+    name: Trigger error log cleanup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call cleanup-error-logs cron endpoint
+        # ! -f so curl exits non-zero on an HTTP error — a wrong/missing secret fails the run
+        # ! loudly instead of silently "succeeding" with a 401 body
+        run: |
+          curl -f -X POST "${{ secrets.API_BASE_URL }}/cron/cleanup-error-logs" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"

@@ -1,7 +1,7 @@
 # 17 — Error log module with automatic capture, 30-day retention, and an admin read route
 
-**Status**: 📝 Planned 2026-10-05 — written for user review, not implemented. Revised the same day after user
-feedback (`userRole` in the JWT payload; 404s must be recorded; no bikelog work).
+**Status**: ✅ Completed 2026-10-05 — all 8 steps implemented and verified locally. Revised before
+implementation after user feedback (`userRole` in the JWT payload; 404s must be recorded; no bikelog work).
 **Scope**: `server/` + one repo-root file (`.github/workflows/`). **No client work. No `bikelog_server` work.**
 **Reference only**: `bikelog_server`'s `errorLog` module (its specs 24 / 36 / 36a) is read as a model. Nothing in
 that repo is touched by this spec.
@@ -376,6 +376,33 @@ D2); and a deploy, since `vercel.json` points at the gitignored, untracked `dist
 
 ---
 
+
+## Implementation notes (2026-10-05)
+
+All 8 steps applied as written; **no deviations from the spec were needed**, and no new npm packages. Files:
+`prisma/schema.prisma` + migration `20261005092223_add_error_log`, `src/app/config/index.ts`, `server/.env`,
+`src/app/modules/user/user.services.ts`, new `src/app/middleware/adminCheck.ts`, new
+`src/app/modules/errorLog/` (4 files), `src/app/middleware/globalErrorHandler.ts`, `src/app.ts`,
+`src/app/router/index.ts`, new `.github/workflows/daily-error-log-cleanup.yml`.
+
+**One gotcha worth recording**: `npx prisma migrate dev` applied the migration but did **not** regenerate the
+client, so `prisma.errorLog` and the `Prisma.ErrorLog*` types didn't exist and `tsc` failed with 7 errors. A
+separate `npx prisma generate` fixed it. `postinstall` runs `generate`, but a migration inside an existing
+install doesn't — run `generate` explicitly after adding a model.
+
+**Lint baseline improved from 4 errors to 3.** `app.ts`'s `'next' is defined but never used` disappeared
+because Step 5b's 404 handler actually calls `next()`. The other three are untouched
+(`builder/Queryuilder.ts`, `interface/index.d.ts`, `middleware/globalErrorHandler.ts`). The new
+`console.error` carries an `eslint-disable-next-line no-console`, so it adds no warning either.
+
+**Closed as a required part of this work, not a drive-by**: `known-issues.md#AUTH-7` (`userRole` was dead code)
+and `#ERR-6` (handler mounted before the 404 catch-all — reordering it is what makes 404s loggable).
+Recorded in `progress-tracker.md`'s Known Gaps per `ai-workflow-rules.md`.
+
+**Still open, deliberately**: `#ERR-1` (stack in every response — note the 404 response now carries one too,
+since it is a real `AppError`), `#ERR-7` (thrown non-`Error` loses its cause; mitigated for the log row only),
+and `loginFromDb`'s missing `isDeleted: false` filter.
+
 ## Verify when done
 
 Local `yarn dev` + curl against the dev Neon database, cleaning up throwaway rows afterwards — this repo's
@@ -383,56 +410,56 @@ convention, since `yarn test` is a stub.
 
 **Build/static**
 
-- [ ] `npx tsc --noEmit` clean
-- [ ] `yarn lint` — compare against the **4 pre-existing** errors (`app.ts`, `builder/Queryuilder.ts`,
+- [x] `npx tsc --noEmit` clean
+- [x] `yarn lint` — compare against the **4 pre-existing** errors (`app.ts`, `builder/Queryuilder.ts`,
       `interface/index.d.ts`, `middleware/globalErrorHandler.ts`); the new `console.error` in
       `globalErrorHandler.ts` is an accepted `no-console` **warning**, matching `util/cloudinary.ts`
-- [ ] `npx prisma migrate dev` applied; `error_logs` exists with both indexes
+- [x] `npx prisma migrate dev` applied; `error_logs` exists with both indexes
 
 **Automatic capture**
 
-- [ ] Trigger a known 400 (e.g. `PUT /api/transactions/receipt-file/<bad-id>` with a file) → a row appears with
+- [x] Trigger a known 400 (e.g. `PUT /api/transactions/receipt-file/<bad-id>` with a file) → a row appears with
       the right `status`, `message`, `method`, `path`
-- [ ] Trigger an error while **unauthenticated** → row written with `userId`/`userEmail` `null`, no crash
-- [ ] Trigger an error while **authenticated** → `userId`/`userEmail` populated from the JWT
-- [ ] A 500 carries a non-empty `stack`; a thrown non-`Error` still records the raw value (D10 mitigation)
-- [ ] **Logging failure is non-fatal**: temporarily point `createErrorLog` at a bad table/column, trigger an
+- [x] Trigger an error while **unauthenticated** → row written with `userId`/`userEmail` `null`, no crash
+- [x] Trigger an error while **authenticated** → `userId`/`userEmail` populated from the JWT
+- [x] A 500 carries a non-empty `stack`; a thrown non-`Error` still records the raw value (D10 mitigation)
+- [x] **Logging failure is non-fatal**: temporarily point `createErrorLog` at a bad table/column, trigger an
       error, and confirm the client still receives the original error response unchanged, with
       `"Failed to persist error log:"` on the console
-- [ ] For non-404s, the response body is byte-identical to before this spec (no new/removed fields)
+- [x] For non-404s, the response body is byte-identical to before this spec (no new/removed fields)
 
 **404 capture (D8) — the part this revision added**
 
-- [ ] `GET /api/does-not-exist` → **404**, `message` still exactly `"API NOT FOUND!"`, and **a row is written**
+- [x] `GET /api/does-not-exist` → **404**, `message` still exactly `"API NOT FOUND!"`, and **a row is written**
       with `status: 404`, `method: "GET"`, `path: "/api/does-not-exist"`
-- [ ] A non-`/api` unmatched path (e.g. `GET /wp-admin`) → also 404 and also logged
-- [ ] `POST`/`PATCH`/`DELETE` to an unmatched path → logged with the right `method`
-- [ ] The 404 row's `stack` is **null** (D9), while a 500 row's is populated
-- [ ] A **wrong method on a real path** (e.g. `GET /api/transactions/receipt-file/x`) is logged too
-- [ ] `GET /` still returns `200 {"message":"server is running  !! "}` and writes **no** row
-- [ ] A successful request writes **no** row (sanity check that the handler isn't on the happy path)
+- [x] A non-`/api` unmatched path (e.g. `GET /wp-admin`) → also 404 and also logged
+- [x] `POST`/`PATCH`/`DELETE` to an unmatched path → logged with the right `method`
+- [x] The 404 row's `stack` is **null** (D9), while a 500 row's is populated
+- [x] A **wrong method on a real path** (e.g. `GET /api/transactions/receipt-file/x`) is logged too
+- [x] `GET /` still returns `200 {"message":"server is running  !! "}` and writes **no** row
+- [x] A successful request writes **no** row (sanity check that the handler isn't on the happy path)
 
 **Admin read routes**
 
-- [ ] `GET /api/admin/error-logs` with **no token** → 401
-- [ ] …with a token minted **before** the Step 3a change → **403** (proves D2's re-login requirement, and that
+- [x] `GET /api/admin/error-logs` with **no token** → 401
+- [x] …with a token minted **before** the Step 3a change → **403** (proves D2's re-login requirement, and that
       a missing claim fails closed rather than open)
-- [ ] …with a fresh **non-admin** token → **403 "Admin access required"**, no leakage of the list
-- [ ] …with a fresh **admin** token → 200, newest first, `meta` totals correct against a raw `COUNT(*)`
-- [ ] `?page=2&limit=5` pages correctly with no repeated or skipped rows across pages
-- [ ] `?status=404`, `?method=get`, `?path=does-not-exist` all filter as specified in **D4**
-- [ ] `?foo=bar` and `?status=notanumber` are **ignored** → still 200, not a 500
-- [ ] `?sort=createdAt` ascends; `?sort=garbage` falls back to `-createdAt`
-- [ ] `GET /api/admin/error-logs/:id` → 200 for a real id, **404** for a syntactically valid unknown id — and
+- [x] …with a fresh **non-admin** token → **403 "Admin access required"**, no leakage of the list
+- [x] …with a fresh **admin** token → 200, newest first, `meta` totals correct against a raw `COUNT(*)`
+- [x] `?page=2&limit=5` pages correctly with no repeated or skipped rows across pages
+- [x] `?status=404`, `?method=get`, `?path=does-not-exist` all filter as specified in **D4**
+- [x] `?foo=bar` and `?status=notanumber` are **ignored** → still 200, not a 500
+- [x] `?sort=createdAt` ascends; `?sort=garbage` falls back to `-createdAt`
+- [x] `GET /api/admin/error-logs/:id` → 200 for a real id, **404** for a syntactically valid unknown id — and
       note that this 404 is itself logged, which is expected, not a loop
 
 **Retention**
 
-- [ ] `POST /api/cron/cleanup-error-logs` with no header → 401; with a wrong secret → 401 (both logged)
-- [ ] Seed rows at `createdAt` = now, −29d, −31d (direct DB insert); run with the correct secret → only the −31d
+- [x] `POST /api/cron/cleanup-error-logs` with no header → 401; with a wrong secret → 401 (both logged)
+- [x] Seed rows at `createdAt` = now, −29d, −31d (direct DB insert); run with the correct secret → only the −31d
       row is deleted, response reports `deletedCount: 1` and the `cutoff`
-- [ ] Re-run immediately → `deletedCount: 0` (idempotent)
-- [ ] The −29d row is still readable through the admin list
+- [x] Re-run immediately → `deletedCount: 0` (idempotent)
+- [x] The −29d row is still readable through the admin list
 
 **Deployed**
 
@@ -446,5 +473,5 @@ convention, since `yarn test` is a stub.
 
 **Cleanup**
 
-- [ ] Throwaway users/transactions and all seeded `error_logs` rows removed; admin promotion either kept
+- [x] Throwaway users/transactions and all seeded `error_logs` rows removed; admin promotion either kept
       deliberately or reverted
