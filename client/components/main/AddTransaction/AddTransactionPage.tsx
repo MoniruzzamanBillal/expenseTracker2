@@ -7,9 +7,10 @@ import {
   TransactionTypeConst,
   TTransactionType,
 } from "@/constants/TransactionType.constant";
-import { usePostOutcome, usePut } from "@/hooks/useApi";
+import { usePostOutcome, usePutOutcome } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { radius, spacing, text, useTheme } from "@/theme";
+import { prepareReceiptImage } from "@/utils/prepareReceiptImage";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
@@ -68,41 +69,79 @@ export default function AddTransactionPage({
     ["yearly-transaction"],
     ["budgets"],
   ]);
-  const uploadReceiptMutation = usePut([]);
+  // Same five keys as the create above: an empty array meant even a SUCCESSFUL upload
+  // refreshed nothing, so the receipt wouldn't appear until a manual refetch.
+  const uploadReceiptMutation = usePutOutcome([
+    ["daily-transaction"],
+    ["monthly-transaction"],
+    ["weekly-transaction"],
+    ["yearly-transaction"],
+    ["budgets"],
+  ]);
 
   const enqueuePendingTransactions = useEnqueuePendingTransactions();
 
   const pickReceiptFromLibrary = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
+    if (!permission.granted) {
+      // was a silent `return` — a declined prompt gave no feedback at all. Matches
+      // ReceiptImagePicker's existing wording (spec 35 Step 5).
+      Toast.show({
+        type: "error",
+        text1: "Permission denied",
+        text2: "Photo library access is required to attach a receipt",
+        position: "top",
+      });
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       quality: 0.7,
     });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      setReceipt({
-        uri: asset?.uri,
-        name: asset?.fileName ?? "receipt.jpg",
-        type: asset?.mimeType ?? "image/jpeg",
-      });
+      setReceipt(
+        await prepareReceiptImage(
+          {
+            uri: asset?.uri,
+            name: asset?.fileName ?? "receipt.jpg",
+            type: asset?.mimeType ?? "image/jpeg",
+          },
+          asset?.width,
+          asset?.height,
+        ),
+      );
     }
   };
 
   const takeReceiptPhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) return;
+    if (!permission.granted) {
+      Toast.show({
+        type: "error",
+        text1: "Permission denied",
+        text2: "Camera access is required to take a photo",
+        position: "top",
+      });
+      return;
+    }
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       quality: 0.7,
     });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      setReceipt({
-        uri: asset?.uri,
-        name: asset?.fileName ?? "receipt.jpg",
-        type: asset?.mimeType ?? "image/jpeg",
-      });
+      setReceipt(
+        await prepareReceiptImage(
+          {
+            uri: asset?.uri,
+            name: asset?.fileName ?? "receipt.jpg",
+            type: asset?.mimeType ?? "image/jpeg",
+          },
+          asset?.width,
+          asset?.height,
+        ),
+      );
     }
   };
 
@@ -121,7 +160,7 @@ export default function AddTransactionPage({
   };
 
   const openReceiptSheet = () => {
-    Alert.alert("Attach receipt", "Image or PDF, up to 10 MB", [
+    Alert.alert("Attach receipt", "Image or PDF, up to 4 MB", [
       { text: "Take Photo", onPress: takeReceiptPhoto },
       { text: "Choose from Library", onPress: pickReceiptFromLibrary },
       { text: "Choose PDF", onPress: pickReceiptPdf },
@@ -178,19 +217,25 @@ export default function AddTransactionPage({
         const result = outcome.body;
         const createdId = result?.data?._id;
         if (receipt && createdId) {
-          try {
-            const formData = new FormData();
-            formData.append("file", receipt as any);
-            await uploadReceiptMutation.mutateAsync({
-              url: `/transactions/receipt-file/${createdId}`,
-              payload: formData,
-            });
-          } catch (uploadError) {
-            console.log("receipt upload error = ", uploadError);
+          // No try/catch: under FETCH-1 a failed upload RESOLVES, so the old catch here was
+          // dead code and its toast could never appear — the entry looked fully saved while
+          // the receipt had silently failed. usePutOutcome resolves to a TWriteOutcome
+          // instead, which can actually say what went wrong (spec 35).
+          const formData = new FormData();
+          formData.append("file", receipt as any);
+
+          const uploadOutcome = await uploadReceiptMutation.mutateAsync({
+            url: `/transactions/receipt-file/${createdId}`,
+            payload: formData,
+          });
+
+          if (!uploadOutcome?.ok) {
             Toast.show({
               type: "error",
               text1: "Entry saved, receipt didn't upload",
-              text2: "File too large. Open the entry to try another file.",
+              text2: uploadOutcome?.offline
+                ? "You appear to be offline. Open the entry to attach it later."
+                : uploadOutcome?.message,
               position: "top",
             });
           }

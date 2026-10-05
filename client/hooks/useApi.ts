@@ -5,6 +5,7 @@ import {
   apiPost,
   apiPostOutcome,
   apiPut,
+  apiPutOutcome,
   TWriteOutcome,
 } from "@/utils/api";
 import {
@@ -119,6 +120,30 @@ export const usePut = (invalidateQueriesKeys?: string[][]) => {
     },
     onError: (error) => {
       throw error;
+    },
+  });
+};
+
+// The PUT twin of usePostOutcome, same rationale (see utils/api.ts's apiPutOutcome).
+// Deliberately has no throwing onError: under FETCH-1 a rejection never arrives, so a caller
+// must read the resolved TWriteOutcome instead of relying on a catch that cannot fire.
+// Invalidates only on a real success.
+export const usePutOutcome = (invalidateQueriesKeys?: string[][]) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: {
+      url: string;
+      payload: Record<string, unknown> | FormData | any;
+    }): Promise<TWriteOutcome> => {
+      return apiPutOutcome(params?.url, params?.payload);
+    },
+    onSuccess: (outcome) => {
+      if (!outcome?.ok) return;
+
+      invalidateQueriesKeys?.forEach((key) => {
+        queryClient?.invalidateQueries({ queryKey: key });
+      });
     },
   });
 };

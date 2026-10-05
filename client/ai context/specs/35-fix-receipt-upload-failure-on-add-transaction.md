@@ -1,22 +1,22 @@
 # 35 — Fix receipt upload failing on Add Transaction (`FETCH-1` again)
 
-**Status**: 📝 Planned 2026-10-05 — written for user review, not implemented.
+**Status**: ✅ Completed 2026-10-05 — Steps 2–5 implemented; Steps 0–1 were diagnostics, already settled by server specs 15/16.
 **Scope**: `client/` — `utils/api.ts`, `hooks/useApi.ts`, `components/main/AddTransaction/AddTransactionPage.tsx`,
 `components/main/shared/ReceiptImagePicker.tsx`. Companion server spec: `server/ai context/specs/15-harden-receipt-upload-errors.md`.
 
 ## Reported symptom
 
-User, on the Add Transaction page: *"when i try to add any receipt why i m getting error from the backend"*, and when
-asked what the toast said: *"i get this error 'something went wrong' error message"*.
+User, on the Add Transaction page: _"when i try to add any receipt why i m getting error from the backend"_, and when
+asked what the toast said: _"i get this error 'something went wrong' error message"_.
 
 ## The first finding: that message is not from the backend — ⚠️ CORRECTED 2026-10-05
 
 "something went wrong" is a **client** string. There are two candidates and neither carries the server's message:
 
-| Source | Text | When |
-|---|---|---|
-| `AddTransactionPage.tsx:228` | `"Something went wrong!!"` | the outer `catch` of `handleAddTransaction` |
-| `axiosInstance.ts:76` | `"Something went wrong. Please try again."` | the interceptor's last-resort fallback, when both `error.response.data.message` and `error.message` are falsy |
+| Source                       | Text                                        | When                                                                                                          |
+| ---------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `AddTransactionPage.tsx:228` | `"Something went wrong!!"`                  | the outer `catch` of `handleAddTransaction`                                                                   |
+| `axiosInstance.ts:76`        | `"Something went wrong. Please try again."` | the interceptor's last-resort fallback, when both `error.response.data.message` and `error.message` are falsy |
 
 > **⚠️ This section was wrong, and `server/ai context/specs/16-fix-cloudinary-sync-throw-root-cause.md` proves it.**
 > The message **is** the backend's. `globalErrorHandler.ts:17` has its own fallback,
@@ -27,7 +27,7 @@ asked what the toast said: *"i get this error 'something went wrong' error messa
 > 15/16): that case now returns `502 "Receipt upload failed, please try again"`. What remains on the server is
 > confirming the env var is actually set on Vercel.
 >
-> The two client strings below are still real and still reachable — keep them in mind when reading a *future*
+> The two client strings below are still real and still reachable — keep them in mind when reading a _future_
 > report — but they were not the cause of this one.
 
 The rest of this spec stands unchanged: the client still cannot report an upload failure at all, which is why the
@@ -69,7 +69,7 @@ path specifically:
 - `usePut`'s `onError` (`hooks/useApi.ts:120-122`) never fires, so its `throw error` never runs.
 - The `catch (uploadError)` at `AddTransactionPage.tsx:188-196` is therefore **dead code**. Its
   `"Entry saved, receipt didn't upload"` toast can never appear — which is why the user has never seen it.
-- Execution continues straight into `resetForm()`, the success toast with the *create's* message, and
+- Execution continues straight into `resetForm()`, the success toast with the _create's_ message, and
   `router.push("/")`. **A failed receipt upload is presented as a fully successful save**, with at most a stray toast.
 
 This is the same shape of defect as spec 28 (false "Saved offline"), spec 30 (the unrefreshed "Spent on" card) and
@@ -80,12 +80,12 @@ equivalent**. That is the gap this spec closes.
 
 To be read **after** Step 0/1 produce a real response, not guessed at.
 
-| # | Suspect | Evidence | Where it's fixed |
-|---|---|---|---|
-| A | `CLOUDINARY_CLOUD_NAME` not set on Vercel | Cloudinary is the only dependency unique to the receipt path, and only the receipt path fails. `server/.env` (mtime 2026-09-14, when server spec 13 landed) has all three `CLOUDINARY_*` keys; `server/.env.local` — written by `vercel env pull`, mtime **2026-09-02**, *before* spec 13 — has `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` but **no `CLOUDINARY_CLOUD_NAME`**. If it was never added in the dashboard, `cloudinary.config()` gets `cloud_name: undefined` and every upload fails. **CONFIRMED as the mechanism** on 2026-10-05 — server spec 16 reproduced `500 "Something went wrong!!"` from a missing cloud name against a running server. Whether the var is actually missing *on Vercel* still needs `vercel env ls`. | Vercel dashboard / CLI, no code change |
-| B | Vercel's 4.5 MB request-body cap vs multer's 10 MB | Both image pickers use `quality: 0.7` with **no resize** (`AddTransactionPage.tsx:78-81, 95-98`), so a modern phone photo can clear 4.5 MB. The platform then rejects it with a `413` whose body is `{error:{code,message}}` — note `data.message` is undefined there, so even a fixed client would show a blank reason. The route's `MulterError`→clean-400 wrapper never runs, and the sheet's "up to 10 MB" copy (`:124`) is simply wrong. | Step 4 here + server spec 15 |
-| C | Vercel function timeout → 504 | axios allows 60 s (`axiosInstance.ts:13`); `vercel.json` sets no `maxDuration`, so the platform default applies. Several MB in plus a Cloudinary re-upload out can exceed it. | server spec 15 |
-| D | Server 500s instead of 400-ing | `transaction.service.ts:356-379` dereferences `file.buffer` with no `if (!file)` guard, and Cloudinary rejections aren't wrapped in `AppError`, so they fall through `globalErrorHandler.ts:16` to a raw 500 **with a stack trace in production** (`#ERR-1`). | server spec 15 |
+| #   | Suspect                                            | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Where it's fixed                       |
+| --- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| A   | `CLOUDINARY_CLOUD_NAME` not set on Vercel          | Cloudinary is the only dependency unique to the receipt path, and only the receipt path fails. `server/.env` (mtime 2026-09-14, when server spec 13 landed) has all three `CLOUDINARY_*` keys; `server/.env.local` — written by `vercel env pull`, mtime **2026-09-02**, _before_ spec 13 — has `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` but **no `CLOUDINARY_CLOUD_NAME`**. If it was never added in the dashboard, `cloudinary.config()` gets `cloud_name: undefined` and every upload fails. **CONFIRMED as the mechanism** on 2026-10-05 — server spec 16 reproduced `500 "Something went wrong!!"` from a missing cloud name against a running server. Whether the var is actually missing _on Vercel_ still needs `vercel env ls`. | Vercel dashboard / CLI, no code change |
+| B   | Vercel's 4.5 MB request-body cap vs multer's 10 MB | Both image pickers use `quality: 0.7` with **no resize** (`AddTransactionPage.tsx:78-81, 95-98`), so a modern phone photo can clear 4.5 MB. The platform then rejects it with a `413` whose body is `{error:{code,message}}` — note `data.message` is undefined there, so even a fixed client would show a blank reason. The route's `MulterError`→clean-400 wrapper never runs, and the sheet's "up to 10 MB" copy (`:124`) is simply wrong.                                                                                                                                                                                                                                                                                                    | Step 4 here + server spec 15           |
+| C   | Vercel function timeout → 504                      | axios allows 60 s (`axiosInstance.ts:13`); `vercel.json` sets no `maxDuration`, so the platform default applies. Several MB in plus a Cloudinary re-upload out can exceed it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | server spec 15                         |
+| D   | Server 500s instead of 400-ing                     | `transaction.service.ts:356-379` dereferences `file.buffer` with no `if (!file)` guard, and Cloudinary rejections aren't wrapped in `AppError`, so they fall through `globalErrorHandler.ts:16` to a raw 500 **with a stack trace in production** (`#ERR-1`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | server spec 15                         |
 
 ## Step 0 — Read the real error first (no code change)
 
@@ -96,7 +96,7 @@ npx vercel logs exp2server --since 1h # the actual status + message for the rece
 ```
 
 If `CLOUDINARY_CLOUD_NAME` is missing: `npx vercel env add CLOUDINARY_CLOUD_NAME production` (and `preview`),
-redeploy, retest. That may be the entire user-visible fix — the steps below are still worth doing so the *next*
+redeploy, retest. That may be the entire user-visible fix — the steps below are still worth doing so the _next_
 failure is legible instead of silent.
 
 ## Step 1 — Reproduce with curl
@@ -139,7 +139,7 @@ Leave `usePut`/`apiPut` in place — `ReceiptImagePicker` and any other caller k
 
 - `:71` — `usePut([])` → `usePutOutcome([...])` with the **same five keys** the create mutation uses (`:64-70`:
   `daily-transaction`, `monthly-transaction`, `weekly-transaction`, `yearly-transaction`, `budgets`). The current
-  empty array means even a *successful* upload refreshes nothing, so the receipt wouldn't show until a manual refetch.
+  empty array means even a _successful_ upload refreshes nothing, so the receipt wouldn't show until a manual refetch.
 - `:181-196` — drop the dead `try`/`catch` and branch on the outcome:
 
   ```ts
@@ -162,6 +162,7 @@ Leave `usePut`/`apiPut` in place — `ReceiptImagePicker` and any other caller k
 
   The hard-coded `"File too large."` guess in the current `text2` goes — it was a guess, and it is wrong for every
   cause except B.
+
 - Keep `resetForm()` + navigation on the create's success either way: the transaction genuinely was saved, and
   `ReceiptImagePicker` on the transaction detail is the retry path. The toast now says so truthfully.
 
@@ -204,25 +205,76 @@ create time, per the user's own instruction… This is the entire point of the f
 lives there (`:180-197`), added by spec 27's phase 4a (`630363c`), and **spec 27 never recorded the reversal** — it only
 claims "receipt upload … kept as-is". Spec 17's scope note needs correcting, or this spec needs to supersede it.
 
-Spec 17 line 76 also records the assumption that caused the boundary bug to go unnoticed: *"`axiosInstance.ts`'s
+Spec 17 line 76 also records the assumption that caused the boundary bug to go unnoticed: _"`axiosInstance.ts`'s
 request interceptor already branches on `config.data instanceof FormData` to set the correct multipart boundary — no
-interceptor change needed."* It branches; it does not set a boundary.
+interceptor change needed."_ It branches; it does not set a boundary.
+
+## Implementation notes (2026-10-05)
+
+Steps 2–5 applied as written, **no deviations needed**. Steps 0–1 were the diagnostic steps and were already
+settled by server specs 15/16 — the root cause (Cloudinary throwing a bare string on a missing credential,
+surfacing as `500 "Something went wrong!!"`) was found and fixed there, which is also what disproved this spec's
+original "the message is not from the backend" claim (corrected in place above).
+
+Files changed: `utils/api.ts` (+`apiPutOutcome`), `hooks/useApi.ts` (+`usePutOutcome`),
+`components/main/AddTransaction/AddTransactionPage.tsx`, `components/main/shared/ReceiptImagePicker.tsx`,
+`utils/axiosInstance.ts` (Step 5.1 only), and a new `utils/prepareReceiptImage.ts`. One new dependency:
+`expo-image-manipulator@~14.0.8` (no config plugin, so `app.json` is untouched).
+
+**Step 4 note — the current `expo-image-manipulator` API.** `manipulateAsync` is **deprecated** in v14. The
+helper uses the contextual API: `ImageManipulator.manipulate(uri)` → `.resize(...)` → `await renderAsync()` →
+`await saveAsync({ format: SaveFormat.JPEG, compress: 0.6 })`. It resizes only when the long edge actually
+exceeds 1600px (upscaling a small receipt would *add* bytes), caps width when the picker reports no dimensions,
+and renames the output to `.jpg` with `type: "image/jpeg"` — the bytes are always re-encoded as JPEG, so the
+name/type must follow or the server's mimetype-driven Cloudinary `resource_type` pick would disagree with the
+content. It is best-effort: on any failure it returns the original file rather than blocking the upload, since a
+too-large upload now fails with a clean 400 anyway (server spec 15). **PDFs never go through it** — they have no
+pixel dimensions and re-encoding one as JPEG would corrupt it.
+
+**Sheet copy** went to "up to 4 MB" to match server spec 15's multer limit. `ReceiptImagePicker`'s copy also
+dropped the inaccurate "or PDF" — that picker has always been image-only.
+
+**`usePut` now has zero call sites.** Step 3 migrated the last one (`ReceiptImagePicker`). The spec said to leave
+`usePut`/`apiPut` in place, so they are still exported and untouched — but they have joined
+`useUpdateData`/`useDeleteData` as dead hooks, which is `known-issues.md#FETCH-2`'s territory. Flagged, not
+removed; deleting them is a separate cleanup.
+
+**Out of scope, confirmed untouched**: `FETCH-1` itself (the interceptor still resolves on error — this spec adds
+an opt-in escape hatch alongside it, exactly as spec 28 did), `#ERR-1`, and `UX-3` (`ReceiptImagePicker`'s remove
+confirm and the Add page's attach sheet are both still `Alert.alert`, so both are still dead on web — which is
+why the picker flow cannot be exercised on the web target at all, see below).
 
 ## Verify when done
 
-- [ ] `npx tsc --noEmit` clean
-- [ ] `yarn lint` clean
-- [ ] Step 0: `vercel env ls production` lists all three `CLOUDINARY_*` keys
-- [ ] Step 1 curl matrix, **prod**: 200 + a `receiptFileUrl` for a small JPEG; 200 for a PDF; a clean 400 for an
-      oversized file; a clean 400 for a missing `file` field; 400 for a `.txt`
-- [ ] Step 1 curl matrix, **local** (`yarn dev`): same results — if local passes and prod doesn't, it's suspect A
-- [ ] `grep -n "catch (uploadError)" components/main/AddTransaction/AddTransactionPage.tsx` → 0 hits
-- [ ] **On a device** (custom dev client — Expo Go can't run this app since spec 26): Add Transaction → Take Photo →
-      save → success toast, entry listed on Today, receipt visible when the entry is opened
-- [ ] **On a device**: same with Choose from Library, and with Choose PDF
+Static verification plus a live integration check of the outcome mapping. The picker UI itself **cannot** be
+exercised on the web target: `Alert.alert` no-ops there (`UX-3`), so the attach-receipt action sheet never opens
+— that is why every UI step below is marked device-only.
+
+- [x] `npx tsc --noEmit` clean
+- [x] `yarn lint` clean (note: `expo lint` only covers `app/` and `components/`, not `utils/` or `hooks/`)
+- [x] `npx expo export --platform web` succeeds, all 22 routes render — confirms the new
+      `expo-image-manipulator` import resolves on the web target too
+- [x] `grep -n "catch (uploadError)" components/main/AddTransaction/AddTransactionPage.tsx` → 0 hits
+- [x] `grep -rn "usePut(" components/ app/ hooks/` → 0 hits (every call site migrated to `usePutOutcome`)
+- [x] `grep -rn "MediaTypeOptions" components/` → 0 hits (Step 5.2, 4 call sites)
+- [x] **All four `apiPutOutcome` branches verified against the real local server** (`yarn dev` + a Node harness
+      replicating the new interceptor pair byte-for-byte, since the RN module itself can't run in Node):
+      success → `{ok:true, body:{...}}`; bad transaction id → `{ok:false,offline:false,status:400,message:"Invalid
+      transaction id !!!"}`; oversized file → `{...,message:"File too large"}`; unreachable host →
+      `{ok:false,offline:true}`. The toast's `text2` therefore now carries the server's real reason instead of the
+      old hard-coded "File too large." guess.
+- [x] **Step 5.1 validated in the same run**: the success path worked with `Content-Type` **deleted**, i.e. the
+      platform generated the boundary and the server parsed the multipart body. This was the riskiest edit.
+- [x] `utils/envConfig.ts` still points at `https://exp2server.vercel.app`
+- [x] Throwaway user/transaction hard-deleted and the Cloudinary test asset destroyed at the origin
+- [ ] **On a device** (custom dev client — Expo Go can't run this app since spec 26): Add Transaction → Take Photo
+      → save → success toast, entry listed on Today, receipt visible when the entry is opened
+- [ ] **On a device**: same with Choose from Library, and with Choose PDF (confirm the PDF is *not* re-encoded)
 - [ ] **On a device**: the upload refreshes Today/Activity/Budgets without a manual pull-to-refresh (the
       invalidation-keys fix)
-- [ ] **Negative case, on a device**: with `CLOUDINARY_CLOUD_NAME` unset on a *preview* deploy, the toast reads
-      "Entry saved, receipt didn't upload" with the server's actual message in `text2` — not "something went wrong"
+- [ ] **On a device**: declining the camera/library permission now shows a "Permission denied" toast (Step 5.3)
+- [ ] **Negative case, on a device**: force a server-side failure and confirm the toast reads "Entry saved, receipt
+      didn't upload" with the server's actual message in `text2` — not "something went wrong"
 - [ ] **Negative case**: airplane mode mid-save → the offline branch message, and the entry still lands in the queue
-- [ ] `utils/envConfig.ts` still points at `https://exp2server.vercel.app` before committing
+- [ ] **On a device**: confirm a camera photo now uploads well under 4 MB after the downscale (the whole point of
+      Step 4) — check the stored `receiptFileUrl`'s byte size

@@ -40,6 +40,40 @@ export type TWriteOutcome<TBody = any> =
   | { ok: false; offline: true }
   | { ok: false; offline: false; status?: number; message: string };
 
+/**
+ * The PUT counterpart of apiPostOutcome, for the same reason: the interceptor resolves on
+ * error (known-issues.md#FETCH-1), so apiPut returns `undefined` for a 400, a 500 and a dead
+ * network alike. The receipt upload needs to tell the user *why* it failed, which apiPut
+ * cannot express — see ai context/specs/35-fix-receipt-upload-failure-on-add-transaction.md.
+ */
+export const apiPutOutcome = async <TBody = any>(
+  endPoint: string,
+  payLoad: any,
+): Promise<TWriteOutcome<TBody>> => {
+  const result = await axiosInstance.put(endPoint, payLoad);
+
+  // Not an AxiosError → the interceptor's success shape, { data, meta }.
+  if (!axios.isAxiosError(result)) {
+    return { ok: true, body: (result as any)?.data as TBody };
+  }
+
+  // An AxiosError carrying no response never reached a server: offline, DNS
+  // failure, or the 60s timeout. Anything else means the server answered.
+  if (!result?.response) {
+    return { ok: false, offline: true };
+  }
+
+  return {
+    ok: false,
+    offline: false,
+    status: result?.response?.status,
+    message:
+      (result?.response?.data as any)?.message ||
+      result?.message ||
+      "The server rejected this. Please try again.",
+  };
+};
+
 export const apiPostOutcome = async <TBody = any>(
   endPoint: string,
   payLoad: any,
