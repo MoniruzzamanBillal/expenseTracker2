@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { IUser } from "@/types/global.types";
+import { clearPersistedQueryCache } from "@/utils/queryClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type IUserProviderValues = {
@@ -69,6 +70,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       await AsyncStorage.removeItem("user");
       await AsyncStorage.removeItem("token");
+      // Spec 37: persisted reads outlive the session otherwise, and a second account would see
+      // the first one's figures.
+      await clearPersistedQueryCache();
       setUser(null);
       setToken(null);
     } catch (error) {

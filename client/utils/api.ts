@@ -1,8 +1,44 @@
 import axios from "axios";
 import { axiosInstance } from "./axiosInstance";
 
+/**
+ * What a failed read throws. The response interceptor resolves on error instead of rejecting
+ * (known-issues.md#FETCH-1), so without this `apiGet` returned `undefined` for a dead network and a
+ * 500 alike, and TanStack Query rejected that itself with "data is undefined" — the string the
+ * user saw on screen. This is the read-side counterpart of TWriteOutcome below.
+ */
+export class ApiReadError extends Error {
+  /** true when the request never reached a server (offline, DNS, 60s timeout) */
+  readonly offline: boolean;
+  readonly status?: number;
+
+  constructor(message: string, offline: boolean, status?: number) {
+    super(message);
+    this.name = "ApiReadError";
+    this.offline = offline;
+    this.status = status;
+  }
+}
+
 export const apiGet = async (endPoint: string) => {
   const resule = await axiosInstance.get(endPoint);
+
+  // Not an AxiosError → the interceptor's success shape, { data, meta }.
+  if (axios.isAxiosError(resule)) {
+    // No response means the request never reached a server: offline, DNS failure, or the timeout.
+    if (!resule?.response) {
+      throw new ApiReadError("You're offline.", true);
+    }
+
+    throw new ApiReadError(
+      (resule?.response?.data as any)?.message ||
+        resule?.message ||
+        "The server could not complete this request.",
+      false,
+      resule?.response?.status,
+    );
+  }
+
   return resule?.data;
 };
 

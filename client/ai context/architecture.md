@@ -6,7 +6,7 @@
 |---|---|
 | Framework | Expo (React Native), file-based routing via `expo-router` |
 | UI library | Custom design system in `theme/` (`colors.ts`/`typography.ts`/`spacing.ts`/`ThemeContext.tsx`, light+dark, ported from the `xpnsapp` visual reference per `specs/06-visual-redesign-xpnsapp-design-system.md`) — `react-native-paper` is still mounted (`PaperProvider`) but only used for its `Portal`/`Modal` primitives in `UpdateTransactionModal.tsx`/`PendingTransactionEditModal.tsx`; everywhere else uses plain RN components + `theme/`'s `useTheme()`, `text`, `spacing`, `radius` |
-| Server state | TanStack Query, one global `QueryClient` (no custom `staleTime`/`retry` config) |
+| Server state | TanStack Query, one global `QueryClient` defined in `utils/queryClient.ts` (spec 37: `gcTime` 7 days, `staleTime` 30s, `retry: 2`) and persisted to AsyncStorage (`EXPENSE_TRACKER_QUERY_CACHE`, 7-day `maxAge`) so reads survive a restart |
 | HTTP | Axios, one shared instance (`utils/axiosInstance.ts`) |
 | Local persistence | `AsyncStorage` for `user`/`token` only |
 
@@ -14,7 +14,7 @@
 
 ## Provider stack
 
-`app/_layout.tsx` mounts, in order: `SafeAreaProvider` → `KeyboardProvider` → `QueryClientProvider` → `ThemeProvider` (`theme/ThemeContext.tsx`) → `GestureHandlerRootView` → `PaperProvider` → `UserProvider` (`context/user.context.tsx`) → `<Slot />` + `<Toast />`. Order matters (each layer depends on the one outside it being mounted). Root layout also gates on `@expo-google-fonts/inter` loading (`useFonts`), showing `utils/SplashScreen.tsx` until fonts are ready — that splash renders before `ThemeProvider` mounts, so it always uses `ThemeContext`'s default (dark) regardless of system theme; harmless (a few hundred ms), not worth fixing.
+`app/_layout.tsx` mounts, in order: `SafeAreaProvider` → `KeyboardProvider` → `PersistQueryClientProvider` (spec 37; was a plain `QueryClientProvider`) → `ThemeProvider` (`theme/ThemeContext.tsx`) → `GestureHandlerRootView` → `PaperProvider` → `UserProvider` (`context/user.context.tsx`) → `<Slot />` + `<Toast />`. Order matters (each layer depends on the one outside it being mounted). **Reads are cache-first (spec 37):** a failed read no longer replaces a screen — the six list screens (Today, Activity ×2, Insights' Year view, Budgets, Requests) keep rendering the last good/persisted data under an `OfflineNotice` strip, and `ErrorState` only appears when there is nothing cached (and, on Today, nothing queued). `apiGet` throws a typed `ApiReadError` (`offline`, `status`) for a failed read. The persisted cache is dropped by `clearPersistedQueryCache()` on logout and on a 401; `pending-transactions` and mutations are never persisted. When a payload shape a screen reads changes, bump `buster` in `utils/queryClient.ts`. Root layout also gates on `@expo-google-fonts/inter` loading (`useFonts`), showing `utils/SplashScreen.tsx` until fonts are ready — that splash renders before `ThemeProvider` mounts, so it always uses `ThemeContext`'s default (dark) regardless of system theme; harmless (a few hundred ms), not worth fixing.
 
 ## Data-fetching pipeline
 

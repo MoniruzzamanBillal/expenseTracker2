@@ -3,6 +3,7 @@ import axios from "axios";
 import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 import { getBaseUrl } from "./envConfig";
+import { clearPersistedQueryCache } from "./queryClient";
 
 const instance = axios.create({
   baseURL: getBaseUrl(),
@@ -60,6 +61,8 @@ instance.interceptors.response.use(
     if (error?.response?.status === 401) {
       await AsyncStorage.removeItem("user");
       await AsyncStorage.removeItem("token");
+      // Spec 37: don't leave the previous session's cached reads for the next login to find.
+      await clearPersistedQueryCache();
 
       Toast.show({
         type: "error",

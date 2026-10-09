@@ -51,9 +51,9 @@ export default function ErrorLogsPage() {
   const meta = data?.data?.meta;
   const totalPages = meta?.totalPages ?? 1;
 
-  // A 403 (or any HTTP error) does NOT set `isError`: the response interceptor resolves
-  // instead of rejecting, so apiGet returns `undefined` and the query reports success with
-  // no payload (known-issues.md#FETCH-1). Hence the explicit `!data?.success` test.
+  // A 403 (or any HTTP error) does set `isError`: the response interceptor resolves instead of
+  // rejecting (known-issues.md#FETCH-1), but apiGet turns that into a thrown ApiReadError. The
+  // `!data?.success` test still covers a 2xx that carries no success payload.
   const failed = isError || (!isLoading && !isRefetching && !data?.success);
 
   const goToPage = (next: number) => {

@@ -1,6 +1,7 @@
 import ConfirmModal from "@/components/main/shared/ConfirmModal";
 import EmptyState from "@/components/main/shared/EmptyState";
 import ErrorState from "@/components/main/shared/ErrorState";
+import OfflineNotice from "@/components/main/shared/OfflineNotice";
 import TransactionCardSkeleton from "@/components/main/shared/TransactionCardSkeleton";
 import TransactionRequestEditModal from "@/components/main/shared/TransactionRequestEditModal";
 import {
@@ -11,6 +12,7 @@ import {
 import { usePatch } from "@/hooks/useApi";
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransactionRequest } from "@/types/TransactionRequest.types";
+import { ApiReadError } from "@/utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useRouter } from "expo-router";
@@ -43,7 +45,7 @@ export default function TransactionRequestsPage() {
   const [editRequest, setEditRequest] = useState<TTransactionRequest | null>(null);
   const [rejectTarget, setRejectTarget] = useState<TTransactionRequest | null>(null);
 
-  const { data, isLoading, isError, error, refetch, isRefetching } = useFetchTransactionRequests();
+  const { data, isPending, isError, error, refetch, isRefetching, dataUpdatedAt } = useFetchTransactionRequests();
 
   const acceptMutation = useAcceptTransactionRequest();
   const rejectMutation = useRejectTransactionRequest();
@@ -54,6 +56,10 @@ export default function TransactionRequestsPage() {
     ["yearly-transaction"],
     ["budgets"],
   ]);
+
+  // Spec 37: a failed read only blocks the screen when there is nothing cached to show.
+  const hasCached = !!data?.data;
+  const showErrorCard = isError && !hasCached;
 
   const requests = data?.data ?? [];
 
@@ -146,9 +152,17 @@ export default function TransactionRequestsPage() {
           {requests.length > 0 ? <Text style={[text.bodySm, { color: C?.textSecondary }]}>{requests.length} waiting</Text> : null}
         </View>
 
-        {isError ? (
+        {isError && hasCached ? (
+          <OfflineNotice
+            offline={(error as ApiReadError)?.offline === true}
+            onRetry={() => refetch()}
+            updatedAt={dataUpdatedAt || undefined}
+          />
+        ) : null}
+
+        {showErrorCard ? (
           <ErrorState title="Couldn't load requests" message={(error as any)?.message ?? "Network Error"} onRetry={refetch} />
-        ) : isLoading ? (
+        ) : isPending && !hasCached ? (
           <TransactionCardSkeleton />
         ) : requests.length === 0 ? (
           <EmptyState

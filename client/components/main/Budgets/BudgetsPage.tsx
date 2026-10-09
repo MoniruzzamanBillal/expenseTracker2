@@ -1,10 +1,12 @@
 import EmptyState from "@/components/main/shared/EmptyState";
 import ConfirmModal from "@/components/main/shared/ConfirmModal";
 import ErrorState from "@/components/main/shared/ErrorState";
+import OfflineNotice from "@/components/main/shared/OfflineNotice";
 import { useDeleteData, useFetchData } from "@/hooks/useApi";
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TBudget } from "@/types/Budget.types";
 import { TCategory } from "@/types/Category.types";
+import { ApiReadError } from "@/utils/api";
 import { formatTotal as fmt } from "@/utils/formatAmount";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -44,9 +46,10 @@ export default function BudgetsPage() {
 
   const {
     data: budgetsData,
-    isLoading,
+    isPending,
     isError,
     error,
+    dataUpdatedAt,
     refetch: refetchBudgets,
   } = useFetchData<TBudget[]>(["budgets"], "/budgets");
   // No dedicated useCategories hook per spec 12/13's own decision — see
@@ -61,6 +64,10 @@ export default function BudgetsPage() {
     await Promise.all([refetchBudgets(), refetchCategories()]);
     setRefreshing(false);
   };
+
+  // Spec 37: a failed read only blocks the screen when there is nothing cached to show.
+  const hasCached = !!budgetsData?.data;
+  const showErrorCard = isError && !hasCached;
 
   const budgets = budgetsData?.data ?? [];
   const categories = categoriesData?.data ?? [];
@@ -152,13 +159,21 @@ export default function BudgetsPage() {
           ) : null}
         </View>
 
-        {isError ? (
+        {isError && hasCached ? (
+          <OfflineNotice
+            offline={(error as ApiReadError)?.offline === true}
+            onRetry={() => refetchBudgets()}
+            updatedAt={dataUpdatedAt || undefined}
+          />
+        ) : null}
+
+        {showErrorCard ? (
           <ErrorState
             title="Couldn't load budgets"
             message={(error as any)?.message ?? "Network Error"}
             onRetry={refetchBudgets}
           />
-        ) : isLoading ? (
+        ) : isPending && !hasCached ? (
           <View
             style={[
               styles.summaryCard,
