@@ -36,17 +36,13 @@ const fmt = (n: string) => {
   return dec !== undefined ? `${withCommas}.${dec}` : withCommas;
 };
 
-export default function AddTransactionPage({
-  initialType = TransactionTypeConst.income,
-}: {
-  // Lets a caller (e.g. the quick-add widget route) pre-select income/expense
-  // instead of always defaulting to income.
-  initialType?: TTransactionType;
-} = {}) {
+export default function AddTransactionPage() {
   const C = useTheme();
   const router = useRouter();
 
-  const [type, setType] = useState<TTransactionType>(initialType);
+  const [type, setType] = useState<TTransactionType>(
+    TransactionTypeConst.income,
+  );
   const [amount, setAmount] = useState<string>("");
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);

@@ -1,5 +1,7 @@
 # 26: Android home-screen widget for quick-adding a transaction
 
+> ⛔ **Removed 2026-10-10** — the widget did not work on the user's phone. Everything below is history; none of these files exist anymore.
+
 ## Goal
 
 Let the user add a transaction from the Android home screen without opening the full app — a widget with two tap targets ("+ Expense" / "+ Income") that launches a fast, pre-filled Add Transaction screen. Explicitly **not** a widget for the AI "Smart Add" flow, and Android-only (iOS WidgetKit would require a separately-maintained native SwiftUI extension — decided out of scope for now).

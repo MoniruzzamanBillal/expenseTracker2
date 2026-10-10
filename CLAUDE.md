@@ -32,7 +32,7 @@ Same for two other things the docs still name as if present:
 
 ### client (run from `client/`)
 - `yarn start` / `yarn dev` — Expo dev server; `yarn web` — web target (port 8081).
-- `yarn android` / `yarn ios` — `expo run:android` / `expo run:ios`. There is **no checked-in `android/`/`ios/` directory**; these prebuild one. Since spec 26 the app needs a custom dev client (`expo-dev-client` + the `react-native-android-widget` config plugin), so Expo Go can't run the widget path.
+- `yarn android` / `yarn ios` — `expo start --android` / `expo start --ios`. There is **no checked-in `android/`/`ios/` directory**. The Android widget (spec 26) and `expo-dev-client` were removed, so Expo Go runs the app again; the APK is built through EAS.
 - `yarn lint` — `expo lint`. Typecheck: `npx tsc --noEmit`.
 - `app.json` has `experiments.typedRoutes: true` — after adding a route file, typed routes must be regenerated (run `expo start`/`expo start --web` once) or `tsc --noEmit` will fail on the new href.
 - `yarn reset-project` — Expo's scaffolding reset script (moves `app/` to `app-example/`, creates a blank one); do not run unless explicitly asked.
@@ -70,7 +70,7 @@ Read in this order, on either side:
 6. `progress-tracker.md` — current state, known gaps, next up
 7. `specs/00-build-plan.md` — how to scope new work
 
-**Known doc drift (verify against code before relying on these two):** `server/ai context/architecture.md` predates the `category`/`budget`/`transactionRequest` modules and the receipt-upload and trend endpoints. `client/ai context/architecture.md`'s routing section predates specs 14/16/26 **and** the Nocturne redesign (spec 27) — the tab bar is now Today (`index`) · Activity (`monthlyTransactions`) · Add (`addTransaction`) · Insights (`history`) · Budgets (`budgets`, now visible, not `href: null`); `settings`/`smart-add`/`transaction-requests` stay `href: null` but are reached differently than the doc describes (avatar → Settings and tray icon → Requests on Today, not a gear icon or an Add-screen button), plus a top-level `app/quick-add.tsx`. `progress-tracker.md` on each side is the more current of the two.
+**Known doc drift (verify against code before relying on these two):** `server/ai context/architecture.md` predates the `category`/`budget`/`transactionRequest` modules and the receipt-upload and trend endpoints. `client/ai context/architecture.md`'s routing section predates specs 14/16 **and** the Nocturne redesign (spec 27) — the tab bar is now Today (`index`) · Activity (`monthlyTransactions`) · Add (`addTransaction`) · Insights (`history`) · Budgets (`budgets`, now visible, not `href: null`); `settings`/`smart-add`/`transaction-requests` stay `href: null` but are reached differently than the doc describes (avatar → Settings and tray icon → Requests on Today, not a gear icon or an Add-screen button). `progress-tracker.md` on each side is the more current of the two.
 
 ### Working conventions worth knowing up front
 - Plans go in `ai context/specs/` as numbered markdown files (`NN-kebab-title.md`) with their own "Verify when done" checklist, and get a row in that side's `progress-tracker.md`. Superseded specs are renumbered to the end and marked ⛔ rather than deleted.
@@ -79,8 +79,7 @@ Read in this order, on either side:
 ## Client specifics that aren't obvious from one file
 
 - Data flow is `utils/axiosInstance.ts` → `utils/api.ts` → `hooks/useApi.ts` (TanStack Query wrappers) → screens. Use the hooks, not axios directly.
-- The Android home-screen widget (spec 26) spans `client/index.js` (registers the task handler *before* nothing else — it wraps `expo-router/entry`), `widget-task-handler.tsx`, `widgets/QuickAddWidget.tsx`, and the `react-native-android-widget` plugin block in `app.json`. It deep-links `client://quick-add?type=income|expense` into `app/quick-add.tsx`, which renders `AddTransactionPage` with an `initialType` prop. `QuickAddWidget.tsx` is deliberately opted out of the React Compiler (`experiments.reactCompiler` is on globally) — don't remove that directive.
-- Colors always come from `theme/`'s `useTheme()`; `constants/theme.ts` is untouched Expo scaffolding with no call sites. Since the Nocturne redesign, theme also has a manual override: `useThemePreference()` (Dark/Light/System, AsyncStorage-persisted, wired up in Settings) sits alongside `useTheme()` in the same `ThemeContext.tsx` — `useTheme()` itself still just returns the resolved `ColorScheme`, so old call sites didn't need to change.
+- Colors always come from `theme/`'s `useTheme()`. Since the Nocturne redesign, theme also has a manual override: `useThemePreference()` (Dark/Light/System, AsyncStorage-persisted, wired up in Settings) sits alongside `useTheme()` in the same `ThemeContext.tsx` — `useTheme()` itself still just returns the resolved `ColorScheme`, so old call sites didn't need to change.
 - Icons: since the Nocturne redesign, UI chrome (tab bar, buttons, headers, empty/error states) uses `Ionicons`; `MaterialCommunityIcons` is kept only for category icons (`category.icon`, `CATEGORY_ICON_OPTIONS`) since that's what's already stored in the database. Don't reintroduce MCI for chrome or Ionicons for category pickers — that split is deliberate, not incidental.
 - `types/Transaction.tyes.ts`'s filename typo is load-bearing across ~13 imports — renaming it is a full grep-and-fix change, not a rename.
 
@@ -98,4 +97,3 @@ Read in this order, on either side:
 - On a 401, `AsyncStorage` is cleared but `UserProvider`'s in-memory state isn't — the UI can look "still logged in" until reload or manual logout (`#AUTH-2`; a fix is written up but unimplemented in `specs/25-fix-auth2-401-session-state-sync.md`).
 - `Alert.alert` no-ops on the web target, so confirm dialogs silently do nothing there (`#UX-3`).
 - Resolved: `#TYPE-1`'s three-copies-of-the-transaction-type enum. Import the enum only from `constants/TransactionType.constant.ts`.
-- The web target throws `TypeError: AppRegistry.default.registerHeadlessTask is not a function` in the console on every page load — `client/index.js` calls `registerWidgetTaskHandler` (spec 26's Android widget) unconditionally, and that API doesn't exist on web. Harmless (confirmed via headless-browser click-through: login, navigation, and every screen still render and work), not a regression from anything recent — don't chase it as a new bug.
