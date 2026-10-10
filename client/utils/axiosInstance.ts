@@ -3,6 +3,7 @@ import axios from "axios";
 import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 import { getBaseUrl } from "./envConfig";
+import { clearPersistedQueryCache } from "./queryClient";
 
 const instance = axios.create({
   baseURL: getBaseUrl(),
@@ -22,8 +23,12 @@ instance.interceptors.request.use(
     if (!(config?.data instanceof FormData)) {
       config.headers["Content-Type"] = "application/json";
     } else {
-      // Let the browser set the correct multipart boundary
-      config.headers["Content-Type"] = "multipart/form-data";
+      // Delete it, don't set it: a "multipart/form-data" with no `boundary` parameter is
+      // incomplete, and this branch used to set exactly that while its comment claimed the
+      // opposite. Removing the header lets the platform generate the full value with its own
+      // boundary — the browser on web, OkHttp on Android, RCTNetworking on iOS. Those three
+      // regenerate it anyway, which is why the old code happened to work (spec 35 Step 5).
+      delete config.headers["Content-Type"];
     }
 
     // Skip adding Authorization header for login endpoint
@@ -56,6 +61,8 @@ instance.interceptors.response.use(
     if (error?.response?.status === 401) {
       await AsyncStorage.removeItem("user");
       await AsyncStorage.removeItem("token");
+      // Spec 37: don't leave the previous session's cached reads for the next login to find.
+      await clearPersistedQueryCache();
 
       Toast.show({
         type: "error",

@@ -4,6 +4,7 @@ import { usePendingTransactions } from "@/hooks/usePendingTransactions";
 import { useFetchTransactionRequests } from "@/hooks/useTransactionRequests";
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
+import { ApiReadError } from "@/utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useRef } from "react";
@@ -22,6 +23,7 @@ import CategoryBreakdown, {
 } from "../shared/CategoryBreakdown";
 import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
+import OfflineNotice from "../shared/OfflineNotice";
 import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TransactionCard from "../shared/TransactionCard";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
@@ -49,11 +51,12 @@ export default function HomePage() {
 
   const {
     data: dailyTransaction,
-    isLoading,
+    isPending,
     isError,
     error,
     refetch,
     isRefetching,
+    dataUpdatedAt,
   } = useFetchData<TData>(
     ["daily-transaction"],
     `/transactions/daily-transaction`,
@@ -82,7 +85,12 @@ export default function HomePage() {
 
   // console.log("categoryBreakdown = ", categoryBreakdown);
 
-  const entryCount = transactions.length;
+  // Spec 37: a failed read only blocks the screen when there is genuinely nothing to show —
+  // React Query keeps the last good `data` through a failed refetch, and the persisted cache
+  // restores it after a restart.
+  const hasCached = !!dailyTransaction?.data;
+  const hasQueued = pendingAsTransactions.length > 0;
+  const showErrorCard = isError && !hasCached && !hasQueued;
 
   const todayLabel = useMemo(
     () =>
@@ -104,6 +112,8 @@ export default function HomePage() {
   };
 
   const allRows = [...pendingAsTransactions, ...transactions];
+  // Counts the queued rows too: offline with only a queue, "0 entries" under a visible row reads wrong.
+  const entryCount = allRows.length;
 
   return (
     <SafeAreaView
@@ -184,7 +194,7 @@ export default function HomePage() {
           </TouchableOpacity>
         </View>
 
-        {isError ? (
+        {showErrorCard ? (
           <>
             <ErrorState
               title="Couldn't load today"
@@ -198,10 +208,20 @@ export default function HomePage() {
                 only one of the two ever shows anything. */}
             <PendingSyncBanner />
           </>
-        ) : isLoading ? (
+        ) : isPending && !hasCached ? (
+          // isPending, not isLoading: while the persisted cache is still being restored the
+          // query is pending but not yet fetching, and isLoading would let an empty Today flash.
           <TransactionCardSkeleton />
         ) : (
           <>
+            {isError ? (
+              <OfflineNotice
+                offline={(error as ApiReadError)?.offline === true}
+                onRetry={() => refetch()}
+                updatedAt={dataUpdatedAt || undefined}
+              />
+            ) : null}
+
             <NetTodayCard
               income={income}
               expense={expense}

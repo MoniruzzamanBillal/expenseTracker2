@@ -93,6 +93,9 @@ const loginFromDb = async (payload: Tlogin) => {
   const jwtPayload = {
     userId: userData.id,
     userEmail: userData.email,
+    // ! read by middleware/adminCheck.ts (spec 17). A token minted before spec 17 shipped
+    // ! carries no userRole, so adminCheck fails closed until the user logs in again.
+    userRole: userData.userRole,
   };
 
   const token = Jwt.sign(jwtPayload, config.jwt_secret as string, {

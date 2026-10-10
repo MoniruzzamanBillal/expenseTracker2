@@ -62,6 +62,30 @@ Soft-delete is used throughout `Transaction` (`isDeleted` flag; all four report 
 
 Date-range logic for the four report endpoints (monthly/daily/yearly/weekly) is computed by hand in `transaction.service.ts`, not through `builder/Queryuilder.ts` (which is unused — → `known-issues.md#NAME-1`). The "week" is Friday–Thursday, anchored via `getUTCDay()` and a `diffToFriday` offset in `getWeeklySummary` — not the ISO Monday-start week.
 
+## Error logging & retention (spec 17)
+
+Every error response is also persisted. `globalErrorHandler` `await`s `errorLogServices.createErrorLog`
+inside its own `try`/`catch` before replying — the `await` is deliberate (a Vercel invocation can be torn
+down once the response flushes) and the local catch guarantees a logging failure never alters the client's
+response. `app.ts`'s catch-all 404 is mounted **before** the error handler and hands off via
+`next(new AppError(404, ...))`, so unmatched routes are logged too; the old order (handler first, 404
+responding directly) is why no 404 was ever recorded, and that reordering resolves `known-issues.md#ERR-6`.
+404 rows deliberately store no `stack` (synthetic, and bot scans make them the highest-volume row).
+
+`error_logs` is read via `GET /api/admin/error-logs` (+ `/:id`), gated by `authCheck` + `adminCheck`.
+`adminCheck` reads `userRole` from the JWT, which `user.services.ts`'s `jwtPayload` now carries — so a token
+minted before spec 17 has no claim and is rejected until re-login. This is the only place `userRole` is
+enforced; there is no promotion endpoint (admin is a direct DB write).
+
+Retention is 30 days, deleted by `POST /api/cron/cleanup-error-logs` — no `authCheck`, guarded by an
+`x-cron-secret` header against `CRON_SECRET`, driven daily by `.github/workflows/daily-error-log-cleanup.yml`
+at the repo root. Postgres has no equivalent to Mongo's TTL-index sweep, so expiry must be externally
+triggered. The window is rolling 30x24h evaluated once a day, i.e. retention is "at least 30 days, up to ~31".
+
+The list endpoint **allowlists and coerces** its query params (`page`/`limit`/`sort`/`status`/`method`/`path`)
+rather than spreading them into Prisma's `where`; `status` is an `Int` column, so a passed-through
+`?status=500` string — or any unknown key — would be a `PrismaClientValidationError`, i.e. a 500.
+
 ## Numbered invariants
 
 1. **Transactions have no ownership check on mutation.** `updateTransaction`/`deleteTransactionData` key off `_id` alone — do not assume any endpoint here scopes writes to the caller. → `known-issues.md#AUTH-1`

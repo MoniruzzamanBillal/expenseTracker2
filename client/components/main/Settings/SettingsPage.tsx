@@ -6,6 +6,7 @@ import { useUserContext } from "@/context/user.context";
 import { useFetchData, usePatch } from "@/hooks/useApi";
 import { radius, spacing, text, useTheme, useThemePreference, TThemePreference } from "@/theme";
 import { IUser } from "@/types/global.types";
+import { isAdmin } from "@/utils/isAdmin";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -131,6 +132,22 @@ export default function SettingsPage() {
           <CategoryManager />
         </View>
 
+        {/* Admin-only entry to the error-log viewer (spec 36). Gated on `user` from the
+            context, not on `profile?.data` — /auth/me's select omits userRole, so only the
+            login response carries it. That also means this is visible exactly when the
+            stored token carries the claim the server's adminCheck reads. */}
+        {isAdmin(user) ? (
+          <TouchableOpacity
+            onPress={() => router?.push("/error-logs")}
+            activeOpacity={0.8}
+            style={[styles.adminRow, { backgroundColor: C?.surface, borderColor: C?.border }]}
+          >
+            <Ionicons name="bug-outline" size={18} color={C?.accent} />
+            <Text style={[text.bodyMd, { color: C?.text, flex: 1 }]}>Error logs</Text>
+            <Ionicons name="chevron-forward" size={18} color={C?.textMuted} />
+          </TouchableOpacity>
+        ) : null}
+
         <TouchableOpacity onPress={handleLogoutPress} activeOpacity={0.8} style={[styles.logoutBtn, { borderColor: `${C?.expense}80` }]}>
           <Ionicons name="log-out-outline" size={18} color={C?.expense} />
           <Text style={[text.bodyMd, { color: C?.expense }]}>Log out</Text>
@@ -169,6 +186,7 @@ const styles = StyleSheet.create({
   editBtn: { height: 36, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   appearanceTrack: { flexDirection: "row", height: 40, padding: 3, borderRadius: radius.card, borderWidth: 1 },
   appearanceOpt: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: radius.sm + 1 },
+  adminRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, height: spacing.field, paddingHorizontal: spacing.md, borderWidth: 1, borderRadius: radius.card, marginTop: spacing.xl },
   logoutBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, height: spacing.field, borderWidth: 1, borderRadius: radius.card, marginTop: spacing.xl },
   editHeadRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.lg },
 });

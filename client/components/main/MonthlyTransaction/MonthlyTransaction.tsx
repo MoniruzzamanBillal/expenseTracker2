@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFetchData } from "@/hooks/useApi";
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
+import { ApiReadError } from "@/utils/api";
 import { formatTotal as fmt } from "@/utils/formatAmount";
 import { Ionicons } from "@expo/vector-icons";
 import { getDaysInMonth } from "date-fns";
@@ -20,6 +21,7 @@ import CategoryBreakdown, {
 } from "../shared/CategoryBreakdown";
 import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
+import OfflineNotice from "../shared/OfflineNotice";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
 import TransactionAccordion from "./TransactionAccordion";
 
@@ -92,9 +94,10 @@ export default function MonthlyTransactionPage() {
 
   const {
     data: monthlyTransaction,
-    isLoading: isMonthlyLoading,
+    isPending: isMonthlyPending,
     isError: isMonthlyError,
     error: monthlyError,
+    dataUpdatedAt: monthlyUpdatedAt,
     refetch: refetchMonthly,
   } = useFetchData<TMonthlyData>(
     [
@@ -108,9 +111,10 @@ export default function MonthlyTransactionPage() {
 
   const {
     data: weeklyTransaction,
-    isLoading: isWeeklyLoading,
+    isPending: isWeeklyPending,
     isError: isWeeklyError,
     error: weeklyError,
+    dataUpdatedAt: weeklyUpdatedAt,
     refetch: refetchWeekly,
   } = useFetchData<TWeeklyData>(
     ["weekly-transaction"],
@@ -188,9 +192,17 @@ export default function MonthlyTransactionPage() {
     }));
   }, [weeklyBuckets, selectedCategoryKey]);
 
-  const isLoading = view === "monthly" ? isMonthlyLoading : isWeeklyLoading;
+  // Spec 37: a failed read only blocks the screen when the active view has nothing cached to
+  // show. isPending (not isLoading) so the skeleton also covers the persisted-cache restore.
+  const isPending = view === "monthly" ? isMonthlyPending : isWeeklyPending;
   const isError = view === "monthly" ? isMonthlyError : isWeeklyError;
   const error = view === "monthly" ? monthlyError : weeklyError;
+  const hasCached =
+    view === "monthly"
+      ? !!monthlyTransaction?.data
+      : !!weeklyTransaction?.data;
+  const showErrorCard = isError && !hasCached;
+  const updatedAt = (view === "monthly" ? monthlyUpdatedAt : weeklyUpdatedAt) || undefined;
 
   return (
     <SafeAreaView
@@ -314,13 +326,21 @@ export default function MonthlyTransactionPage() {
               ) : null}
             </View>
 
-            {isError ? (
+            {isError && hasCached ? (
+              <OfflineNotice
+                offline={(error as ApiReadError)?.offline === true}
+                onRetry={() => refetchMonthly()}
+                updatedAt={updatedAt}
+              />
+            ) : null}
+
+            {showErrorCard ? (
               <ErrorState
                 title={`Couldn't load ${MONTHS[selectedMonth - 1]}`}
                 message={(error as any)?.message ?? "Network Error"}
                 onRetry={refetchMonthly}
               />
-            ) : isLoading ? (
+            ) : isPending && !hasCached ? (
               <TransactionCardSkeleton />
             ) : (
               <>
@@ -423,13 +443,21 @@ export default function MonthlyTransactionPage() {
               </View>
             ) : null}
 
-            {isError ? (
+            {isError && hasCached ? (
+              <OfflineNotice
+                offline={(error as ApiReadError)?.offline === true}
+                onRetry={() => refetchWeekly()}
+                updatedAt={updatedAt}
+              />
+            ) : null}
+
+            {showErrorCard ? (
               <ErrorState
                 title="Couldn't load this week"
                 message={(error as any)?.message ?? "Network Error"}
                 onRetry={refetchWeekly}
               />
-            ) : isLoading ? (
+            ) : isPending && !hasCached ? (
               <TransactionCardSkeleton />
             ) : (
               <>

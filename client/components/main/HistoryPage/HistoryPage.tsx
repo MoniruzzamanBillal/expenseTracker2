@@ -13,11 +13,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransactionHistory } from "@/types/Transaction.tyes";
+import { ApiReadError } from "@/utils/api";
 import { formatCompact, formatTotal as fmt } from "@/utils/formatAmount";
 import { Ionicons } from "@expo/vector-icons";
 import TrendTab from "../MonthlyTransaction/TrendTab";
 import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
+import OfflineNotice from "../shared/OfflineNotice";
 import HistoryCardSkeleton from "./HistoryCardSkeleton";
 
 const MONTHS = [
@@ -73,11 +75,12 @@ export default function HistoryPage() {
 
   const {
     data: yearlyTransactions,
-    isLoading,
+    isPending,
     isError,
     error,
     refetch,
     isRefetching,
+    dataUpdatedAt,
   } = useFetchData<TData>(
     ["yearly-transaction", String(selectedYear)],
     `/transactions/yearly-transaction?targetYear=${selectedYear}`,
@@ -85,6 +88,11 @@ export default function HistoryPage() {
       enabled: segment === "year",
     },
   );
+
+  // Spec 37: a failed read only blocks the screen when there is no cached year to show. The
+  // Trend segment returns early below, so everything keyed off these is the Year view's.
+  const hasCached = !!yearlyTransactions?.data;
+  const showErrorCard = isError && !hasCached;
 
   const yearSummary = useMemo(
     () => yearlyTransactions?.data?.yearSummary ?? [],
@@ -194,7 +202,7 @@ export default function HistoryPage() {
       edges={["top"]}
     >
       <FlatList
-        data={isError ? [] : yearSummary.length ? recentMonths.slice(0, 5) : []}
+        data={showErrorCard ? [] : yearSummary.length ? recentMonths.slice(0, 5) : []}
         keyExtractor={(m) => String(m?.month)}
         refreshControl={
           <RefreshControl
@@ -243,13 +251,21 @@ export default function HistoryPage() {
               </TouchableOpacity>
             </View>
 
-            {isError ? (
+            {isError && hasCached ? (
+              <OfflineNotice
+                offline={(error as ApiReadError)?.offline === true}
+                onRetry={() => refetch()}
+                updatedAt={dataUpdatedAt || undefined}
+              />
+            ) : null}
+
+            {showErrorCard ? (
               <ErrorState
                 title={`Couldn't load ${selectedYear}`}
                 message={(error as any)?.message ?? "Network Error"}
                 onRetry={refetch}
               />
-            ) : isLoading ? (
+            ) : isPending && !hasCached ? (
               <>
                 <HistoryCardSkeleton />
                 <HistoryCardSkeleton />
@@ -309,7 +325,7 @@ export default function HistoryPage() {
               </View>
             )}
 
-            {!isLoading && !isError && hasYearActivity ? (
+            {!isPending && !showErrorCard && hasYearActivity ? (
               <View
                 style={[
                   styles.yearChartCard,
@@ -434,7 +450,7 @@ export default function HistoryPage() {
               </View>
             ) : null}
 
-            {!isLoading && !isError && yearSummary.length === 0 ? (
+            {!isPending && !showErrorCard && yearSummary.length === 0 ? (
               <EmptyState
                 title={`Nothing logged in ${selectedYear}`}
                 subtitle="Totals appear here once a year has entries. Step forward to this year."
