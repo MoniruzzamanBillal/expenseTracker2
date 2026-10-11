@@ -461,11 +461,11 @@ spec 27 (headless click-through), with the device caveats recorded in the checkl
 
 **What the traces actually showed** (the three that matter most):
 
-| Scenario                                     | Observed network trace                                                                                            |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Two queries racing an expired access token   | `401`, `401` → **one** `200 POST /auth/refresh-token` → both retried `200`. No toast, stayed on Today.            |
-| A write with an expired access token         | `401 POST /transactions/new-transaction` → `200 POST /auth/refresh-token` → `201` on the retry.                   |
-| Every `/api/**` returning `401`              | 3 requests total in 12s (2 queries + 1 refresh), one logout, no storm — the `_retry` guard and single-flight held. |
+| Scenario                                   | Observed network trace                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Two queries racing an expired access token | `401`, `401` → **one** `200 POST /auth/refresh-token` → both retried `200`. No toast, stayed on Today.             |
+| A write with an expired access token       | `401 POST /transactions/new-transaction` → `200 POST /auth/refresh-token` → `201` on the retry.                    |
+| Every `/api/**` returning `401`            | 3 requests total in 12s (2 queries + 1 refresh), one logout, no storm — the `_retry` guard and single-flight held. |
 
 **`#AUTH-2` is closed, and the evidence is structural rather than a DevTools reading.** The old interceptor
 cleared `AsyncStorage` itself (`HEAD:utils/axiosInstance.ts` lines 62-65); the new one contains **no** storage or
@@ -477,7 +477,7 @@ DevTools; the first attempt to prove it via `history.pushState` was discarded as
 drive `expo-router`'s state and so proved nothing either way.
 
 **Refinement to D1's premise.** The spec says importing `expo-secure-store` on web throws. It does not: the web
-build resolves its native module to `export default {}`, so the *import* is harmless and only a *call* would be
+build resolves its native module to `export default {}`, so the _import_ is harmless and only a _call_ would be
 a TypeError. The `Platform.OS !== "web"` guard is therefore still required, but for the stated reason rather than
 to avoid an import-time crash. Worth knowing before anyone "simplifies" the guard into a try/catch.
 
@@ -528,12 +528,12 @@ the web path; a device pass is what actually exercises SecureStore.
       network so the refresh call times out → the offline toast appears, the user stays logged in, and
       reconnecting then recovers without a re-login.
 - [~] Spec 37's offline behaviour partially verified: going offline **while mounted** keeps the session, the
-      tokens and the rendered data, and never redirects to `/auth`. A **cold offline launch** from the persisted
-      cache could not be tested on web — the JS bundle itself comes from Metro, so an offline reload just yields
-      Chromium's network-error page. Device-only.
+  tokens and the rendered data, and never redirects to `/auth`. A **cold offline launch** from the persisted
+  cache could not be tested on web — the JS bundle itself comes from Metro, so an offline reload just yields
+  Chromium's network-error page. Device-only.
 - [x] Writes survive an expired access token (**D7**): saving a transaction with an expired token produced
       `401 POST /transactions/new-transaction` → `200 POST /auth/refresh-token` → `201 POST
-      /transactions/new-transaction`, with no toast and no redirect. Tested as a direct write rather than via the
+/transactions/new-transaction`, with no toast and no redirect. Tested as a direct write rather than via the
       offline queue, which is the same code path once the queue flushes (the queue itself holds no network code).
 - [x] **Wrong field name is loud, not a logout** (**D6(c)**): temporarily send `{ refresh_token: ... }`; confirm
       the `400` is visible in the console rather than silently ending the session. Revert.
