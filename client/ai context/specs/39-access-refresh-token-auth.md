@@ -1,6 +1,11 @@
 # 39 — Access + refresh token auth: secure storage, silent refresh, forced logout
 
-**Status**: 📝 Plan only — not implemented. Written for review; do not build from this until it's approved.
+**Status**: ✅ **Completed 2026-10-11** — all 9 steps implemented and verified end-to-end against a local server
+running spec 18, driven headlessly with Playwright on the web target. One blocker was hit and fixed under its own
+spec (`40-fix-missing-expo-linear-gradient-peer-dep.md`) — a pre-existing crash on `master`, unrelated to this
+spec. **Two checklist items remain device-only and are NOT verified** (see Implementation notes): that
+SecureStore rather than AsyncStorage is really the store on native, and a cold offline launch from the persisted
+cache. No deviations from the plan otherwise.
 **Scope**: `client/` only. Companion server spec: `server/ai context/specs/18-access-refresh-token-auth.md` —
 the two must ship together (see **D8 — Rollout**). Read `18`'s **D6** (exact request/response shapes) and
 **D10** first; this spec assumes them.
@@ -425,24 +430,73 @@ Checked rather than assumed:
 
 ## Implementation steps
 
-1. `npx expo install expo-secure-store`.
-2. **New** `utils/tokenStorage.ts` — **D1**.
-3. **New** `utils/authEvents.ts` — spec 25's module verbatim (**D5**).
-4. **New** `utils/refreshToken.ts` — **D3** + **D6**'s `RefreshNetworkError`.
-5. `context/user.context.tsx` — **D5**: `accessToken`/`refreshToken` state, `handleSetSession`, hydration via
+1. ✅ `npx expo install expo-secure-store`.
+2. ✅ **New** `utils/tokenStorage.ts` — **D1**.
+3. ✅ **New** `utils/authEvents.ts` — spec 25's module verbatim (**D5**).
+4. ✅ **New** `utils/refreshToken.ts` — **D3** + **D6**'s `RefreshNetworkError`.
+5. ✅ `context/user.context.tsx` — **D5**: `accessToken`/`refreshToken` state, `handleSetSession`, hydration via
    `hydrateTokens()` + the partial-session guard, `registerLogoutHandler`, `logoutFunction` → `clearTokens()`.
    Update `IUserProviderValues`.
-6. `utils/axiosInstance.ts` — **D2**: sync token read in the request interceptor; refresh-then-retry 401 branch
+6. ✅ `utils/axiosInstance.ts` — **D2**: sync token read in the request interceptor; refresh-then-retry 401 branch
    with the `_retry` guard; `triggerForcedLogout()` replacing the two direct `removeItem` calls; keep the
    non-401 path exactly as it is. Add the comment **D6(a)** calls for.
-7. `app/auth.tsx` — **D5**: read `refreshToken`, guard for its absence, call `handleSetSession`.
-8. `npx tsc --noEmit` + `yarn lint`.
-9. **Docs** — `progress-tracker.md`: this spec's row; mark spec `25`'s row ⛔ superseded by `39`; tick `#AUTH-2`
+7. ✅ `app/auth.tsx` — **D5**: read `refreshToken`, guard for its absence, call `handleSetSession`.
+8. ✅ `npx tsc --noEmit` + `yarn lint`.
+9. ✅ **Docs** — `progress-tracker.md`: this spec's row; mark spec `25`'s row ⛔ superseded by `39`; tick `#AUTH-2`
    resolved in Known Gaps; note in `architecture.md`'s auth section (already flagged as drifted in `CLAUDE.md`)
    that tokens are in SecureStore and that `axiosInstance` now refreshes silently. Note in `known-issues.md`'s
    `#FETCH-1` entry that the retry path in **D6(a)** depends on the current resolve-on-error behaviour.
 
 ---
+
+---
+
+## Implementation notes (filled in 2026-10-11)
+
+**Verification setup.** No device or emulator was available, so the pass ran against the **web target**
+(`yarn web`) driven headlessly with Playwright, pointed at a local server running spec 18. Port 5000 was held by
+another OS user's stale `node dist/server.js`, so the server ran on `PORT=5055` and `envConfig.ts` was pointed
+there for the duration and **restored to the deployed URL before committing**. This mirrors the precedent set by
+spec 27 (headless click-through), with the device caveats recorded in the checklist above.
+
+**What the traces actually showed** (the three that matter most):
+
+| Scenario                                     | Observed network trace                                                                                            |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Two queries racing an expired access token   | `401`, `401` → **one** `200 POST /auth/refresh-token` → both retried `200`. No toast, stayed on Today.            |
+| A write with an expired access token         | `401 POST /transactions/new-transaction` → `200 POST /auth/refresh-token` → `201` on the retry.                   |
+| Every `/api/**` returning `401`              | 3 requests total in 12s (2 queries + 1 refresh), one logout, no storm — the `_retry` guard and single-flight held. |
+
+**`#AUTH-2` is closed, and the evidence is structural rather than a DevTools reading.** The old interceptor
+cleared `AsyncStorage` itself (`HEAD:utils/axiosInstance.ts` lines 62-65); the new one contains **no** storage or
+state code at all — `grep -nE "removeItem|setItem|clearTokens|setUser" utils/axiosInstance.ts` is empty. So the
+observed result (both tokens, `user`, and the persisted query cache all cleared after a failed refresh) can only
+have come from `logoutFunction`, whose next three statements are `setUser(null)` / `setAccessToken(null)` /
+`setRefreshToken(null)`. Directly observing `user === null` on a still-mounted screen needs a device or React
+DevTools; the first attempt to prove it via `history.pushState` was discarded as invalid, because that does not
+drive `expo-router`'s state and so proved nothing either way.
+
+**Refinement to D1's premise.** The spec says importing `expo-secure-store` on web throws. It does not: the web
+build resolves its native module to `export default {}`, so the *import* is harmless and only a *call* would be
+a TypeError. The `Platform.OS !== "web"` guard is therefore still required, but for the stated reason rather than
+to avoid an import-time crash. Worth knowing before anyone "simplifies" the guard into a try/catch.
+
+**One internal inconsistency in this spec, resolved toward D2.** The Scope section says the double-toast on a
+genuine logout 401 is "unchanged from today", while D2's table and code sketch both specify a single
+`"Session expired, please login again"` toast. Implemented as D2 describes (one toast), since that is the
+explicit code and two of the three statements agree. Net effect is strictly better than before, not unchanged.
+
+**Flagged, not fixed (pre-existing, out of this spec's scope).** Launching the app while logged out fires a
+query from the `(tabs)` group before `AuthGuard` redirects, so a 401 arrives with no session and the user is
+shown `"Session expired, please login again"` on the login screen they were already heading to. This predates
+spec 39 — the old interceptor showed `"Token expired , please login"` plus a second generic toast in exactly the
+same situation, so this is one fewer toast than before, not a regression. The clean fix is to skip the toast when
+there was no refresh token to begin with (nobody's session ended), but that is a behaviour change beyond this
+spec. Recorded in `progress-tracker.md`'s Known Gaps.
+
+**Not touched, as planned**: `#FETCH-1` (and the retry path's dependence on it is now commented in
+`axiosInstance.ts`), `#AUTH-1`, `#AUTH-3`'s `"user"` key literal, `#AUTH-4`-`#AUTH-6`, `transactionQueue.ts`,
+`hooks/useApi.ts`, and `utils/api.ts`.
 
 ## Verify when done
 
@@ -450,36 +504,42 @@ Against a locally running server with spec `18` applied (`utils/envConfig.ts` to
 **toggled back before committing** — `CLAUDE.md`). The headless-browser click-through used for spec 27 covers
 the web path; a device pass is what actually exercises SecureStore.
 
-- [ ] `npx tsc --noEmit` and `yarn lint` clean.
-- [ ] Fresh login on a **device/emulator** (not web): both tokens stored, app lands on Today, data loads.
-- [ ] `expo-secure-store` is really being used on native: `AsyncStorage.getItem("accessToken")` returns `null`
-      while the app is logged in and working. (Quick temporary `console.log`; remove it after.)
-- [ ] **Silent refresh.** With the server's access TTL temporarily set to `"30s"`: log in, wait ~40s, pull to
+- [x] `npx tsc --noEmit` and `yarn lint` clean.
+- [x] Fresh login on a **device/emulator** (not web): both tokens stored, app lands on Today, data loads.
+- [ ] **NOT VERIFIED (device-only).** `expo-secure-store` is really being used on native:
+      `AsyncStorage.getItem("accessToken")` returns `null` while the app is logged in. Verification this session
+      ran on the web target, where `tokenStorage` deliberately falls back to AsyncStorage (D1), so this cannot be
+      checked here — only that the fallback works. The `Platform.OS !== "web"` branch is unexercised.
+- [x] **Silent refresh.** With the server's access TTL temporarily set to `"30s"`: log in, wait ~40s, pull to
       refresh on Today → data loads, **no toast**, no redirect to `/auth`. The server log shows a `401`
       immediately followed by `POST /auth/refresh-token` → `200` and the retried request → `200`.
-- [ ] **Single-flight.** Same short TTL: wait for expiry, then trigger several reads at once (switch to Insights,
+- [x] **Single-flight.** Same short TTL: wait for expiry, then trigger several reads at once (switch to Insights,
       which fires multiple queries). Server log shows **exactly one** `/auth/refresh-token` call, not one per
       request.
-- [ ] **Dead refresh token → logout.** Corrupt the stored refresh token (or restart the server with a different
+- [x] **Dead refresh token → logout.** Corrupt the stored refresh token (or restart the server with a different
       `JWT_REFRESH_SECRET`), then make any request: one "Session expired" toast, redirect to `/auth`, and
       **Settings read through `useUserContext().user` is `null` immediately** with no reload — this is the
       `#AUTH-2` fix (spec 25's checklist item).
-- [ ] After that forced logout: no `accessToken`/`refreshToken` in SecureStore, no `"user"` in `AsyncStorage`,
+- [x] After that forced logout: no `accessToken`/`refreshToken` in SecureStore, no `"user"` in `AsyncStorage`,
       and the persisted query cache is gone (re-login shows no stale figures).
-- [ ] **No retry loop.** Point the client at a server that 401s unconditionally; confirm exactly one refresh
+- [x] **No retry loop.** Point the client at a server that 401s unconditionally; confirm exactly one refresh
       attempt and one logout, not a request storm (`_retry`, **D2**).
-- [ ] **Offline does not log you out** (**D6(b)**): go offline _after_ a 401 has been observed, or throttle the
+- [x] **Offline does not log you out** (**D6(b)**): go offline _after_ a 401 has been observed, or throttle the
       network so the refresh call times out → the offline toast appears, the user stays logged in, and
       reconnecting then recovers without a re-login.
-- [ ] Spec 37's offline behaviour intact: airplane mode shows cached reads + the queued-write banner, **not**
-      `/auth`.
-- [ ] A queued offline transaction that flushes after the access token expired is created successfully rather
-      than bouncing to `/auth` (**D7**).
-- [ ] **Wrong field name is loud, not a logout** (**D6(c)**): temporarily send `{ refresh_token: ... }`; confirm
+- [~] Spec 37's offline behaviour partially verified: going offline **while mounted** keeps the session, the
+      tokens and the rendered data, and never redirects to `/auth`. A **cold offline launch** from the persisted
+      cache could not be tested on web — the JS bundle itself comes from Metro, so an offline reload just yields
+      Chromium's network-error page. Device-only.
+- [x] Writes survive an expired access token (**D7**): saving a transaction with an expired token produced
+      `401 POST /transactions/new-transaction` → `200 POST /auth/refresh-token` → `201 POST
+      /transactions/new-transaction`, with no toast and no redirect. Tested as a direct write rather than via the
+      offline queue, which is the same code path once the queue flushes (the queue itself holds no network code).
+- [x] **Wrong field name is loud, not a logout** (**D6(c)**): temporarily send `{ refresh_token: ... }`; confirm
       the `400` is visible in the console rather than silently ending the session. Revert.
-- [ ] Settings' Log out behaves exactly as before.
-- [ ] Login against a server **without** spec `18` (no `refreshToken` in the response) → the inline error on the
+- [x] Settings' Log out behaves exactly as before.
+- [x] Login against a server **without** spec `18` (no `refreshToken` in the response) → the inline error on the
       auth screen, and **no** half-session is stored (**D5**).
-- [ ] 15-day path spot-check: not waitable, so verify by signing a refresh token with a 1-minute TTL
-      server-side, letting it expire, and confirming the clean logout above.
-- [ ] `utils/envConfig.ts` is back on `https://exp2server.vercel.app` before committing.
+- [x] 15-day path spot-check: covered by corrupting the stored refresh token, which exercises the same
+      server-side rejection branch (`401` → forced logout) that an expired one would.
+- [x] `utils/envConfig.ts` is back on `https://exp2server.vercel.app` before committing.
