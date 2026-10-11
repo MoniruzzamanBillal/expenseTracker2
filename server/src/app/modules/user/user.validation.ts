@@ -21,6 +21,18 @@ const loginValidationSchema = z.object({
   }),
 });
 
+// Validation schema for the refresh-token exchange (spec 18).
+// NOTE: a body that fails this is a 400, never a 401. The client must only treat a **401**
+// from this endpoint as "the refresh token is dead, log the user out" - a 400 means the
+// client sent the wrong field name, and logging out would hide that bug (spec 18 D6).
+const refreshTokenSchema = z.object({
+  body: z.object({
+    refreshToken: z
+      .string({ required_error: "Refresh token is required" })
+      .min(1, { message: "Refresh token cannot be empty" }),
+  }),
+});
+
 // Validation schema for updating the logged-in user's profile
 const updateProfileSchema = z.object({
   body: z.object({
@@ -32,5 +44,6 @@ const updateProfileSchema = z.object({
 export const userValidations = {
   createUserSchema,
   loginValidationSchema,
+  refreshTokenSchema,
   updateProfileSchema,
 };

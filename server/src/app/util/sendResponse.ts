@@ -6,6 +6,9 @@ type Tresponse<T> = {
   message: string;
   data: T;
   token?: string;
+  // ! login returns both tokens (spec 18). Like `token`, this is undefined on every other
+  // ! endpoint and JSON.stringify drops it, so no existing response shape changes.
+  refreshToken?: string;
 };
 
 const sendResponse = <T>(res: Response, data: Tresponse<T>) => {
@@ -14,6 +17,7 @@ const sendResponse = <T>(res: Response, data: Tresponse<T>) => {
     message: data.message,
     data: data.data,
     token: data.token,
+    refreshToken: data.refreshToken,
   });
 };
 
