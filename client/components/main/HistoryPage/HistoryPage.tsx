@@ -487,7 +487,13 @@ export default function HistoryPage() {
             <TouchableOpacity
               disabled={!tappable}
               onPress={() =>
-                tappable && router.push({ pathname: "/monthlyTransactions" })
+                tappable &&
+                router.push({
+                  pathname: "/monthlyTransactions",
+                  // Spec 42: `yearSummary[].month` is 0-based; Activity's month and
+                  // the API's `?targetMonth=` are both 1-based.
+                  params: { targetMonth: String((m?.month ?? 0) + 1) },
+                })
               }
               activeOpacity={tappable ? 0.7 : 1}
               style={styles.monthRow}
