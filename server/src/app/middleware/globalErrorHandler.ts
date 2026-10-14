@@ -2,6 +2,7 @@ import { ErrorRequestHandler } from "express";
 import httpStatus from "http-status";
 import { ZodError } from "zod";
 import AppError from "../Error/AppError";
+import config from "../config";
 import { handleCastError } from "../Error/handleCatError";
 import { handleDuplicateError } from "../Error/handleDuplicateError";
 import { handleValidationError } from "../Error/handleValidationError";
@@ -96,7 +97,25 @@ const globalErrorHandler: ErrorRequestHandler = async (
     success: false,
     message,
     errorSources,
-    stack: error?.stack,
+    // ! #ERR-1 (spec 19 D5): the stack used to go out unconditionally, in every
+    // ! environment - confirmed live on the Vercel deployment, /var/task/dist paths and all.
+    // !
+    // ! The test is `=== "development"`, NOT `!== "production"`, and that is the whole
+    // ! point. Both hide it on Vercel (which sets NODE_ENV=production for production AND
+    // ! preview), but they differ where it matters: an environment whose NODE_ENV is unset,
+    // ! misspelled or lost. `!== "production"` leaks there; this fails closed. A missing env
+    // ! var is the likeliest misconfiguration in a project whose .env is gitignored and
+    // ! hand-synced to Vercel, so silence is the right default.
+    // !
+    // ! Nothing is lost in production (spec 19 D7): the stack is persisted on the error_logs
+    // ! row by the insert directly above, served at GET /api/admin/error-logs/:id behind
+    // ! authCheck + adminCheck, and the client already renders it from there
+    // ! (components/main/ErrorLogs/ErrorLogDetailSheet.tsx). Don't "restore" this for
+    // ! debuggability - the stack is already available, to an admin instead of to everyone.
+    // !
+    // ! `undefined`, not null, so res.json drops the key entirely - the same mechanism
+    // ! sendResponse relies on for its optional token/refreshToken.
+    stack: config.node_env === "development" ? error?.stack : undefined,
   });
 };
 

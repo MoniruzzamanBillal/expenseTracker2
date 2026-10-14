@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
-import CategoryPicker from "./CategoryPicker";
+import CategorySelectField from "./CategorySelectField";
 import ConfirmModal from "./ConfirmModal";
 import FormField from "./FormField";
 import PrimaryButton from "./PrimaryButton";
@@ -186,7 +186,11 @@ export default function UpdateTransactionModal({
         <TypeToggle value={type} onChange={setType} />
 
         <View style={{ marginTop: spacing.lg }}>
-          <CategoryPicker value={categoryId} onChange={setCategoryId} />
+          <CategorySelectField
+            value={categoryId}
+            onChange={setCategoryId}
+            inSheet
+          />
         </View>
 
         <View style={{ marginTop: spacing.lg }}>

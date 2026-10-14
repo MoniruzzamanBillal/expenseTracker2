@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransactionHistory } from "@/types/Transaction.tyes";
 import { ApiReadError } from "@/utils/api";
-import { formatCompact, formatTotal as fmt } from "@/utils/formatAmount";
+import { formatTotal as fmt, formatCompact } from "@/utils/formatAmount";
 import { Ionicons } from "@expo/vector-icons";
 import TrendTab from "../MonthlyTransaction/TrendTab";
 import EmptyState from "../shared/EmptyState";
@@ -116,7 +116,8 @@ export default function HistoryPage() {
   // A year can come back with rows that are all zero, which would draw an empty
   // plot whose ticks are derived from the peak's `1` fallback ("0 1 1").
   const hasYearActivity = useMemo(
-    () => yearSummary.some((m) => (m?.income ?? 0) > 0 || (m?.expense ?? 0) > 0),
+    () =>
+      yearSummary.some((m) => (m?.income ?? 0) > 0 || (m?.expense ?? 0) > 0),
     [yearSummary],
   );
 
@@ -124,15 +125,26 @@ export default function HistoryPage() {
   // so past years get no drill-in chevron.
   const canDrillIn = selectedYear === currentYear;
 
-  const recentMonths = useMemo(
-    () =>
-      [...yearSummary]
-        .filter(
-          (m) => m?.income > 0 || m?.expense > 0 || m?.transactionCount > 0,
-        )
-        .reverse(),
-    [yearSummary],
-  );
+  // Spec 41: the whole January → latest-month range, not the newest five active months.
+  // Zero months are kept so the range is continuous; future months of the current year are
+  // cut at the same boundary the chart's `isFuture` stub uses. The server zero-fills all 12
+  // months, so this is a window on complete data, never a gap-filling pass. The `typeof`
+  // guard replaces what the old activity filter did incidentally — `MONTHS[m.month]`
+  // throws on a malformed row.
+  //
+  // Spec 43: ordered newest-first (October → January), by request. That is the opposite of
+  // the chart's left-to-right axis above it — 41 had chosen ascending to match it — and it
+  // puts the month being looked at most at the top. Sorted, not `.reverse()`d, so the order
+  // can't depend on the payload arriving ascending.
+  const monthRows = useMemo(() => {
+    const lastMonth = selectedYear === currentYear ? currentMonth : 11;
+    return yearSummary
+      .filter(
+        (m) =>
+          typeof m?.month === "number" && m.month >= 0 && m.month <= lastMonth,
+      )
+      .sort((a, b) => b.month - a.month);
+  }, [yearSummary, selectedYear]);
 
   const segmentControl = (
     <View
@@ -202,7 +214,7 @@ export default function HistoryPage() {
       edges={["top"]}
     >
       <FlatList
-        data={showErrorCard ? [] : yearSummary.length ? recentMonths.slice(0, 5) : []}
+        data={showErrorCard || !hasYearActivity ? [] : monthRows}
         keyExtractor={(m) => String(m?.month)}
         refreshControl={
           <RefreshControl
@@ -450,7 +462,7 @@ export default function HistoryPage() {
               </View>
             ) : null}
 
-            {!isPending && !showErrorCard && yearSummary.length === 0 ? (
+            {!isPending && !showErrorCard && !hasYearActivity ? (
               <EmptyState
                 title={`Nothing logged in ${selectedYear}`}
                 subtitle="Totals appear here once a year has entries. Step forward to this year."
@@ -460,35 +472,71 @@ export default function HistoryPage() {
           </View>
         }
         renderItem={({ item: m }) => {
-          const mNet = m?.income - m?.expense;
+          const mNet = (m?.income ?? 0) - (m?.expense ?? 0);
           const isPositive = mNet >= 0;
-          const barColor = isPositive ? C.income : C.expense;
+          // Spec 41: the list now spans the whole year, so most rows in an
+          // early-in-the-year view are zero. Mute them so the range reads as a range and
+          // the months that do have data still stand out.
+          const isEmptyMonth =
+            (m?.income ?? 0) === 0 &&
+            (m?.expense ?? 0) === 0 &&
+            (m?.transactionCount ?? 0) === 0;
+          const tappable = canDrillIn && !isEmptyMonth;
+          const barColor = isEmptyMonth
+            ? C.textMuted
+            : isPositive
+              ? C.income
+              : C.expense;
 
           return (
             <TouchableOpacity
-              disabled={!canDrillIn}
+              disabled={!tappable}
               onPress={() =>
-                canDrillIn && router.push({ pathname: "/monthlyTransactions" })
+                tappable &&
+                router.push({
+                  pathname: "/monthlyTransactions",
+                  // Spec 42: `yearSummary[].month` is 0-based; Activity's month and
+                  // the API's `?targetMonth=` are both 1-based.
+                  params: { targetMonth: String((m?.month ?? 0) + 1) },
+                })
               }
-              activeOpacity={canDrillIn ? 0.7 : 1}
+              activeOpacity={tappable ? 0.7 : 1}
               style={styles.monthRow}
             >
-              <Text style={[text.bodyMd, { color: C.text, width: 40 }]}>
+              <Text
+                style={[
+                  text.bodyMd,
+                  { color: isEmptyMonth ? C.textMuted : C.text, width: 40 },
+                ]}
+              >
                 {MONTHS[m?.month].slice(0, 3)}
               </Text>
               <View style={{ flex: 1 }}>
-                <Text style={[text.caption, { color: C.textSecondary }]}>
-                  {m?.transactionCount} entries
+                <Text
+                  style={[
+                    text.caption,
+                    { color: isEmptyMonth ? C.textMuted : C.textSecondary },
+                  ]}
+                >
+                  {isEmptyMonth
+                    ? "No entries"
+                    : `${m?.transactionCount} entries`}
                 </Text>
-                <Text style={[text.caption, { color: C.textSecondary }]}>
-                  <Text style={{ color: C.income }}>+{fmt(m?.income)}</Text>{" "}
-                  <Text style={{ color: C.expense }}>−{fmt(m?.expense)}</Text>
-                </Text>
+                {!isEmptyMonth ? (
+                  <Text style={[text.caption, { color: C.textSecondary }]}>
+                    <Text style={{ color: C.income }}>+{fmt(m?.income)}</Text>{" "}
+                    <Text style={{ color: C.expense }}>
+                      −{fmt(m?.expense)}
+                    </Text>
+                  </Text>
+                ) : null}
               </View>
               <Text style={[text.bodyMd, { color: barColor }]}>
-                {isPositive ? "+" : "−"}৳{fmt(mNet)}
+                {isEmptyMonth
+                  ? "৳0"
+                  : `${isPositive ? "+" : "−"}৳${fmt(mNet)}`}
               </Text>
-              {canDrillIn ? (
+              {tappable ? (
                 <Ionicons
                   name="chevron-forward"
                   size={16}

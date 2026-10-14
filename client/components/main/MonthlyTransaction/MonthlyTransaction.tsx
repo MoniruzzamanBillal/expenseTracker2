@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFetchData } from "@/hooks/useApi";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { ApiReadError } from "@/utils/api";
@@ -85,6 +86,26 @@ export default function MonthlyTransactionPage() {
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+  const router = useRouter();
+  const { targetMonth } = useLocalSearchParams<{ targetMonth?: string }>();
+
+  // Spec 42: a month row on Insights › Year pushes `?targetMonth=<1-12>`. This runs in
+  // an effect, not in `useState`'s initialiser, because this screen is a tab and stays
+  // mounted — an initialiser would adopt the first drill-in of a session and ignore every
+  // later one. The param is cleared once adopted so the same month can be opened again (an
+  // unchanged dependency would make the second tap a no-op) and so a stale value can't
+  // re-apply itself if the tab ever remounts. A bad value is ignored, not clamped.
+  useEffect(() => {
+    if (!targetMonth) return;
+    const month = Number(targetMonth);
+    if (Number.isInteger(month) && month >= startMonth && month <= endMonth) {
+      setSelectedMonth(month);
+      // Landing on Weekly would hide the month that was just asked for.
+      setView("monthly");
+    }
+    router.setParams({ targetMonth: "" });
+  }, [targetMonth, router]);
 
   // A stale filter silently hiding data after navigating is worse than always
   // resetting it (spec 13).
