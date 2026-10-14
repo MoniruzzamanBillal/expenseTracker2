@@ -1,4 +1,4 @@
-import CategoryPicker from "@/components/main/shared/CategoryPicker";
+import CategorySelectField from "@/components/main/shared/CategorySelectField";
 import FormField from "@/components/main/shared/FormField";
 import Keypad from "@/components/main/shared/Keypad";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
@@ -353,7 +353,7 @@ export default function AddTransactionPage() {
           </View>
         ) : null}
 
-        <CategoryPicker value={categoryId} onChange={setCategoryId} />
+        <CategorySelectField value={categoryId} onChange={setCategoryId} />
 
         <View style={styles.pillRow}>
           <TouchableOpacity
