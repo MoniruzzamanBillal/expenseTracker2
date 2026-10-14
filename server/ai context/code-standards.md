@@ -15,7 +15,7 @@ Zod schemas live in `<feature>.validation.ts`, wired via the `validateRequest` m
 
 ## Error handling pattern
 
-`catchAsync` (`util/catchAsync.ts`) wraps every controller so thrown/rejected errors reach `globalErrorHandler.ts`. Throw `AppError(status, message)` (`Error/AppError.ts`) for expected business-logic failures (e.g. "transaction not found"). The global handler currently returns a stack trace on every response regardless of environment — don't add sensitive detail to an error's `message` assuming it stays server-side (`known-issues.md#ERR-1`). Full behavior and gaps: `known-issues.md`'s `ERR-` section — don't re-derive it here.
+`catchAsync` (`util/catchAsync.ts`) wraps every controller so thrown/rejected errors reach `globalErrorHandler.ts`. Throw `AppError(status, message)` (`Error/AppError.ts`) for expected business-logic failures (e.g. "transaction not found"). The global handler returns a stack trace **only when `NODE_ENV === "development"`** (`specs/19` closed `known-issues.md#ERR-1`; the test is deliberately `=== "development"` rather than `!== "production"`, so an unset `NODE_ENV` hides it). Still don't add sensitive detail to an error's `message` assuming it stays server-side: `message` is **not** gated, goes out in every environment, and `#ERR-2` can still put a raw driver string into it. Full behavior and gaps: `known-issues.md`'s `ERR-` section — don't re-derive it here.
 
 ## Response envelope
 

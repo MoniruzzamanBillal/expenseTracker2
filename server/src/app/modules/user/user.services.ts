@@ -24,6 +24,28 @@ import { TUser } from "./user.interface";
 const ACCESS_TOKEN_TTL = "15m";
 const REFRESH_TOKEN_TTL = "15d";
 
+// ! ---------------------------------------------------------------------------------------
+// ! #AUTH-3 (spec 19 D1/D2): the field list for any prisma.user read whose result reaches a
+// ! response. An allowlist, not a `delete result.password` after the fact - the hash then
+// ! never enters the object that becomes `data`, so the failure mode of forgetting a field
+// ! is a MISSING field (loud: the client notices immediately) rather than an EXTRA one
+// ! (silent: which is exactly how the hash shipped unnoticed since the Mongoose era).
+// !
+// ! `as const` is load-bearing: without it `{ id: true }` widens to `{ id: boolean }` and
+// ! Prisma's payload inference can no longer tell which fields were selected.
+// !
+// ! `isDeleted` is deliberately absent - nothing on either side reads it, and an account's
+// ! deletion state is not the client's business. `password` is absent, obviously.
+// ! ---------------------------------------------------------------------------------------
+const PUBLIC_USER_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  profilePicture: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 type TTokenType = "access" | "refresh";
 
 type TTokenPayload = {
@@ -56,6 +78,9 @@ const createUser = async (payload: TUser) => {
       password: hashedPassword,
       profilePicture: payload.profilePicture,
     },
+    // ! #AUTH-3: without this, `create` returns the whole row and the controller sends the
+    // ! freshly-made hash straight back to whoever just registered (spec 19 D8).
+    select: PUBLIC_USER_SELECT,
   });
 
   return { ...result, _id: result.id };
@@ -71,14 +96,9 @@ type Tlogin = {
 const getMe = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      profilePicture: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    // ! the field list this already had, hoisted (spec 19 D2) - identical, so this
+    // ! endpoint's response does not change.
+    select: PUBLIC_USER_SELECT,
   });
 
   if (!user) {
@@ -93,14 +113,8 @@ const updateProfile = async (userId: string, payload: { name: string }) => {
   const result = await prisma.user.update({
     where: { id: userId },
     data: { name: payload.name },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      profilePicture: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    // ! same hoist as getMe above (spec 19 D2) - identical list, unchanged response.
+    select: PUBLIC_USER_SELECT,
   });
 
   return { ...result, _id: result.id };
@@ -133,8 +147,26 @@ const loginFromDb = async (payload: Tlogin) => {
     userRole: userData.userRole,
   };
 
+  // ! #AUTH-3 (spec 19 D3): the query above stays unselected on purpose - it needs
+  // ! `password` for argon2.verify and `userRole` for the claims - so the stripping happens
+  // ! here, on the way out. Spread the row and this fix is undone, which is what the old
+  // ! `{ ...userData, _id: userData.id }` did.
+  // !
+  // ! `userRole` MUST stay in this list (spec 19 D4): login is the only place the client can
+  // ! learn it - getMe's select omits it - so dropping it would not fail loudly. The user
+  // ! would log in fine and the admin error-log screen would simply never appear again
+  // ! (client app/auth.tsx:62).
   return {
-    userData: { ...userData, _id: userData.id },
+    userData: {
+      _id: userData.id,
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+      profilePicture: userData.profilePicture,
+      userRole: userData.userRole,
+      createdAt: userData.createdAt,
+      updatedAt: userData.updatedAt,
+    },
     accessToken: signToken(jwtPayload, "access"),
     refreshToken: signToken(jwtPayload, "refresh"),
   };
