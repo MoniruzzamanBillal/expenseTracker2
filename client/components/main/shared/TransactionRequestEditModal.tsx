@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
-import CategoryPicker from "./CategoryPicker";
+import CategorySelectField from "./CategorySelectField";
 import FormField from "./FormField";
 import PrimaryButton from "./PrimaryButton";
 import Sheet from "./Sheet";
@@ -151,9 +151,15 @@ export default function TransactionRequestEditModal({
           inputStyle={{ height: 70, textAlignVertical: "top", paddingTop: 12 }}
         />
 
+        {/* Spec 45: the select field draws its own label, identical to the
+            hand-rolled one that used to sit here. `inSheet` because this modal
+            is a Sheet — on `inputBg` the field matches the sheet and vanishes. */}
         <View style={{ marginBottom: spacing.md }}>
-          <Text style={[text.captionMd, { color: C?.textSecondary, marginBottom: spacing.xs + 1 }]}>Category</Text>
-          <CategoryPicker value={categoryId} onChange={setCategoryId} />
+          <CategorySelectField
+            value={categoryId}
+            onChange={setCategoryId}
+            inSheet
+          />
         </View>
 
         {initialValue ? (
