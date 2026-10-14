@@ -46,7 +46,8 @@
           "photosPermission": "Allow ExpenseTracker to access your photos to attach a receipt.",
           "cameraPermission": "Allow ExpenseTracker to access your camera to take a receipt photo."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

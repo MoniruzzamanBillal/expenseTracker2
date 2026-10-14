@@ -18,7 +18,7 @@ Plus `app/auth.tsx`/`app/register.tsx` outside the tab group. (`app/quick-add.ts
 
 ## Tech stack
 
-Expo, React Native, `expo-router` (file-based routing), a custom design system in `theme/` (colors/typography/spacing, light+dark — see `architecture.md`) with `react-native-paper` kept mounted only for its `Portal`/`Modal` primitives (used by the two edit modals), TanStack Query + Axios for data fetching, `AsyncStorage` for session persistence.
+Expo, React Native, `expo-router` (file-based routing), a custom design system in `theme/` (colors/typography/spacing, light+dark — see `architecture.md`) with `react-native-paper` kept mounted only for its `Portal`/`Modal` primitives (used by the two edit modals), TanStack Query + Axios for data fetching, `expo-secure-store` for the two auth tokens on native with `AsyncStorage` for everything else persisted (spec 39).
 
 ## Not a shared-types monorepo
 

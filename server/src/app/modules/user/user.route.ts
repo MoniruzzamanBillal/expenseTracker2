@@ -20,6 +20,15 @@ router.post(
   userController.signIn,
 );
 
+// ! for exchanging a refresh token for a new access token (spec 18).
+// ! Deliberately NO authCheck: the caller's access token is expired, which is the whole
+// ! reason this endpoint is being hit. Authentication here IS the refresh token's signature.
+router.post(
+  "/refresh-token",
+  validateRequest(userValidations.refreshTokenSchema),
+  userController.refreshToken,
+);
+
 // ! for getting the logged-in user's own profile
 router.get("/me", authCheck, userController.getMe);
 

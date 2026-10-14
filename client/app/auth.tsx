@@ -19,7 +19,7 @@ export default function AuthScreen() {
 
   const router = useRouter();
 
-  const { handleSetUser, handleSetToken } = useUserContext();
+  const { handleSetUser, handleSetSession } = useUserContext();
 
   const loginMutation = usePost([["login"]]);
 
@@ -39,7 +39,18 @@ export default function AuthScreen() {
 
       if (result?.success) {
         const userData = result?.data;
-        const token = result?.token;
+        // Spec 39: login returns an access token in `token` and a refresh token alongside it
+        // (server spec 18 D6).
+        const accessToken = result?.token;
+        const refreshToken = result?.refreshToken;
+
+        // ! Both or nothing. A server still on the pre-spec-18 build sends no `refreshToken`,
+        // ! and storing a session without one produces an account that can never refresh and
+        // ! gets silently logged out 15 minutes later. Failing here is the legible failure.
+        if (!accessToken || !refreshToken) {
+          setErrorMessage("Something went wrong. Please try again.");
+          return;
+        }
 
         const userPayload = {
           _id: userData?._id,
@@ -51,7 +62,7 @@ export default function AuthScreen() {
           userRole: userData?.userRole,
         };
 
-        handleSetToken(token);
+        await handleSetSession(accessToken, refreshToken);
         handleSetUser(userPayload);
 
         Toast.show({ type: "success", text1: result?.message, position: "top" });

@@ -19,14 +19,32 @@ const crateUser = catchAsync(async (req, res) => {
 const signIn = catchAsync(async (req, res) => {
   const result = await userServices.loginFromDb(req.body);
 
-  const { userData, token } = result;
+  const { userData, accessToken, refreshToken } = result;
 
   sendResponse(res, {
     status: httpStatus.OK,
     success: true,
     message: "User logged in successfully!!!",
     data: userData,
-    token: token,
+    // ! the access token keeps the existing top-level `token` field rather than moving into
+    // ! `data`, so "where is the access token" has one answer on both login and refresh
+    // ! (spec 18 D6).
+    token: accessToken,
+    refreshToken,
+  });
+});
+
+// ! for exchanging a refresh token for a new access token (spec 18). No authCheck on the
+// ! route: the access token is expired by definition when the client calls this.
+const refreshToken = catchAsync(async (req, res) => {
+  const result = await userServices.refreshAccessToken(req.body.refreshToken);
+
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Access token refreshed successfully",
+    data: null,
+    token: result.accessToken,
   });
 });
 
@@ -56,6 +74,7 @@ const updateProfile = catchAsync(async (req, res) => {
 export const userController = {
   crateUser,
   signIn,
+  refreshToken,
   getMe,
   updateProfile,
 };
