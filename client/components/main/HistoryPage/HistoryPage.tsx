@@ -125,12 +125,17 @@ export default function HistoryPage() {
   // so past years get no drill-in chevron.
   const canDrillIn = selectedYear === currentYear;
 
-  // Spec 41: January → the latest month that can hold data, ascending. Zero months are
-  // kept so the list is a continuous range and reads in the same direction as the chart
-  // above it; future months of the current year are cut at the same boundary the chart's
-  // `isFuture` stub uses. The server zero-fills all 12 months, so this is a window on
-  // complete data, never a gap-filling pass. The `typeof` guard replaces what the old
-  // activity filter did incidentally — `MONTHS[m.month]` throws on a malformed row.
+  // Spec 41: the whole January → latest-month range, not the newest five active months.
+  // Zero months are kept so the range is continuous; future months of the current year are
+  // cut at the same boundary the chart's `isFuture` stub uses. The server zero-fills all 12
+  // months, so this is a window on complete data, never a gap-filling pass. The `typeof`
+  // guard replaces what the old activity filter did incidentally — `MONTHS[m.month]`
+  // throws on a malformed row.
+  //
+  // Spec 43: ordered newest-first (October → January), by request. That is the opposite of
+  // the chart's left-to-right axis above it — 41 had chosen ascending to match it — and it
+  // puts the month being looked at most at the top. Sorted, not `.reverse()`d, so the order
+  // can't depend on the payload arriving ascending.
   const monthRows = useMemo(() => {
     const lastMonth = selectedYear === currentYear ? currentMonth : 11;
     return yearSummary
@@ -138,7 +143,7 @@ export default function HistoryPage() {
         (m) =>
           typeof m?.month === "number" && m.month >= 0 && m.month <= lastMonth,
       )
-      .sort((a, b) => a.month - b.month);
+      .sort((a, b) => b.month - a.month);
   }, [yearSummary, selectedYear]);
 
   const segmentControl = (

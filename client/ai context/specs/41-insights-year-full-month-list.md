@@ -89,7 +89,11 @@ Two consequences of this that the fix has to carry:
 Visual rules come from `theme/` as always — `useTheme()` for colour, `text.*` for type, `spacing.*` for
 layout. No new tokens, no literals.
 
-**Order: ascending, January at the top.** The user's phrasing ("starting from january to the latest
+**Order: ascending, January at the top.** ⚠️ **Superseded by
+[`specs/43-insights-year-newest-month-first.md`](43-insights-year-newest-month-first.md)
+(2026-10-14)** — the user asked for newest-first (October → January) after seeing this shipped, so the
+list now runs descending. The rest of this spec stands; only the sort direction changed. The reasoning
+below is kept because it is why the order flipped in the first place. The user's phrasing ("starting from january to the latest
 month") is a reading order, and it makes the list scan in the same direction as the chart's left-to-right
 axis directly above it. This reverses today's newest-first order — that is intended, not a regression.
 
@@ -336,7 +340,8 @@ points at before blaming data.
 - [x] `yarn lint` shows nothing new for `HistoryPage.tsx` against the pre-change output.
 - [x] `grep -n "slice(0, 5)\|recentMonths" components/main/HistoryPage/HistoryPage.tsx` returns nothing.
 - [x] Insights → Year, current year (2026): the list runs **January at the top through October at the
-      bottom** — 10 rows, ascending. Not 5, not newest-first. — *by execution; not yet seen on screen*
+      bottom** — 10 rows, ascending. Not 5, not newest-first. — *by execution; not yet seen on screen.*
+      *Ordering since reversed by `specs/43` — the range (10 rows, Jan–Oct) is unchanged.*
 - [x] November and December 2026 are **absent** from the list (matching the chart's stubbed future
       columns). — *by execution*
 - [x] A month with no entries renders `No entries`, a muted `৳0` with no `+`/`−`, no in/out line, and
