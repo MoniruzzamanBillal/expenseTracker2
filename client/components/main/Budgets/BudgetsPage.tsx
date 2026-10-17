@@ -262,7 +262,10 @@ export default function BudgetsPage() {
                     styles.summaryFill,
                     {
                       width: `${totalLimit > 0 ? Math.min((totalSpent / totalLimit) * 100, 100) : 0}%`,
-                      backgroundColor: C.accent,
+                      backgroundColor:
+                        totalLimit > 0 && totalSpent > totalLimit
+                          ? C.expense
+                          : C.accent,
                     },
                   ]}
                 />

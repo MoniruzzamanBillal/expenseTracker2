@@ -50,8 +50,24 @@ export type TCategoryBreakdownEntry = {
   expense: number;
 };
 
+export type TCategoryDetailTransaction = {
+  _id: string;
+  type: keyof typeof TransactionTypeConst;
+  title: string;
+  description?: string | null;
+  amount: number;
+  createdAt: string;
+};
+
+export type TCategoryDetailEntry = TCategoryBreakdownEntry & {
+  transactions: TCategoryDetailTransaction[];
+};
+
 export type TTrendSummary = {
   months: number;
   monthlySummary: TTrendMonth[];
   categoryBreakdown: TCategoryBreakdownEntry[];
+  // Whole window, income + expense, per category. Absent from a server that
+  // predates the category-detail change, so readers default it to [].
+  categoryDetail?: TCategoryDetailEntry[];
 };

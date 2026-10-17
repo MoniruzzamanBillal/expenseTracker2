@@ -231,7 +231,13 @@ export default function HistoryPage() {
         ListHeaderComponent={
           <View>
             <Text
-              style={[text.h2, { color: C.text, marginBottom: spacing.base }]}
+              style={[
+                text.h2,
+                {
+                  color: C.text,
+                  marginBottom: spacing.base,
+                },
+              ]}
             >
               Insights
             </Text>
@@ -525,16 +531,12 @@ export default function HistoryPage() {
                 {!isEmptyMonth ? (
                   <Text style={[text.caption, { color: C.textSecondary }]}>
                     <Text style={{ color: C.income }}>+{fmt(m?.income)}</Text>{" "}
-                    <Text style={{ color: C.expense }}>
-                      −{fmt(m?.expense)}
-                    </Text>
+                    <Text style={{ color: C.expense }}>−{fmt(m?.expense)}</Text>
                   </Text>
                 ) : null}
               </View>
               <Text style={[text.bodyMd, { color: barColor }]}>
-                {isEmptyMonth
-                  ? "৳0"
-                  : `${isPositive ? "+" : "−"}৳${fmt(mNet)}`}
+                {isEmptyMonth ? "৳0" : `${isPositive ? "+" : "−"}৳${fmt(mNet)}`}
               </Text>
               {tappable ? (
                 <Ionicons

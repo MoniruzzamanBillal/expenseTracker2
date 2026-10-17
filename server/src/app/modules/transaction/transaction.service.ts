@@ -70,6 +70,74 @@ const buildCategoryBreakdown = (
   return Object.values(buckets);
 };
 
+// ! like buildCategoryBreakdown, but each bucket also carries its transactions (newest first)
+// ! and buckets come back biggest spender first — the Trend tab's category-wise detail view
+const buildCategoryDetail = (
+  transactions: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string | null;
+    amount: number;
+    createdAt: Date;
+    category: { id: string; name: string; icon: string | null } | null;
+  }>,
+) => {
+  const buckets: Record<
+    string,
+    {
+      categoryId: string | null;
+      name: string;
+      icon: string | null;
+      income: number;
+      expense: number;
+      transactions: Array<{
+        _id: string;
+        type: string;
+        title: string;
+        description: string | null;
+        amount: number;
+        createdAt: Date;
+      }>;
+    }
+  > = {};
+
+  for (const t of transactions) {
+    const key = t.category?.id ?? "uncategorized";
+    if (!buckets[key]) {
+      buckets[key] = {
+        categoryId: t.category?.id ?? null,
+        name: t.category?.name ?? "Uncategorized",
+        icon: t.category?.icon ?? null,
+        income: 0,
+        expense: 0,
+        transactions: [],
+      };
+    }
+    if (t.type === transactionConstants.income) buckets[key].income += t.amount;
+    else if (t.type === transactionConstants.expense)
+      buckets[key].expense += t.amount;
+
+    buckets[key].transactions.push({
+      _id: t.id,
+      type: t.type,
+      title: t.title,
+      description: t.description,
+      amount: t.amount,
+      createdAt: t.createdAt,
+    });
+  }
+
+  return Object.values(buckets)
+    .map((b) => ({
+      ...b,
+      transactions: b.transactions.sort(
+        (a, c) => c.createdAt.getTime() - a.createdAt.getTime(),
+      ),
+    }))
+    .sort((a, b) => b.expense - a.expense || b.income - a.income);
+};
+
 // ! for adding new transaction
 const addNewTransaction = async (
   payload: TTransaction,
@@ -707,6 +775,8 @@ const getTrendSummary = async (userId: string, query: TTrendPayload) => {
       expense,
     })),
     categoryBreakdown: buildCategoryBreakdown(latestExpenseTransactions),
+    // ! additive: the whole window, income AND expense, with each category's transactions
+    categoryDetail: buildCategoryDetail(transactions),
   };
 };
 
