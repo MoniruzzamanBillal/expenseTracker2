@@ -1,6 +1,6 @@
 # 46 — User profile picture: upload in Settings, show on Home
 
-**Status**: 📝 Drafted 2026-10-17 — awaiting review before implementation starts. Nothing in this file has been built.
+**Status**: 🔨 Code written 2026-10-17 (`tsc` + `expo lint` clean) — runtime verification and device pass still pending.
 **Depends on `server/ai context/specs/20-user-profile-picture-upload.md`** — build and deploy that first; this UI is
 tested against its endpoints (`PUT`/`DELETE /auth/profile-picture`) and response shape.
 **Scope**: `client/` — one new component (`UserAvatar`), one new util (`prepareAvatarImage`), edits to

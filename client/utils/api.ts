@@ -96,6 +96,8 @@ export const apiPutOutcome = async <TBody = any>(
   // An AxiosError carrying no response never reached a server: offline, DNS
   // failure, or the 60s timeout. Anything else means the server answered.
   if (!result?.response) {
+    // TEMP (spec 46 debugging): the outcome below drops the axios error, so log it here.
+    console.log("apiPutOutcome no response = ", endPoint, result?.code, result?.message);
     return { ok: false, offline: true };
   }
 

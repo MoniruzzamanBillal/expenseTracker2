@@ -27,6 +27,7 @@ import OfflineNotice from "../shared/OfflineNotice";
 import PendingSyncBanner from "../shared/PendingSyncBanner";
 import TransactionCard from "../shared/TransactionCard";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
+import UserAvatar from "../shared/UserAvatar";
 import NetTodayCard from "./NetTodayCard";
 
 type TData = {
@@ -35,12 +36,6 @@ type TData = {
   transactions: TTransaction[];
   categoryBreakdown: TBreakdownEntry[];
 };
-
-function initials(name?: string | null) {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
-}
 
 export default function HomePage() {
   const C = useTheme();
@@ -138,11 +133,12 @@ export default function HomePage() {
           <TouchableOpacity
             onPress={() => router.push("/settings")}
             activeOpacity={0.8}
-            style={[styles.avatar, { backgroundColor: C.accentDim }]}
           >
-            <Text style={[text.bodyMd, { color: C.accentText }]}>
-              {initials(user?.name)}
-            </Text>
+            <UserAvatar
+              name={user?.name}
+              uri={user?.profilePicture}
+              size={36}
+            />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             {/* Both lines sit one step under their tokens, local to this header
@@ -300,13 +296,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     height: 48,
     marginBottom: spacing.base,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
   },
   trayBtn: {
     width: 40,

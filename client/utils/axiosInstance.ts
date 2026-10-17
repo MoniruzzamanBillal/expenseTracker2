@@ -99,6 +99,9 @@ instance.interceptors.response.use(
     const status = error?.response?.status;
     const originalConfig = error?.config as TRetriableConfig | undefined;
 
+    // TEMP (spec 46 debugging)
+    console.log("axios error = ", originalConfig?.method, originalConfig?.url, "status", status, "retry", originalConfig?._retry, error?.code);
+
     // ! Spec 39 D2 — silent refresh. With a 15-minute access token, an expiry 401 is routine,
     // ! so it must not be visible: refresh once, retry the original request, show nothing.
     // ! Only a genuinely dead refresh token ends the session.

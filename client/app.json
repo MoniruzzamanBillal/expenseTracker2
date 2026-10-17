@@ -43,8 +43,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow ExpenseTracker to access your photos to attach a receipt.",
-          "cameraPermission": "Allow ExpenseTracker to access your camera to take a receipt photo."
+          "photosPermission": "Allow ExpenseTracker to access your photos to attach a receipt or set your profile photo.",
+          "cameraPermission": "Allow ExpenseTracker to access your camera to take a receipt or profile photo."
         }
       ],
       "expo-secure-store"

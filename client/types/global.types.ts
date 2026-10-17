@@ -10,7 +10,7 @@ export type IUser = {
   // ! That is deliberate: it makes "the client thinks I'm an admin" true exactly when the
   // ! stored JWT carries the userRole claim the server's adminCheck reads.
   userRole?: TUserRole;
-  profilePicture?: string;
+  profilePicture?: string | null;
   createdAt?: string;
   updatedAt?: string;
   __v?: number;

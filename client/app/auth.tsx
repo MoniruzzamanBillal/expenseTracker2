@@ -60,6 +60,8 @@ export default function AuthScreen() {
           // while /auth/me's select omits userRole. Dropping it here is what made the admin
           // check impossible on the client before spec 36.
           userRole: userData?.userRole,
+          // ! Without this a fresh login shows initials until the user re-uploads (spec 46).
+          profilePicture: userData?.profilePicture ?? null,
         };
 
         await handleSetSession(accessToken, refreshToken);
