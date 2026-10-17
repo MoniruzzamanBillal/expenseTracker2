@@ -17,7 +17,7 @@ The REST API for ExpenseTracker, a personal income/expense tracking app. Express
 
 | Module | Route prefix | Purpose |
 |---|---|---|
-| `user` | `/api/auth` | register, login |
+| `user` | `/api/auth` | register, login, refresh-token, me, update-profile, profile-picture (PUT/DELETE) |
 | `transaction` | `/api/transactions` | CRUD + daily/monthly/weekly/yearly summaries + AI-assisted bulk entry |
 
 ## Domain model at a glance

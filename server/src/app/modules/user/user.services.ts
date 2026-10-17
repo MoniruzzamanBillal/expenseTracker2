@@ -5,6 +5,10 @@ import Jwt, { JwtPayload } from "jsonwebtoken";
 import AppError from "../../Error/AppError";
 import config from "../../config";
 import { prisma } from "../../lib/prisma";
+import {
+  deleteCloudinaryImage,
+  uploadAvatarBuffer,
+} from "../../util/cloudinary";
 import { generateObjectId } from "../../util/generateObjectId";
 import { TUser } from "./user.interface";
 
@@ -116,6 +120,74 @@ const updateProfile = async (userId: string, payload: { name: string }) => {
     // ! same hoist as getMe above (spec 19 D2) - identical list, unchanged response.
     select: PUBLIC_USER_SELECT,
   });
+
+  return { ...result, _id: result.id };
+};
+
+// ! for setting/replacing the logged-in user's profile picture (spec 20)
+const updateProfilePicture = async (
+  userId: string,
+  file: Express.Multer.File | undefined,
+) => {
+  // ! multer leaves req.file undefined when no "file" part was parsed (wrong field name,
+  // ! malformed body) - without this guard file.buffer below is a raw TypeError -> 500.
+  if (!file) {
+    throw new AppError(httpStatus.BAD_REQUEST, "No image file received");
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { id: userId, isDeleted: false },
+    select: { profilePicturePublicId: true },
+  });
+
+  if (!existing) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // ! upload -> DB write -> delete old (spec 20 D5): a failed upload leaves the current
+  // ! avatar intact, and the worst case is an orphaned asset rather than a dangling URL.
+  const { url, publicId } = await uploadAvatarBuffer(
+    file.buffer,
+    file.mimetype,
+  );
+
+  const result = await prisma.user.update({
+    where: { id: userId },
+    data: { profilePicture: url, profilePicturePublicId: publicId },
+    select: PUBLIC_USER_SELECT,
+  });
+
+  if (existing.profilePicturePublicId) {
+    await deleteCloudinaryImage(existing.profilePicturePublicId);
+  }
+
+  return { ...result, _id: result.id };
+};
+
+// ! for removing the logged-in user's profile picture (spec 20)
+const removeProfilePicture = async (userId: string) => {
+  const existing = await prisma.user.findUnique({
+    where: { id: userId, isDeleted: false },
+    select: { profilePicture: true, profilePicturePublicId: true },
+  });
+
+  if (!existing) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (!existing.profilePicture) {
+    throw new AppError(httpStatus.BAD_REQUEST, "No profile picture to remove");
+  }
+
+  const result = await prisma.user.update({
+    where: { id: userId },
+    data: { profilePicture: null, profilePicturePublicId: null },
+    select: PUBLIC_USER_SELECT,
+  });
+
+  if (existing.profilePicturePublicId) {
+    await deleteCloudinaryImage(existing.profilePicturePublicId);
+  }
 
   return { ...result, _id: result.id };
 };
@@ -232,4 +304,6 @@ export const userServices = {
   refreshAccessToken,
   getMe,
   updateProfile,
+  updateProfilePicture,
+  removeProfilePicture,
 };

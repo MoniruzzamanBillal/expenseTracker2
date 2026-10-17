@@ -23,15 +23,16 @@ enum TransactionRequestStatus {
 }
 
 model User {
-  id             String   @id
-  name           String
-  email          String   @unique
-  password       String
-  profilePicture String?
-  isDeleted      Boolean  @default(false)
-  userRole       Role     @default(user)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                     String   @id
+  name                   String
+  email                  String   @unique
+  password               String
+  profilePicture         String?
+  profilePicturePublicId String? // Cloudinary public_id of the current avatar, for destroy()
+  isDeleted              Boolean  @default(false)
+  userRole               Role     @default(user)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   transactions Transaction[]
   categories   Category[]

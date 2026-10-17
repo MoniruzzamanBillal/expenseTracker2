@@ -28,6 +28,12 @@ const deleteCloudinaryImage = async (
 const uploadDocumentBuffer = (
   buffer: Buffer,
   mimetype: string,
+  options?: {
+    folder?: string;
+    transformation?: Record<string, unknown>[];
+    // ! defaults to the receipt wording so existing receipt callers behave exactly as before
+    failureMessage?: string;
+  },
 ): Promise<{
   url: string;
   publicId: string;
@@ -36,6 +42,9 @@ const uploadDocumentBuffer = (
   const resourceType: "image" | "raw" = mimetype.startsWith("image/")
     ? "image"
     : "raw";
+
+  const failureMessage =
+    options?.failureMessage ?? "Receipt upload failed, please try again";
 
   return new Promise((resolve, reject) => {
     // ! upload_stream validates credentials EAGERLY and SYNCHRONOUSLY (utils.api_url ->
@@ -48,7 +57,11 @@ const uploadDocumentBuffer = (
 
     try {
       uploadStream = cloudinary.uploader.upload_stream(
-        { resource_type: resourceType },
+        {
+          resource_type: resourceType,
+          folder: options?.folder,
+          transformation: options?.transformation,
+        },
         (error, result) => {
           // ! Cloudinary's error is a plain object carrying `http_code`, not `status`, so
           // ! globalErrorHandler's `error.status || 500` turned every failure (including a
@@ -59,12 +72,7 @@ const uploadDocumentBuffer = (
           // ! upload. An AppError fixes both: one shaped 502, real cause logged server-side.
           if (error || !result) {
             console.error("Cloudinary upload failed", error);
-            return reject(
-              new AppError(
-                httpStatus.BAD_GATEWAY,
-                "Receipt upload failed, please try again",
-              ),
-            );
+            return reject(new AppError(httpStatus.BAD_GATEWAY, failureMessage));
           }
           resolve({
             url: result.secure_url,
@@ -80,16 +88,22 @@ const uploadDocumentBuffer = (
         "Cloudinary upload_stream threw synchronously",
         configError,
       );
-      return reject(
-        new AppError(
-          httpStatus.BAD_GATEWAY,
-          "Receipt upload failed, please try again",
-        ),
-      );
+      return reject(new AppError(httpStatus.BAD_GATEWAY, failureMessage));
     }
 
     uploadStream.end(buffer);
   });
 };
 
-export { deleteCloudinaryImage, uploadDocumentBuffer };
+// ! avatars: normalised to 512x512 (face-centred when there is one) and kept apart from
+// ! receipts in the media library (spec 20 D6/D7)
+const uploadAvatarBuffer = (buffer: Buffer, mimetype: string) =>
+  uploadDocumentBuffer(buffer, mimetype, {
+    folder: "exptracker/avatars",
+    transformation: [
+      { width: 512, height: 512, crop: "fill", gravity: "face" },
+    ],
+    failureMessage: "Profile picture upload failed, please try again",
+  });
+
+export { deleteCloudinaryImage, uploadAvatarBuffer, uploadDocumentBuffer };

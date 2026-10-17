@@ -1,5 +1,6 @@
 import { Router } from "express";
 import authCheck from "../../middleware/authCheck";
+import { handleAvatarFileUpload } from "../../middleware/uploadAvatarFile";
 import validateRequest from "../../middleware/validateRequest";
 import { userController } from "./user.controller";
 import { userValidations } from "./user.validation";
@@ -38,6 +39,22 @@ router.patch(
   authCheck,
   validateRequest(userValidations.updateProfileSchema),
   userController.updateProfile,
+);
+
+// ! for uploading/replacing the logged-in user's profile picture (spec 20).
+// ! No validateRequest - multipart has no Zod-able body, same as the receipt route.
+router.put(
+  "/profile-picture",
+  authCheck,
+  handleAvatarFileUpload,
+  userController.updateProfilePicture,
+);
+
+// ! for removing the logged-in user's profile picture (spec 20)
+router.delete(
+  "/profile-picture",
+  authCheck,
+  userController.removeProfilePicture,
 );
 
 //

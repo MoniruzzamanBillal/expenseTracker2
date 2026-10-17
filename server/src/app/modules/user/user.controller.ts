@@ -70,6 +70,31 @@ const updateProfile = catchAsync(async (req, res) => {
   });
 });
 
+// ! for setting/replacing the logged-in user's profile picture (spec 20)
+const updateProfilePicture = catchAsync(async (req, res) => {
+  const result = await userServices.updateProfilePicture(
+    req.user.userId,
+    req.file as Express.Multer.File,
+  );
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Profile picture updated successfully",
+    data: result,
+  });
+});
+
+// ! for removing the logged-in user's profile picture (spec 20)
+const removeProfilePicture = catchAsync(async (req, res) => {
+  const result = await userServices.removeProfilePicture(req.user.userId);
+  sendResponse(res, {
+    status: httpStatus.OK,
+    success: true,
+    message: "Profile picture removed successfully",
+    data: result,
+  });
+});
+
 //
 export const userController = {
   crateUser,
@@ -77,4 +102,6 @@ export const userController = {
   refreshToken,
   getMe,
   updateProfile,
+  updateProfilePicture,
+  removeProfilePicture,
 };

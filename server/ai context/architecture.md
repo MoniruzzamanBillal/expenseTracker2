@@ -22,7 +22,7 @@
 Two modules under `src/app/modules/`: `transaction` and `user`. `src/app/router/index.ts` mounts them:
 
 - `transaction` → `/api/transactions` (folder name matches route prefix)
-- `user` → `/api/auth`, i.e. `/api/auth/register`, `/api/auth/login` (folder name does **not** match route prefix — → `known-issues.md#NAME-3`)
+- `user` → `/api/auth`, i.e. `/api/auth/register`, `/api/auth/login`, `PUT`/`DELETE /api/auth/profile-picture` (spec 20) (folder name does **not** match route prefix — → `known-issues.md#NAME-3`)
 
 ## Auth model — as it actually behaves today
 

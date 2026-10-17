@@ -1,4 +1,5 @@
 import CategoryManager from "@/components/main/Settings/CategoryManager";
+import ConfirmModal from "@/components/main/shared/ConfirmModal";
 import FormField from "@/components/main/shared/FormField";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import Sheet from "@/components/main/shared/Sheet";
@@ -10,7 +11,7 @@ import { isAdmin } from "@/utils/isAdmin";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -34,6 +35,7 @@ export default function SettingsPage() {
   const { preference, setPreference } = useThemePreference();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const [name, setName] = useState("");
 
   const { data: profile } = useFetchData<IUser>(["profile"], "/auth/me");
@@ -63,22 +65,6 @@ export default function SettingsPage() {
     } catch (error) {
       console.log("error = ", error);
     }
-  };
-
-  const handleLogoutPress = () => {
-    // react-native-web's Alert.alert is a hard no-op — use window.confirm there
-    // instead, same fix spec 08 already applied to Home's logout button.
-    if (Platform.OS === "web") {
-      if (window.confirm("Log out?")) {
-        logoutFunction();
-      }
-      return;
-    }
-
-    Alert.alert("Log out?", undefined, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Log out", style: "destructive", onPress: logoutFunction },
-    ]);
   };
 
   const displayName = profile?.data?.name ?? user?.name ?? "";
@@ -148,7 +134,7 @@ export default function SettingsPage() {
           </TouchableOpacity>
         ) : null}
 
-        <TouchableOpacity onPress={handleLogoutPress} activeOpacity={0.8} style={[styles.logoutBtn, { borderColor: `${C?.expense}80` }]}>
+        <TouchableOpacity onPress={() => setLogoutOpen(true)} activeOpacity={0.8} style={[styles.logoutBtn, { borderColor: `${C?.expense}80` }]}>
           <Ionicons name="log-out-outline" size={18} color={C?.expense} />
           <Text style={[text.bodyMd, { color: C?.expense }]}>Log out</Text>
         </TouchableOpacity>
@@ -172,6 +158,19 @@ export default function SettingsPage() {
           <PrimaryButton label={updateProfileMutation?.isPending ? "Saving…" : "Save"} onPress={saveName} loading={updateProfileMutation?.isPending} height={spacing.cta} />
         </KeyboardAwareScrollView>
       </Sheet>
+
+      <ConfirmModal
+        visible={logoutOpen}
+        icon="log-out-outline"
+        title="Log out?"
+        message="You'll need to sign in again to see your transactions."
+        confirmLabel="Log out"
+        onCancel={() => setLogoutOpen(false)}
+        onConfirm={() => {
+          setLogoutOpen(false);
+          logoutFunction();
+        }}
+      />
     </SafeAreaView>
   );
 }
