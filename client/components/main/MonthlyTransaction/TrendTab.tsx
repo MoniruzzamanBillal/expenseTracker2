@@ -47,7 +47,7 @@ const dayLabel = (iso: string) => {
   return Number.isNaN(d.getTime()) ? "" : format(d, "d MMM");
 };
 
-/** Sort key for a createdAt that is a string here (it was a Date server-side). */
+/** Sort key for an occurredAt that is a string here (it was a Date server-side). */
 const atTime = (iso?: string) => {
   const t = new Date(iso ?? "").getTime();
   return Number.isNaN(t) ? 0 : t;
@@ -159,7 +159,7 @@ export default function TrendTab() {
           title: t?.title,
           description: t?.description,
           amount: t?.amount,
-          createdAt: t?.createdAt ?? "",
+          occurredAt: t?.occurredAt ?? t?.createdAt ?? "",
         });
       }
     }
@@ -168,7 +168,7 @@ export default function TrendTab() {
       .map((b) => ({
         ...b,
         transactions: b.transactions.sort(
-          (a, c) => atTime(c.createdAt) - atTime(a.createdAt),
+          (a, c) => atTime(c.occurredAt) - atTime(a.occurredAt),
         ),
       }))
       .sort((a, b) => b.expense - a.expense || b.income - a.income);
@@ -356,7 +356,7 @@ export default function TrendTab() {
                                 { color: C.textSecondary },
                               ]}
                             >
-                              {dayLabel(t.createdAt)}
+                              {dayLabel(t.occurredAt)}
                             </Text>
                             <View style={{ flex: 1 }}>
                               <Text

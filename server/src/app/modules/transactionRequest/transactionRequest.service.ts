@@ -88,10 +88,15 @@ const acceptTransactionRequest = async (
   const title = edits.title ?? transactionRequest.title;
   const description = edits.description ?? transactionRequest.description ?? undefined;
   const amount = edits.amount ?? Number(transactionRequest.amount);
+  // The accepted expense is filed under the request's real date (set by the
+  // source app), not today — unless the reviewer overrode it. Previously this
+  // was dropped and the transaction defaulted to now() (spec 21).
+  const occurredAt =
+    edits.occurredAt ?? transactionRequest.occurredAt.toISOString();
 
   return prisma.$transaction(async (tx) => {
     const transaction = await transactionServices.addNewTransaction(
-      { type: "expense", title, description, amount, isDeleted: false },
+      { type: "expense", title, description, amount, occurredAt, isDeleted: false },
       userId,
       tx,
     );

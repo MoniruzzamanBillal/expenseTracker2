@@ -47,7 +47,8 @@
           "cameraPermission": "Allow ExpenseTracker to access your camera to take a receipt or profile photo."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

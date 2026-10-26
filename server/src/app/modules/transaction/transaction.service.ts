@@ -79,7 +79,7 @@ const buildCategoryDetail = (
     title: string;
     description: string | null;
     amount: number;
-    createdAt: Date;
+    occurredAt: Date;
     category: { id: string; name: string; icon: string | null } | null;
   }>,
 ) => {
@@ -97,7 +97,7 @@ const buildCategoryDetail = (
         title: string;
         description: string | null;
         amount: number;
-        createdAt: Date;
+        occurredAt: Date;
       }>;
     }
   > = {};
@@ -124,7 +124,7 @@ const buildCategoryDetail = (
       title: t.title,
       description: t.description,
       amount: t.amount,
-      createdAt: t.createdAt,
+      occurredAt: t.occurredAt,
     });
   }
 
@@ -132,7 +132,7 @@ const buildCategoryDetail = (
     .map((b) => ({
       ...b,
       transactions: b.transactions.sort(
-        (a, c) => c.createdAt.getTime() - a.createdAt.getTime(),
+        (a, c) => c.occurredAt.getTime() - a.occurredAt.getTime(),
       ),
     }))
     .sort((a, b) => b.expense - a.expense || b.income - a.income);
@@ -155,6 +155,7 @@ const addNewTransaction = async (
       title: payload.title,
       description: payload.description,
       amount: payload.amount,
+      occurredAt: payload.occurredAt ? new Date(payload.occurredAt) : new Date(),
     },
   });
 
@@ -175,6 +176,7 @@ const addManyTransaction = async (payload: TTransaction[], userId: string) => {
     title: data.title,
     description: data.description,
     amount: data.amount,
+    occurredAt: data.occurredAt ? new Date(data.occurredAt) : new Date(),
   }));
 
   const result = await prisma.transaction.createMany({
@@ -203,10 +205,10 @@ const getMonthlyTransactions = async (
   const transactionsRaw = await prisma.transaction.findMany({
     where: {
       userId,
-      createdAt: { gte: start, lte: end },
+      occurredAt: { gte: start, lte: end },
       isDeleted: false,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { occurredAt: "desc" },
     include: { category: true },
   });
 
@@ -231,7 +233,7 @@ const getMonthlyTransactions = async (
   } = {};
 
   transactions?.forEach((tran) => {
-    const day = (tran?.createdAt as Date)?.getUTCDate() as number;
+    const day = (tran?.occurredAt as Date)?.getUTCDate() as number;
 
     const dateString = `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
 
@@ -285,10 +287,10 @@ const getDailyTransactions = async (userId: string) => {
   const transactionsRaw = await prisma.transaction.findMany({
     where: {
       userId,
-      createdAt: { gte: start, lte: end },
+      occurredAt: { gte: start, lte: end },
       isDeleted: false,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { occurredAt: "desc" },
     include: { category: true },
   });
 
@@ -323,7 +325,7 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
   const transactionsRaw = await prisma.transaction.findMany({
     where: {
       userId,
-      createdAt: { gte: start, lt: end },
+      occurredAt: { gte: start, lt: end },
       isDeleted: false,
     },
   });
@@ -348,7 +350,7 @@ const getYearlySummary = async (userId: string, query: TYearlyPayload) => {
   }
 
   for (const transaction of transactions) {
-    const month = new Date(transaction?.createdAt as Date).getUTCMonth();
+    const month = new Date(transaction?.occurredAt as Date).getUTCMonth();
 
     if (transaction.type === transactionConstants.income) {
       monthlySummary[month].income += transaction.amount;
@@ -391,9 +393,17 @@ const updateTransaction = async (
     await assertCategoryOwnership(payload.categoryId, userId);
   }
 
+  // occurredAt arrives as an ISO string — normalize to a Date so the stored value
+  // matches what addNewTransaction writes (the raw spread would otherwise pass the
+  // string straight through).
+  const data = {
+    ...payload,
+    ...(payload.occurredAt ? { occurredAt: new Date(payload.occurredAt) } : {}),
+  };
+
   const result = await prisma.transaction.update({
     where: { id: transactionId },
-    data: payload,
+    data,
   });
 
   return toApiShape(result);
@@ -631,7 +641,7 @@ const getWeeklySummary = async (userId: string) => {
   const transactionsRaw = await prisma.transaction.findMany({
     where: {
       userId,
-      createdAt: { gte: start, lt: end },
+      occurredAt: { gte: start, lt: end },
       isDeleted: false,
     },
     include: { category: true },
@@ -658,7 +668,7 @@ const getWeeklySummary = async (userId: string) => {
   } = {};
 
   transactions.forEach((tran) => {
-    const txDate = new Date(tran.createdAt as Date);
+    const txDate = new Date(tran.occurredAt as Date);
 
     const year = txDate.getUTCFullYear();
     const month = txDate.getUTCMonth() + 1;
@@ -719,7 +729,7 @@ const getTrendSummary = async (userId: string, query: TTrendPayload) => {
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 
   const transactionsRaw = await prisma.transaction.findMany({
-    where: { userId, isDeleted: false, createdAt: { gte: start, lt: end } },
+    where: { userId, isDeleted: false, occurredAt: { gte: start, lt: end } },
     include: { category: true },
   });
   const transactions = transactionsRaw.map(toApiShape);
@@ -751,7 +761,7 @@ const getTrendSummary = async (userId: string, query: TTrendPayload) => {
   }
 
   for (const t of transactions) {
-    const key = monthKey(new Date(t.createdAt as Date));
+    const key = monthKey(new Date(t.occurredAt as Date));
     if (!buckets[key]) continue; // defensive — shouldn't happen given the query's own range
     if (t.type === transactionConstants.income) buckets[key].income += t.amount;
     else if (t.type === transactionConstants.expense)

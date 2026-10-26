@@ -9,6 +9,9 @@ export interface TTransaction {
   amount: number;
   isDeleted: boolean;
 
+  // ISO string from the client on create/update; a Date once read back from Prisma.
+  occurredAt?: Date | string;
+
   receiptFileUrl?: string | null;
   receiptFilePublicId?: string | null;
   receiptFileResourceType?: string | null;

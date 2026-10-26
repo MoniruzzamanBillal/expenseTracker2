@@ -8,6 +8,9 @@ export type TPendingTransactionPayload = {
   amount: number;
   title: string;
   description?: string;
+  // ISO date the entry is filed under, captured when queued so it survives until the
+  // entry syncs (which may be days later). Optional: smart-add batches omit it.
+  occurredAt?: string;
 };
 
 export type TPendingTransactionOrigin = "manual" | "smart-add";

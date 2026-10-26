@@ -7,6 +7,10 @@ export type TTransaction = {
   description?: string;
   amount: number;
   type: keyof typeof TransactionTypeConst;
+  // The user-editable transaction date (server spec 21). Drives all date display and
+  // grouping; createdAt stays the audit insertion time. Optional so older cached/offline
+  // rows that predate it still type-check — readers fall back to createdAt.
+  occurredAt?: string;
   createdAt?: string;
   updatedAt?: string;
 
@@ -56,7 +60,7 @@ export type TCategoryDetailTransaction = {
   title: string;
   description?: string | null;
   amount: number;
-  createdAt: string;
+  occurredAt: string;
 };
 
 export type TCategoryDetailEntry = TCategoryBreakdownEntry & {
