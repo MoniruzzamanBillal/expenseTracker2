@@ -68,6 +68,9 @@ export default function HomePage() {
       description: item?.payload?.description,
       amount: item?.payload?.amount,
       type: item?.payload?.type,
+      // The chosen transaction date (spec 48) if the queued payload carried one,
+      // else the enqueue timestamp as a fallback for display.
+      occurredAt: item?.payload?.occurredAt ?? item?.createdAt,
       createdAt: item?.createdAt,
     }),
   );

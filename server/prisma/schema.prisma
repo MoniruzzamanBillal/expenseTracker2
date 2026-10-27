@@ -85,6 +85,11 @@ model Transaction {
   amount      Decimal         @db.Decimal(12, 2)
   isDeleted   Boolean         @default(false)
 
+  // ! the date the transaction actually happened — user-editable, defaults to now()
+  // ! at create time when the client omits it. createdAt stays the true row-insertion
+  // ! audit timestamp; every read path groups/filters by occurredAt (spec 21).
+  occurredAt DateTime
+
   receiptFileUrl          String?
   receiptFilePublicId     String?
   receiptFileResourceType String?
@@ -98,6 +103,7 @@ model Transaction {
 
   @@index([userId])
   @@index([categoryId])
+  @@index([userId, occurredAt])
   @@map("transactions")
 }
 

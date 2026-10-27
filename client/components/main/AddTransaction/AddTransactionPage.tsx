@@ -1,4 +1,5 @@
 import CategorySelectField from "@/components/main/shared/CategorySelectField";
+import DateField from "@/components/main/shared/DateField";
 import FormField from "@/components/main/shared/FormField";
 import Keypad from "@/components/main/shared/Keypad";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
@@ -11,6 +12,7 @@ import { usePostOutcome, usePutOutcome } from "@/hooks/useApi";
 import { useEnqueuePendingTransactions } from "@/hooks/usePendingTransactions";
 import { radius, spacing, text, useTheme } from "@/theme";
 import { prepareReceiptImage } from "@/utils/prepareReceiptImage";
+import { toOccurredAtISO } from "@/utils/occurredAt";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
@@ -47,6 +49,7 @@ export default function AddTransactionPage() {
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [date, setDate] = useState<Date>(new Date());
   const [receipt, setReceipt] = useState<{
     uri: string;
     name: string;
@@ -170,6 +173,7 @@ export default function AddTransactionPage() {
     setAmount("");
     setType(TransactionTypeConst.income);
     setCategoryId(null);
+    setDate(new Date());
     setReceipt(null);
     setTitleError(false);
     setNoteOpen(false);
@@ -199,6 +203,7 @@ export default function AddTransactionPage() {
         amount: parseFloat(amount),
         title: finalTitle ?? "Uncategorized",
         description: description?.trim() || " ",
+        occurredAt: toOccurredAtISO(date),
       };
 
       // Omitted rather than sent as null when nothing is picked: the server's
@@ -354,6 +359,8 @@ export default function AddTransactionPage() {
         ) : null}
 
         <CategorySelectField value={categoryId} onChange={setCategoryId} />
+
+        <DateField value={date} onChange={setDate} label="Date" />
 
         <View style={styles.pillRow}>
           <TouchableOpacity

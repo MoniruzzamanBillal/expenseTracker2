@@ -2,6 +2,7 @@ import { usePatch } from "@/hooks/useApi";
 import { TransactionTypeConst, TTransactionType } from "@/constants/TransactionType.constant";
 import { useTheme, spacing, text } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
+import { parseOccurredAt, toOccurredAtISO } from "@/utils/occurredAt";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -9,6 +10,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import CategorySelectField from "./CategorySelectField";
 import ConfirmModal from "./ConfirmModal";
+import DateField from "./DateField";
 import FormField from "./FormField";
 import PrimaryButton from "./PrimaryButton";
 import ReceiptImagePicker from "./ReceiptImagePicker";
@@ -52,6 +54,9 @@ export default function UpdateTransactionModal({
   const [categoryId, setCategoryId] = useState<string | null>(
     initialValue?.categoryId ?? null,
   );
+  const [date, setDate] = useState<Date>(
+    parseOccurredAt(initialValue?.occurredAt, initialValue?.createdAt),
+  );
 
   const patchMutation = usePatch(INVALIDATE_KEYS);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -82,6 +87,7 @@ export default function UpdateTransactionModal({
       setDescription(initialValue?.description ?? " ");
       setType(initialValue?.type || TransactionTypeConst.income);
       setCategoryId(initialValue?.categoryId ?? null);
+      setDate(parseOccurredAt(initialValue?.occurredAt, initialValue?.createdAt));
     }
   }, [initialValue]);
 
@@ -116,6 +122,7 @@ export default function UpdateTransactionModal({
         title,
         description: description ?? " ",
         categoryId,
+        occurredAt: toOccurredAtISO(date),
       };
 
       const result = await patchMutation?.mutateAsync({
@@ -178,9 +185,7 @@ export default function UpdateTransactionModal({
       >
         <View style={styles.headRow}>
           <Text style={[text.h3, { color: C?.text }]}>Edit entry</Text>
-          {initialValue?.createdAt ? (
-            <Text style={[text.caption, { color: C?.textMuted }]}>Today · {format(new Date(initialValue?.createdAt), "HH:mm")}</Text>
-          ) : null}
+          <Text style={[text.caption, { color: C?.textMuted }]}>{format(date, "d MMM yyyy")}</Text>
         </View>
 
         <TypeToggle value={type} onChange={setType} />
@@ -213,6 +218,7 @@ export default function UpdateTransactionModal({
             inSheet
             inputStyle={{ height: 70, textAlignVertical: "top", paddingTop: 12 }}
           />
+          <DateField value={date} onChange={setDate} label="Date" inSheet />
         </View>
 
         {initialValue?._id ? (

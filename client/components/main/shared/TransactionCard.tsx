@@ -59,8 +59,11 @@ export default function TransactionCard({
   const patchMutation = usePatch(INVALIDATE_KEYS);
   const removePendingTransaction = useRemovePendingTransaction();
 
-  const time = transactionData?.createdAt
-    ? new Date(transactionData?.createdAt).toLocaleTimeString("en-US", {
+  // occurredAt is the user-facing transaction date (spec 48); fall back to createdAt
+  // for older cached/offline rows that predate it.
+  const txDate = transactionData?.occurredAt ?? transactionData?.createdAt;
+  const time = txDate
+    ? new Date(txDate).toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
@@ -121,10 +124,7 @@ export default function TransactionCard({
                 style={[text.caption, { color: C?.textSecondary }]}
                 numberOfLines={1}
               >
-                {format(
-                  new Date(transactionData?.createdAt as string),
-                  "d MMM",
-                )}
+                {format(new Date(txDate as string), "d MMM")}
               </Text>
             </View>
           </View>

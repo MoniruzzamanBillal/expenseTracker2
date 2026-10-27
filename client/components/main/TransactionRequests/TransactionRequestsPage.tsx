@@ -65,7 +65,12 @@ export default function TransactionRequestsPage() {
 
   const acceptRequest = async (
     id: string,
-    payload: { title?: string; description?: string; amount?: number } = {},
+    payload: {
+      title?: string;
+      description?: string;
+      amount?: number;
+      occurredAt?: string;
+    } = {},
     categoryId: string | null = null,
   ) => {
     try {
@@ -130,7 +135,7 @@ export default function TransactionRequestsPage() {
     }
   };
 
-  const handleModalAccept = async (edits: { title: string; description: string; amount: number; categoryId: string | null }) => {
+  const handleModalAccept = async (edits: { title: string; description: string; amount: number; categoryId: string | null; occurredAt: string }) => {
     if (!editRequest) return;
     const { categoryId, ...payload } = edits;
     await acceptRequest(editRequest._id, payload, categoryId);

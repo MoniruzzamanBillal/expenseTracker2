@@ -1,5 +1,6 @@
 import { useTheme, spacing, text } from "@/theme";
 import { TTransactionRequest } from "@/types/TransactionRequest.types";
+import { parseOccurredAt, toOccurredAtISO } from "@/utils/occurredAt";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
@@ -7,6 +8,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import CategorySelectField from "./CategorySelectField";
+import DateField from "./DateField";
 import FormField from "./FormField";
 import PrimaryButton from "./PrimaryButton";
 import Sheet from "./Sheet";
@@ -26,6 +28,7 @@ type TPageProps = {
     description: string;
     amount: number;
     categoryId: string | null;
+    occurredAt: string;
   }) => void;
   loading?: boolean;
 };
@@ -54,6 +57,9 @@ export default function TransactionRequestEditModal({
     initialValue?.description || null,
   );
   const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [date, setDate] = useState<Date>(
+    parseOccurredAt(initialValue?.occurredAt),
+  );
 
   const handleTextChange = (text: string) => {
     const regex = /^\d+(\.\d{0,2})?$/;
@@ -78,6 +84,7 @@ export default function TransactionRequestEditModal({
       setTitle(initialValue?.title);
       setDescription(initialValue?.description ?? " ");
       setCategoryId(null);
+      setDate(parseOccurredAt(initialValue?.occurredAt));
     }
   }, [initialValue]);
 
@@ -108,6 +115,7 @@ export default function TransactionRequestEditModal({
       description: description ?? " ",
       amount: parseFloat(amount),
       categoryId,
+      occurredAt: toOccurredAtISO(date),
     });
   };
 
@@ -162,11 +170,15 @@ export default function TransactionRequestEditModal({
           />
         </View>
 
+        <View style={{ marginBottom: spacing.md }}>
+          <DateField value={date} onChange={setDate} label="Date" inSheet />
+        </View>
+
         {initialValue ? (
           <View style={styles.infoRow}>
             <Ionicons name="information-circle-outline" size={15} color={C?.textMuted} />
             <Text style={[text.caption, { color: C?.textMuted, flex: 1 }]}>
-              Saved with today&apos;s date. The request keeps its original time ({format(new Date(initialValue?.occurredAt), "d MMM")}).
+              Defaults to the request&apos;s original date ({format(new Date(initialValue?.occurredAt), "d MMM")}). Change the date above to file it on a different day.
             </Text>
           </View>
         ) : null}

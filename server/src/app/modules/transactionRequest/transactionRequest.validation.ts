@@ -19,6 +19,17 @@ const acceptTransactionRequestSchema = z.object({
     title: z.string().min(1).optional(),
     description: z.string().optional(),
     amount: z.number().positive().optional(),
+    // Optional override of the date the created transaction is filed under; when
+    // omitted it falls back to the request's own occurredAt. Same future-date
+    // backstop as transaction.validation.ts (spec 21).
+    occurredAt: z
+      .string()
+      .datetime()
+      .refine(
+        (v) => new Date(v).getTime() <= Date.now() + 24 * 60 * 60 * 1000,
+        { message: "Transaction date cannot be in the future" },
+      )
+      .optional(),
   }),
 });
 

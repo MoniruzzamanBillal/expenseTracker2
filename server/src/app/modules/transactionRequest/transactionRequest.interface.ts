@@ -19,6 +19,7 @@ export type TAcceptTransactionRequestEdits = {
   title?: string;
   description?: string;
   amount?: number;
+  occurredAt?: string;
 };
 
 export type TTransactionRequestStatus =
