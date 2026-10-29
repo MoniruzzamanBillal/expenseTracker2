@@ -110,6 +110,14 @@ export default function TransactionCard({
             <Text style={[text.bodyMd, { color: C?.text }]} numberOfLines={1}>
               {transactionData?.title}
             </Text>
+            {transactionData?.description ? (
+              <Text
+                style={[text.caption, { color: C?.textSecondary }]}
+                numberOfLines={1}
+              >
+                {transactionData.description}
+              </Text>
+            ) : null}
             <View style={styles.metaRow}>
               <Ionicons
                 name="cloud-upload-outline"
@@ -304,8 +312,16 @@ export default function TransactionCard({
                 />
               ) : null}
             </View>
+            {transactionData?.description ? (
+              <Text
+                style={[text.caption, { color: C?.textSecondary }]}
+                numberOfLines={1}
+              >
+                {transactionData.description}
+              </Text>
+            ) : null}
             <Text
-              style={[text.caption, { color: C?.textSecondary }]}
+              style={[text.caption, { color: C?.textMuted }]}
               numberOfLines={1}
             >
               {meta}
