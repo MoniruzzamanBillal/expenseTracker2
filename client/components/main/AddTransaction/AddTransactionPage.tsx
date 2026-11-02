@@ -1,7 +1,6 @@
 import CategorySelectField from "@/components/main/shared/CategorySelectField";
 import DateField from "@/components/main/shared/DateField";
 import FormField from "@/components/main/shared/FormField";
-import Keypad from "@/components/main/shared/Keypad";
 import PrimaryButton from "@/components/main/shared/PrimaryButton";
 import TypeToggle from "@/components/main/shared/TypeToggle";
 import {
@@ -31,13 +30,6 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-const fmt = (n: string) => {
-  if (!n) return "0";
-  const [whole, dec] = n.split(".");
-  const withCommas = Number(whole || 0).toLocaleString("en-IN");
-  return dec !== undefined ? `${withCommas}.${dec}` : withCommas;
-};
-
 export default function AddTransactionPage() {
   const C = useTheme();
   const router = useRouter();
@@ -56,7 +48,17 @@ export default function AddTransactionPage() {
     type: string;
   } | null>(null);
   const [titleError, setTitleError] = useState(false);
+  const [amountError, setAmountError] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+
+  // Commit only digits with an optional dot and up to 2 decimals (same shape the
+  // old Keypad enforced); ignore anything else and allow an empty field.
+  const handleAmountChange = (next: string) => {
+    if (next === "" || /^\d+(\.\d{0,2})?$/.test(next)) {
+      setAmount(next);
+      if (next) setAmountError(false);
+    }
+  };
 
   const accentColor =
     type === TransactionTypeConst.income ? C.income : C.expense;
@@ -187,11 +189,7 @@ export default function AddTransactionPage() {
       setTitleError(true);
     }
     if (!amount) {
-      Toast.show({
-        type: "error",
-        text1: "Enter an amount",
-        position: "bottom",
-      });
+      setAmountError(true);
       return;
     }
 
@@ -306,22 +304,35 @@ export default function AddTransactionPage() {
 
         <TypeToggle value={type} onChange={setType} />
 
-        <View style={styles.amountBlock}>
-          <Text style={[text.kicker, { color: C.textSecondary }]}>Amount</Text>
-          <View style={styles.amountRow}>
-            <Text style={[styles.currencySymbol, { color: C.textSecondary }]}>
-              ৳
-            </Text>
-            <Text
-              style={[
-                text.amountInput,
-                { color: amount ? C.text : C.textMuted },
-              ]}
-            >
-              {fmt(amount) || "0"}
+        <Text style={[text.kicker, { color: C.textSecondary }]}>Amount</Text>
+        <View
+          style={[
+            styles.amountField,
+            {
+              backgroundColor: C.surface,
+              borderColor: amountError ? C.expense : C.border,
+            },
+          ]}
+        >
+          <Text style={[text.body, { color: C.textMuted }]}>৳</Text>
+          <TextInput
+            value={amount}
+            onChangeText={handleAmountChange}
+            placeholder="0.00"
+            placeholderTextColor={C.placeholder}
+            keyboardType="decimal-pad"
+            underlineColorAndroid="transparent"
+            style={[styles.titleInput, text.body, { color: C.text }]}
+          />
+        </View>
+        {amountError ? (
+          <View style={styles.errorRow}>
+            <Ionicons name="alert-circle-outline" size={14} color={C.expense} />
+            <Text style={[text.caption, { color: C.expense }]}>
+              Please enter an amount
             </Text>
           </View>
-        </View>
+        ) : null}
 
         <View
           style={[
@@ -444,8 +455,6 @@ export default function AddTransactionPage() {
           />
         ) : null}
 
-        <Keypad value={amount} onChange={setAmount} />
-
         <PrimaryButton
           label={
             saving
@@ -487,9 +496,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm + 3,
     borderWidth: 1,
   },
-  amountBlock: { gap: 2, paddingVertical: spacing.xs },
-  amountRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  currencySymbol: { fontSize: 28 },
+  amountField: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    height: 46,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+  },
   titleField: {
     flexDirection: "row",
     alignItems: "center",
