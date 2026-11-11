@@ -140,6 +140,6 @@ video link : https://drive.google.com/file/d/1ldSujwrj7bQlwAGk1OzOKDohC0jwamVI/v
 ## 📱 APK Download
 
 You can try out the app by installing the APK directly on your Android device:
-link : https://drive.google.com/file/d/1r-0RZemoPWDM5RaSGHQYCgqa18d1pGQd/view?usp=sharing
+link : https://drive.google.com/file/d/1vPxMLVydL7OSf1cxZng5S6EUjYRZnFOo/view?usp=sharing
 
 ---
