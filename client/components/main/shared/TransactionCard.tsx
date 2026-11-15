@@ -309,14 +309,22 @@ export default function TransactionCard({
             </View>
             {transactionData?.description ? (
               <Text
-                style={[text.caption, styles.descText, { color: C?.textSecondary }]}
+                style={[
+                  text.caption,
+                  styles.descText,
+                  { color: C?.textSecondary },
+                ]}
                 numberOfLines={1}
               >
                 {transactionData.description}
               </Text>
             ) : null}
             <Text
-              style={[text.captionMd, styles.metaText, { color: C?.textSecondary }]}
+              style={[
+                text.captionMd,
+                styles.metaText,
+                { color: C?.textSecondary },
+              ]}
               numberOfLines={1}
             >
               {meta}
@@ -383,22 +391,22 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
     minHeight: spacing.rowMinHeight,
-    paddingHorizontal: spacing.md + 2,
+    paddingHorizontal: spacing.md,
   },
   catIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
   uncatIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
     borderWidth: 1,
     borderStyle: "dashed",
     alignItems: "center",
@@ -406,13 +414,17 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   info: { flex: 1, minWidth: 0, gap: 1 },
-  descText: { fontSize: 11, lineHeight: 15 },
+  descText: { fontSize: 10, lineHeight: 15 },
   metaText: { fontSize: 11, lineHeight: 15 },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: 5, minWidth: 0 },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    minWidth: 0,
+  },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   receiptIconBtn: { padding: 2 },
-  // alignItems centres the glyph over its wider label — without it the icon
-  // sits flush left against the text's edge.
+
   actionBtn: { alignItems: "center", justifyContent: "center" },
   leftAction: { width: 64, justifyContent: "center", alignItems: "center" },
   rightAction: { width: 64, justifyContent: "center", alignItems: "center" },

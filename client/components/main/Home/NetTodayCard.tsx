@@ -74,7 +74,9 @@ export default function NetTodayCard({ income, expense, entryCount }: TProps) {
         <View>
           <View style={styles.inOutLabelRow}>
             <View style={[styles.dot, { backgroundColor: C?.income }]} />
-            <Text style={[text.captionMd, styles.inOutLabel, { color: C?.text }]}>
+            <Text
+              style={[text.captionMd, styles.inOutLabel, { color: C?.text }]}
+            >
               In
             </Text>
           </View>
@@ -103,10 +105,10 @@ export default function NetTodayCard({ income, expense, entryCount }: TProps) {
 const styles = StyleSheet.create({
   netCard: {
     borderRadius: radius.card,
-    padding: spacing.base,
-    paddingBottom: spacing.lg,
-    gap: spacing.md,
-    marginBottom: spacing.base,
+    padding: spacing.md,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   rowBetween: {
     flexDirection: "row",
@@ -114,14 +116,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   netAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
-  // The type scale jumps 40 (amountLg) straight to 18 (amountMd) with nothing
-  // between, so the headline overrides amountLg's metrics instead of reaching
-  // for another token — fontFamily.medium and tabular-nums still come from the
-  // token, only size/leading/tracking change. Leading and tracking are scaled
-  // with the size (44 -> 38, -0.8 -> -0.68) so the figure keeps its proportions.
-  netAmount: { fontSize: 30, lineHeight: 34, letterSpacing: -0.6 },
-  // Sized off the amount at half its size, not off the type scale, so they
-  // track netAmount instead of drifting when it changes.
+
+  netAmount: { fontSize: 28, lineHeight: 34, letterSpacing: -0.6 },
+
   netSign: { fontSize: 15 },
   netCurrency: { fontSize: 15 },
   inOutLabel: { fontSize: 11, lineHeight: 15 },

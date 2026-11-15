@@ -99,10 +99,14 @@ export default function CategoryBreakdown({
             >
               <View style={[styles.swatch, { backgroundColor: r.color }]} />
 
-              <Text style={[text.caption, styles.legendText, { color: C?.text }]}>
+              <Text
+                style={[text.caption, styles.legendText, { color: C?.text }]}
+              >
                 {r.name}
               </Text>
-              <Text style={[text.caption, styles.legendText, { color: C?.text }]}>
+              <Text
+                style={[text.caption, styles.legendText, { color: C?.text }]}
+              >
                 {r.pct}%
               </Text>
             </TouchableOpacity>
@@ -117,25 +121,25 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: radius.card,
     borderWidth: 1,
-    padding: 12,
-    paddingHorizontal: 14,
+    padding: 8,
+    paddingHorizontal: 10,
     gap: spacing.sm,
-    marginBottom: spacing.base,
+    marginBottom: spacing.md,
   },
   headRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  bar: { flexDirection: "row", gap: 2, height: 7 },
+  bar: { flexDirection: "row", gap: 2, height: 5 },
   legend: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 5,
     paddingVertical: 2,
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
-  swatch: { width: 8, height: 7, borderRadius: 2 },
+  swatch: { width: 4, height: 4, borderRadius: 2 },
   legendText: { fontSize: 11, lineHeight: 15 },
 });

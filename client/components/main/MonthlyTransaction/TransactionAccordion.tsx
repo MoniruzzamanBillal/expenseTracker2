@@ -1,11 +1,11 @@
 import { elevation, radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
+import { formatTotal as fmt } from "@/utils/formatAmount";
 import { format } from "date-fns";
 import { useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import TransactionCard from "../shared/TransactionCard";
-import { formatTotal as fmt } from "@/utils/formatAmount";
 
 type TDailyData = {
   date: string;
@@ -37,30 +37,52 @@ export default function TransactionAccordion({ dailyData }: TProps) {
         return (
           <View key={day?.date} style={styles.dayGroup}>
             <View style={styles.dayHeader}>
-              <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-                <Text style={[text.bodyMd, { color: C.text }]}>{format(new Date(`${day?.date}T00:00:00`), "EEE d MMM")}</Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}
+              >
+                <Text style={[text.bodyMd, { color: C.text }]}>
+                  {format(new Date(`${day?.date}T00:00:00`), "EEE d MMM")}
+                </Text>
               </View>
               {hasIncome && hasExpense ? (
                 <View style={{ flexDirection: "row", gap: spacing.sm }}>
-                  <Text style={[text.bodySm, { color: C.income }]}>+৳{fmt(day?.income)}</Text>
-                  <Text style={[text.bodySm, { color: C.expense }]}>−৳{fmt(day?.expense)}</Text>
+                  <Text style={[text.bodySm, { color: C.income }]}>
+                    +৳{fmt(day?.income)}
+                  </Text>
+                  <Text style={[text.bodySm, { color: C.expense }]}>
+                    −৳{fmt(day?.expense)}
+                  </Text>
                 </View>
               ) : (
-                <Text style={[text.bodySm, { color: net >= 0 ? C.income : C.expense }]}>
+                <Text
+                  style={[
+                    text.bodySm,
+                    { color: net >= 0 ? C.income : C.expense },
+                  ]}
+                >
                   {net >= 0 ? "+" : "−"}৳{fmt(net)}
                 </Text>
               )}
             </View>
 
             {day?.transactions?.length > 0 ? (
-              <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }, elevation(C, dark).card]}>
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: C.surface, borderColor: C.border },
+                  elevation(C, dark).card,
+                ]}
+              >
                 {day?.transactions.map((item, i) => (
                   <TransactionCard
                     key={item?._id}
                     transactionData={item}
                     isLast={i === day?.transactions.length - 1}
                     onSwipeOpen={(ref) => {
-                      if (openSwipeableRef.current && openSwipeableRef.current !== ref) {
+                      if (
+                        openSwipeableRef.current &&
+                        openSwipeableRef.current !== ref
+                      ) {
                         openSwipeableRef.current.close();
                       }
                       openSwipeableRef.current = ref;
@@ -77,7 +99,12 @@ export default function TransactionAccordion({ dailyData }: TProps) {
 }
 
 const styles = StyleSheet.create({
-  dayGroup: { marginBottom: spacing.base },
-  dayHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
-  card: { borderRadius: radius.card, borderWidth: 1 },
+  dayGroup: { marginBottom: spacing.md },
+  dayHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  card: { borderRadius: radius.sm, borderWidth: 1 },
 });

@@ -3,19 +3,15 @@ import { formatTotal as fmt } from "@/utils/formatAmount";
 import { StyleSheet, Text, View } from "react-native";
 
 type TProps = {
-  // Kicker label, e.g. "Net · October" or "Net this week".
   label: string;
-  // Optional secondary line shown next to the label (e.g. avg expense/day).
+
   caption?: string;
   income: number;
   expense: number;
-  // Monthly card shows the income/expense split bar; the weekly one doesn't.
+
   showSplitBar?: boolean;
 };
 
-// Shared net-summary card for Activity's Month and Week views. Extracted from
-// MonthlyTransaction so both sections render the same card instead of two
-// copied JSX blocks.
 export default function NetSummaryCard({
   label,
   caption,
@@ -44,7 +40,11 @@ export default function NetSummaryCard({
         </Text>
         {caption ? (
           <Text
-            style={[text.caption, styles.cardCaption, { color: C.textMuted }]}
+            style={[
+              text.caption,
+              styles.cardCaption,
+              { color: C.textSecondary },
+            ]}
           >
             {caption}
           </Text>
@@ -95,10 +95,10 @@ export default function NetSummaryCard({
 const styles = StyleSheet.create({
   netCard: {
     borderRadius: radius.card,
-    padding: spacing.base,
-    paddingBottom: spacing.lg,
-    gap: spacing.md,
-    marginBottom: spacing.base,
+    padding: spacing.sm,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   rowBetween: {
     flexDirection: "row",
@@ -106,9 +106,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   netAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
-  // Overrides amountLg's metrics; a touch smaller than the previous inline card
-  // (27 -> 25) so the whole block reads tighter.
-  netAmount: { fontSize: 25, lineHeight: 29, letterSpacing: -0.5 },
+
+  netAmount: { fontSize: 24, lineHeight: 29, letterSpacing: -0.5 },
   cardKicker: { fontSize: 10, lineHeight: 13, letterSpacing: 0.9 },
   cardCaption: { fontSize: 10, lineHeight: 14 },
   netSign: { fontSize: 13 },
