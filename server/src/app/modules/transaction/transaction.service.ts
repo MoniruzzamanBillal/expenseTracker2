@@ -188,6 +188,7 @@ const addManyTransaction = async (payload: TTransaction[], userId: string) => {
 
 type TMonthlyPayload = {
   targetMonth?: number;
+  targetYear?: number;
 };
 
 // ! for getting monthly data
@@ -196,8 +197,11 @@ const getMonthlyTransactions = async (
   query: TMonthlyPayload,
 ) => {
   const today = new Date();
-  const year = today.getUTCFullYear(); // eg : 2025
-  const month = query?.targetMonth ?? today.getUTCMonth() + 1; // eg : 2 --> feb
+  // Query values arrive as strings; coerce and fall back to the current
+  // month/year on anything missing or non-numeric. targetYear lets the client
+  // browse past years (TrendTab's month/year picker), not just the current one.
+  const month = Number(query?.targetMonth) || today.getUTCMonth() + 1; // eg : 2 --> feb
+  const year = Number(query?.targetYear) || today.getUTCFullYear(); // eg : 2025
 
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 0, 23, 59, 59, 999);
