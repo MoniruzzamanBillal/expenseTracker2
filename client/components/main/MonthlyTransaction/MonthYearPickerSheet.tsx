@@ -50,7 +50,7 @@ export default function MonthYearPickerSheet({
 
   return (
     <Sheet visible={visible} onDismiss={onDismiss}>
-      <Text style={[text.h3, styles.title, { color: C.text }]}>
+      <Text style={[text.h3, styles.title, { color: C?.text }]}>
         Select month
       </Text>
 
@@ -66,11 +66,11 @@ export default function MonthYearPickerSheet({
           <Ionicons
             name="chevron-back"
             size={20}
-            color={atMinYear ? C.textMuted : C.text}
+            color={atMinYear ? C?.textMuted : C?.text}
           />
         </TouchableOpacity>
 
-        <Text style={[text.h2, { color: C.text }]}>{viewYear}</Text>
+        <Text style={[text.h2, { color: C?.text }]}>{viewYear}</Text>
 
         <TouchableOpacity
           onPress={() => setViewYear((y) => y + 1)}
@@ -83,7 +83,7 @@ export default function MonthYearPickerSheet({
           <Ionicons
             name="chevron-forward"
             size={20}
-            color={atMaxYear ? C.textMuted : C.text}
+            color={atMaxYear ? C?.textMuted : C?.text}
           />
         </TouchableOpacity>
       </View>
@@ -105,8 +105,8 @@ export default function MonthYearPickerSheet({
               style={[
                 styles.monthCell,
                 {
-                  backgroundColor: active ? C.accentDim : C.surface2,
-                  borderColor: active ? C.accentBorder : C.border,
+                  backgroundColor: active ? C?.accentDim : C?.surface2,
+                  borderColor: active ? C?.accentBorder : C?.border,
                   opacity: disabled ? 0.4 : 1,
                 },
               ]}
@@ -116,10 +116,10 @@ export default function MonthYearPickerSheet({
                   text.bodyMd,
                   {
                     color: active
-                      ? C.accentText
+                      ? C?.accentText
                       : disabled
-                        ? C.textMuted
-                        : C.text,
+                        ? C?.textMuted
+                        : C?.text,
                   },
                 ]}
               >

@@ -257,7 +257,7 @@ export default function TrendTab() {
           else, here is the way back". Same treatment as Activity's pill (spec 31) —
           accent border + accentDim fill + accentText, 22pt with hitSlop covering the
           sub-44pt target — so the one accent affordance looks the same on both screens. */}
-      {!isCurrentMonth ? (
+      {!isCurrentMonth && (
         <TouchableOpacity
           onPress={goToCurrentMonth}
           activeOpacity={0.8}
@@ -277,7 +277,7 @@ export default function TrendTab() {
             This month
           </Text>
         </TouchableOpacity>
-      ) : null}
+      )}
     </View>
   );
 

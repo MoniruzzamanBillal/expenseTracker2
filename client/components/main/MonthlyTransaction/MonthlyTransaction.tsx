@@ -330,7 +330,7 @@ export default function MonthlyTransactionPage() {
                 </TouchableOpacity>
               </View>
 
-              {!isCurrentMonth ? (
+              {!isCurrentMonth && (
                 <TouchableOpacity
                   onPress={goToCurrentMonth}
                   activeOpacity={0.8}
@@ -351,7 +351,7 @@ export default function MonthlyTransactionPage() {
                     This month
                   </Text>
                 </TouchableOpacity>
-              ) : null}
+              )}
             </View>
 
             <MonthYearPickerSheet

@@ -20,35 +20,35 @@ export default function NetSummaryCard({
   showSplitBar = false,
 }: TProps) {
   const C = useTheme();
-  const dark = C.statusBarStyle === "light";
+  const dark = C?.statusBarStyle === "light";
   const net = income - expense;
-  const netColor = net >= 0 ? C.income : C.expense;
+  const netColor = net >= 0 ? C?.income : C?.expense;
 
   return (
     <View
       style={[
         styles.netCard,
-        { backgroundColor: C.surface },
+        { backgroundColor: C?.surface },
         elevation(C, dark).glow,
       ]}
     >
       <View style={styles.rowBetween}>
         <Text
-          style={[text.kicker, styles.cardKicker, { color: C.textSecondary }]}
+          style={[text.kicker, styles.cardKicker, { color: C?.textSecondary }]}
         >
           {label}
         </Text>
-        {caption ? (
+        {!!caption && (
           <Text
             style={[
               text.caption,
               styles.cardCaption,
-              { color: C.textSecondary },
+              { color: C?.textSecondary },
             ]}
           >
             {caption}
           </Text>
-        ) : null}
+        )}
       </View>
 
       <View style={styles.netAmountRow}>
@@ -61,30 +61,30 @@ export default function NetSummaryCard({
         </Text>
       </View>
 
-      {showSplitBar ? (
+      {showSplitBar && (
         <View style={styles.splitBar}>
           <View
             style={{
               flex: income || 0.001,
               borderRadius: 3,
-              backgroundColor: C.income,
+              backgroundColor: C?.income,
             }}
           />
           <View
             style={{
               flex: expense || 0.001,
               borderRadius: 3,
-              backgroundColor: C.expense,
+              backgroundColor: C?.expense,
             }}
           />
         </View>
-      ) : null}
+      )}
 
       <View style={styles.inOutRow}>
-        <Text style={[text.caption, styles.cardCaption, { color: C.income }]}>
+        <Text style={[text.caption, styles.cardCaption, { color: C?.income }]}>
           In +৳{fmt(income)}
         </Text>
-        <Text style={[text.caption, styles.cardCaption, { color: C.expense }]}>
+        <Text style={[text.caption, styles.cardCaption, { color: C?.expense }]}>
           Expense −৳{fmt(expense)}
         </Text>
       </View>
