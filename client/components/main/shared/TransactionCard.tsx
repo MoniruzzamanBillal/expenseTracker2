@@ -31,11 +31,11 @@ const INVALIDATE_KEYS = [
 
 type TProps = {
   transactionData: TTransaction;
-  /** "only one swipeable open at a time" callback, driven by HomePage/TransactionAccordion. */
+
   onSwipeOpen?: (ref: Swipeable) => void;
-  /** Not-yet-synced, offline-queued item — dashed/dimmed card, icon buttons instead of swipe. */
+
   pending?: boolean;
-  /** Omit the bottom divider — pass true for the last row in a list/section. */
+
   isLast?: boolean;
 };
 
@@ -48,19 +48,14 @@ export default function TransactionCard({
   const C = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [receiptViewerOpen, setReceiptViewerOpen] = useState(false);
-  // Drives ConfirmModal for both branches below. Declared above the pending
-  // early-return so the hook order is identical either way.
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
   const isIncome = transactionData?.type === TransactionTypeConst.income;
 
-  // Hooks run unconditionally above the pending/normal branch below (rules-of-hooks) —
-  // both branches need usePatch/useRemovePendingTransaction wired regardless of which renders.
   const patchMutation = usePatch(INVALIDATE_KEYS);
   const removePendingTransaction = useRemovePendingTransaction();
 
-  // occurredAt is the user-facing transaction date (spec 48); fall back to createdAt
-  // for older cached/offline rows that predate it.
   const txDate = transactionData?.occurredAt ?? transactionData?.createdAt;
   const time = txDate
     ? new Date(txDate).toLocaleTimeString("en-US", {
@@ -237,7 +232,7 @@ export default function TransactionCard({
       <Animated.View
         style={[
           styles.rightAction,
-          { backgroundColor: C?.accentDim, transform: [{ scale }] },
+          { backgroundColor: C?.incomeBg, transform: [{ scale }] },
         ]}
       >
         <TouchableOpacity
@@ -248,8 +243,8 @@ export default function TransactionCard({
             setModalOpen(true);
           }}
         >
-          <Ionicons name="create-outline" size={18} color={C?.accentText} />
-          <Text style={[text.caption, { color: C?.accentText, marginTop: 2 }]}>
+          <Ionicons name="create-outline" size={18} color={C?.income} />
+          <Text style={[text.caption, { color: C?.income, marginTop: 2 }]}>
             Edit
           </Text>
         </TouchableOpacity>
@@ -314,14 +309,14 @@ export default function TransactionCard({
             </View>
             {transactionData?.description ? (
               <Text
-                style={[text.caption, { color: C?.textSecondary }]}
+                style={[text.caption, styles.descText, { color: C?.textSecondary }]}
                 numberOfLines={1}
               >
                 {transactionData.description}
               </Text>
             ) : null}
             <Text
-              style={[text.caption, { color: C?.textMuted }]}
+              style={[text.captionMd, styles.metaText, { color: C?.textSecondary }]}
               numberOfLines={1}
             >
               {meta}
@@ -411,6 +406,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   info: { flex: 1, minWidth: 0, gap: 1 },
+  descText: { fontSize: 11, lineHeight: 15 },
+  metaText: { fontSize: 11, lineHeight: 15 },
   titleRow: { flexDirection: "row", alignItems: "center", gap: 5, minWidth: 0 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   receiptIconBtn: { padding: 2 },
