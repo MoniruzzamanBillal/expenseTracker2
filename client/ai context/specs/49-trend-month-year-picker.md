@@ -38,4 +38,15 @@ pick a month **and year**, while keeping the arrows working as they do now.
       Trend reloads that month; arrows still step within the selected year;
       "This month" returns to the live month/year; future months disabled.
 
+## Follow-up — same picker on Activity › Monthly
+
+The same `MonthYearPickerSheet` was then wired into `MonthlyTransaction.tsx`'s
+Monthly tab (tap the month name → month+year picker; arrows unchanged, still
+clamp 1–12 within the selected year as before). Adds `selectedYear`/`pickerOpen`
+state, carries `&targetYear` on the fetch and the year into the query key,
+`goToCurrentMonth`/"This month" pill reset both month and year, the deep-link
+`targetMonth` adopt resets the year to current, and `daysInSelectedMonth` (avg
+expense/day) now honours the selected year. Reuses server spec 22. Weekly tab
+untouched.
+
 Companion: server `ai context/specs/22-monthly-transactions-target-year.md`.

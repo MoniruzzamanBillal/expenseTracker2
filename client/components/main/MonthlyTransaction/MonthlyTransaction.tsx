@@ -24,6 +24,7 @@ import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
 import OfflineNotice from "../shared/OfflineNotice";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
+import MonthYearPickerSheet from "./MonthYearPickerSheet";
 import NetSummaryCard from "./NetSummaryCard";
 import TransactionAccordion from "./TransactionAccordion";
 
@@ -86,6 +87,11 @@ export default function MonthlyTransactionPage() {
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const isCurrentMonth =
+    selectedMonth === currentMonth && selectedYear === currentYear;
 
   const router = useRouter();
   const { targetMonth } = useLocalSearchParams<{ targetMonth?: string }>();
@@ -95,6 +101,8 @@ export default function MonthlyTransactionPage() {
     const month = Number(targetMonth);
     if (Number.isInteger(month) && month >= startMonth && month <= endMonth) {
       setSelectedMonth(month);
+      // The deep-link param is month-only and always within the current year.
+      setSelectedYear(new Date().getFullYear());
       // Landing on Weekly would hide the month that was just asked for.
       setView("monthly");
     }
@@ -105,7 +113,7 @@ export default function MonthlyTransactionPage() {
   // resetting it (spec 13).
   useEffect(() => {
     setSelectedCategoryKey(null);
-  }, [view, selectedMonth]);
+  }, [view, selectedMonth, selectedYear]);
 
   const {
     data: monthlyTransaction,
@@ -117,10 +125,11 @@ export default function MonthlyTransactionPage() {
   } = useFetchData<TMonthlyData>(
     [
       "monthly-transaction",
-      `monthly-transaction-${selectedMonth}`,
+      `monthly-transaction-${selectedYear}-${selectedMonth}`,
+      String(selectedYear),
       String(selectedMonth),
     ],
-    `/transactions/monthly-transaction?targetMonth=${selectedMonth}`,
+    `/transactions/monthly-transaction?targetMonth=${selectedMonth}&targetYear=${selectedYear}`,
     { enabled: view === "monthly" },
   );
 
@@ -146,7 +155,15 @@ export default function MonthlyTransactionPage() {
     setRefreshing(false);
   };
 
-  const goToCurrentMonth = () => setSelectedMonth(currentMonth);
+  const goToCurrentMonth = () => {
+    setSelectedMonth(currentMonth);
+    setSelectedYear(currentYear);
+  };
+
+  const handlePick = (month: number, year: number) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
 
   const handleMonthChange = (direction: keyof typeof monthChangeDirection) => {
     if (direction === monthChangeDirection.prev && selectedMonth > startMonth) {
@@ -157,10 +174,9 @@ export default function MonthlyTransactionPage() {
     }
   };
 
-  const daysInSelectedMonth =
-    selectedMonth === currentMonth
-      ? new Date().getDate()
-      : getDaysInMonth(new Date(currentYear, selectedMonth - 1));
+  const daysInSelectedMonth = isCurrentMonth
+    ? new Date().getDate()
+    : getDaysInMonth(new Date(selectedYear, selectedMonth - 1));
 
   const monthlyAverageExpense =
     daysInSelectedMonth > 0
@@ -288,10 +304,19 @@ export default function MonthlyTransactionPage() {
                     color={selectedMonth === startMonth ? C.textMuted : C.text}
                   />
                 </TouchableOpacity>
-                <Text style={[text.h3, { color: C.text }]}>
-                  {MONTHS[selectedMonth - 1]}{" "}
-                  <Text style={{ color: C.textMuted }}>{currentYear}</Text>
-                </Text>
+                <TouchableOpacity
+                  onPress={() => setPickerOpen(true)}
+                  activeOpacity={0.7}
+                  style={styles.monthNameBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Select month and year"
+                >
+                  <Text style={[text.h3, { color: C.text }]}>
+                    {MONTHS[selectedMonth - 1]}{" "}
+                    <Text style={{ color: C.textMuted }}>{selectedYear}</Text>
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color={C.textMuted} />
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.navChevron}
                   onPress={() => handleMonthChange(monthChangeDirection.next)}
@@ -305,7 +330,7 @@ export default function MonthlyTransactionPage() {
                 </TouchableOpacity>
               </View>
 
-              {selectedMonth !== currentMonth ? (
+              {!isCurrentMonth ? (
                 <TouchableOpacity
                   onPress={goToCurrentMonth}
                   activeOpacity={0.8}
@@ -328,6 +353,16 @@ export default function MonthlyTransactionPage() {
                 </TouchableOpacity>
               ) : null}
             </View>
+
+            <MonthYearPickerSheet
+              visible={pickerOpen}
+              onDismiss={() => setPickerOpen(false)}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              currentMonth={currentMonth}
+              currentYear={currentYear}
+              onSelect={handlePick}
+            />
 
             {isError && hasCached ? (
               <OfflineNotice
@@ -466,6 +501,8 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   navChevron: { padding: 4 },
+  // Tappable month/year label; row so the chevron-down sits beside the text.
+  monthNameBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
   // Much smaller than CategoryPicker's 34pt chip: this is a secondary way back,
   // and the h3 above it should stay the anchor of the block. captionMd rather
   // than caption because medium weight is what still reads as a button at 12pt.
