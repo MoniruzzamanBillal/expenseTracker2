@@ -10,13 +10,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFetchData } from "@/hooks/useApi";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { elevation, radius, spacing, text, useTheme } from "@/theme";
+import { radius, spacing, text, useTheme } from "@/theme";
 import { TTransaction } from "@/types/Transaction.tyes";
 import { ApiReadError } from "@/utils/api";
 import { formatTotal as fmt } from "@/utils/formatAmount";
 import { Ionicons } from "@expo/vector-icons";
 import { getDaysInMonth } from "date-fns";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import CategoryBreakdown, {
   TBreakdownEntry,
 } from "../shared/CategoryBreakdown";
@@ -24,6 +24,8 @@ import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
 import OfflineNotice from "../shared/OfflineNotice";
 import TransactionCardSkeleton from "../shared/TransactionCardSkeleton";
+import MonthYearPickerSheet from "./MonthYearPickerSheet";
+import NetSummaryCard from "./NetSummaryCard";
 import TransactionAccordion from "./TransactionAccordion";
 
 type TView = "monthly" | "weekly";
@@ -76,7 +78,6 @@ const fmtDate = (iso: string) =>
 
 export default function MonthlyTransactionPage() {
   const C = useTheme();
-  const dark = C.statusBarStyle === "light";
   const [view, setView] = useState<TView>("monthly");
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(
@@ -86,21 +87,22 @@ export default function MonthlyTransactionPage() {
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const isCurrentMonth =
+    selectedMonth === currentMonth && selectedYear === currentYear;
 
   const router = useRouter();
   const { targetMonth } = useLocalSearchParams<{ targetMonth?: string }>();
 
-  // Spec 42: a month row on Insights › Year pushes `?targetMonth=<1-12>`. This runs in
-  // an effect, not in `useState`'s initialiser, because this screen is a tab and stays
-  // mounted — an initialiser would adopt the first drill-in of a session and ignore every
-  // later one. The param is cleared once adopted so the same month can be opened again (an
-  // unchanged dependency would make the second tap a no-op) and so a stale value can't
-  // re-apply itself if the tab ever remounts. A bad value is ignored, not clamped.
   useEffect(() => {
     if (!targetMonth) return;
     const month = Number(targetMonth);
     if (Number.isInteger(month) && month >= startMonth && month <= endMonth) {
       setSelectedMonth(month);
+      // The deep-link param is month-only and always within the current year.
+      setSelectedYear(new Date().getFullYear());
       // Landing on Weekly would hide the month that was just asked for.
       setView("monthly");
     }
@@ -111,7 +113,7 @@ export default function MonthlyTransactionPage() {
   // resetting it (spec 13).
   useEffect(() => {
     setSelectedCategoryKey(null);
-  }, [view, selectedMonth]);
+  }, [view, selectedMonth, selectedYear]);
 
   const {
     data: monthlyTransaction,
@@ -123,10 +125,11 @@ export default function MonthlyTransactionPage() {
   } = useFetchData<TMonthlyData>(
     [
       "monthly-transaction",
-      `monthly-transaction-${selectedMonth}`,
+      `monthly-transaction-${selectedYear}-${selectedMonth}`,
+      String(selectedYear),
       String(selectedMonth),
     ],
-    `/transactions/monthly-transaction?targetMonth=${selectedMonth}`,
+    `/transactions/monthly-transaction?targetMonth=${selectedMonth}&targetYear=${selectedYear}`,
     { enabled: view === "monthly" },
   );
 
@@ -152,7 +155,15 @@ export default function MonthlyTransactionPage() {
     setRefreshing(false);
   };
 
-  const goToCurrentMonth = () => setSelectedMonth(currentMonth);
+  const goToCurrentMonth = () => {
+    setSelectedMonth(currentMonth);
+    setSelectedYear(currentYear);
+  };
+
+  const handlePick = (month: number, year: number) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
 
   const handleMonthChange = (direction: keyof typeof monthChangeDirection) => {
     if (direction === monthChangeDirection.prev && selectedMonth > startMonth) {
@@ -163,10 +174,9 @@ export default function MonthlyTransactionPage() {
     }
   };
 
-  const daysInSelectedMonth =
-    selectedMonth === currentMonth
-      ? new Date().getDate()
-      : getDaysInMonth(new Date(currentYear, selectedMonth - 1));
+  const daysInSelectedMonth = isCurrentMonth
+    ? new Date().getDate()
+    : getDaysInMonth(new Date(selectedYear, selectedMonth - 1));
 
   const monthlyAverageExpense =
     daysInSelectedMonth > 0
@@ -175,7 +185,6 @@ export default function MonthlyTransactionPage() {
 
   const monthlyIncome = monthlyTransaction?.data?.income ?? 0;
   const monthlyExpense = monthlyTransaction?.data?.expense ?? 0;
-  const monthlyNet = monthlyIncome - monthlyExpense;
   const monthlyBuckets = useMemo(
     () => monthlyTransaction?.data?.transactionData ?? [],
     [monthlyTransaction?.data?.transactionData],
@@ -201,7 +210,6 @@ export default function MonthlyTransactionPage() {
     weeklyTransaction?.data?.categoryBreakdown ?? [];
   const weeklyIncome = weeklyTransaction?.data?.income ?? 0;
   const weeklyExpense = weeklyTransaction?.data?.expense ?? 0;
-  const weeklyNet = weeklyIncome - weeklyExpense;
 
   const filteredWeeklyBuckets = useMemo(() => {
     if (!selectedCategoryKey) return weeklyBuckets;
@@ -219,11 +227,10 @@ export default function MonthlyTransactionPage() {
   const isError = view === "monthly" ? isMonthlyError : isWeeklyError;
   const error = view === "monthly" ? monthlyError : weeklyError;
   const hasCached =
-    view === "monthly"
-      ? !!monthlyTransaction?.data
-      : !!weeklyTransaction?.data;
+    view === "monthly" ? !!monthlyTransaction?.data : !!weeklyTransaction?.data;
   const showErrorCard = isError && !hasCached;
-  const updatedAt = (view === "monthly" ? monthlyUpdatedAt : weeklyUpdatedAt) || undefined;
+  const updatedAt =
+    (view === "monthly" ? monthlyUpdatedAt : weeklyUpdatedAt) || undefined;
 
   return (
     <SafeAreaView
@@ -254,7 +261,7 @@ export default function MonthlyTransactionPage() {
             { backgroundColor: C.surface2, borderColor: C.border },
           ]}
         >
-          {(["monthly", "weekly"] as TView[]).map((v) => {
+          {(["monthly", "weekly"] as TView[])?.map((v) => {
             const active = view === v;
             return (
               <TouchableOpacity
@@ -297,10 +304,19 @@ export default function MonthlyTransactionPage() {
                     color={selectedMonth === startMonth ? C.textMuted : C.text}
                   />
                 </TouchableOpacity>
-                <Text style={[text.h3, { color: C.text }]}>
-                  {MONTHS[selectedMonth - 1]}{" "}
-                  <Text style={{ color: C.textMuted }}>{currentYear}</Text>
-                </Text>
+                <TouchableOpacity
+                  onPress={() => setPickerOpen(true)}
+                  activeOpacity={0.7}
+                  style={styles.monthNameBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Select month and year"
+                >
+                  <Text style={[text.h3, { color: C.text }]}>
+                    {MONTHS[selectedMonth - 1]}{" "}
+                    <Text style={{ color: C.textMuted }}>{selectedYear}</Text>
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color={C.textMuted} />
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.navChevron}
                   onPress={() => handleMonthChange(monthChangeDirection.next)}
@@ -314,21 +330,12 @@ export default function MonthlyTransactionPage() {
                 </TouchableOpacity>
               </View>
 
-              {/* Only rendered once you have navigated away, so it reads as "you are
-                  somewhere else, here is the way back" rather than as a permanent
-                  control. Borrows CategoryPicker's active-chip treatment (accent
-                  border + accentDim fill + accentText) so the screen's one accent
-                  affordance looks the same everywhere. Comparing months alone is
-                  correct: there is no year navigation — every fetch is a
-                  `targetMonth` inside currentYear. */}
-              {selectedMonth !== currentMonth ? (
+              {!isCurrentMonth && (
                 <TouchableOpacity
                   onPress={goToCurrentMonth}
                   activeOpacity={0.8}
                   accessibilityRole="button"
                   accessibilityLabel={`Jump to ${MONTHS[currentMonth - 1]}`}
-                  // The pill is 22pt tall, well under spacing.hitTarget — hitSlop
-                  // buys back the touch area without inflating the visual.
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   style={[
                     styles.jumpPill,
@@ -344,8 +351,18 @@ export default function MonthlyTransactionPage() {
                     This month
                   </Text>
                 </TouchableOpacity>
-              ) : null}
+              )}
             </View>
+
+            <MonthYearPickerSheet
+              visible={pickerOpen}
+              onDismiss={() => setPickerOpen(false)}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              currentMonth={currentMonth}
+              currentYear={currentYear}
+              onSelect={handlePick}
+            />
 
             {isError && hasCached ? (
               <OfflineNotice
@@ -365,73 +382,13 @@ export default function MonthlyTransactionPage() {
               <TransactionCardSkeleton />
             ) : (
               <>
-                <View
-                  style={[
-                    styles.netCard,
-                    { backgroundColor: C.surface },
-                    elevation(C, dark).glow,
-                  ]}
-                >
-                  <View style={styles.rowBetween}>
-                    <Text style={[text.kicker, styles.cardKicker, { color: C.textSecondary }]}>
-                      Net · {MONTHS[selectedMonth - 1]}
-                    </Text>
-                    <Text style={[text.caption, styles.cardCaption, { color: C.textMuted }]}>
-                      avg expense ৳{fmt(monthlyAverageExpense)}/day
-                    </Text>
-                  </View>
-                  <View style={styles.netAmountRow}>
-                    <Text
-                      style={[
-                        styles.netSign,
-                        { color: monthlyNet >= 0 ? C.income : C.expense },
-                      ]}
-                    >
-                      {monthlyNet >= 0 ? "+" : "−"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.netCurrency,
-                        { color: monthlyNet >= 0 ? C.income : C.expense },
-                      ]}
-                    >
-                      ৳
-                    </Text>
-                    <Text
-                      style={[
-                        text.amountLg,
-                        styles.netAmount,
-                        { color: monthlyNet >= 0 ? C.income : C.expense },
-                      ]}
-                    >
-                      {fmt(monthlyNet)}
-                    </Text>
-                  </View>
-                  <View style={styles.splitBar}>
-                    <View
-                      style={{
-                        flex: monthlyIncome || 0.001,
-                        borderRadius: 3,
-                        backgroundColor: C.income,
-                      }}
-                    />
-                    <View
-                      style={{
-                        flex: monthlyExpense || 0.001,
-                        borderRadius: 3,
-                        backgroundColor: C.expense,
-                      }}
-                    />
-                  </View>
-                  <View style={styles.inOutRow}>
-                    <Text style={[text.caption, styles.cardCaption, { color: C.income }]}>
-                      In +৳{fmt(monthlyIncome)}
-                    </Text>
-                    <Text style={[text.caption, styles.cardCaption, { color: C.expense }]}>
-                      Expense −৳{fmt(monthlyExpense)}
-                    </Text>
-                  </View>
-                </View>
+                <NetSummaryCard
+                  label={`Net · ${MONTHS[selectedMonth - 1]}`}
+                  caption={`avg expense ৳${fmt(monthlyAverageExpense)}/day`}
+                  income={monthlyIncome}
+                  expense={monthlyExpense}
+                  showSplitBar
+                />
 
                 <CategoryBreakdown
                   data={monthlyCategoryBreakdown}
@@ -482,52 +439,11 @@ export default function MonthlyTransactionPage() {
               <TransactionCardSkeleton />
             ) : (
               <>
-                <View
-                  style={[
-                    styles.netCard,
-                    { backgroundColor: C.surface },
-                    elevation(C, dark).glow,
-                  ]}
-                >
-                  <Text style={[text.kicker, styles.cardKicker, { color: C.textSecondary }]}>
-                    Net this week
-                  </Text>
-                  <View style={styles.netAmountRow}>
-                    <Text
-                      style={[
-                        styles.netSign,
-                        { color: weeklyNet >= 0 ? C.income : C.expense },
-                      ]}
-                    >
-                      {weeklyNet >= 0 ? "+" : "−"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.netCurrency,
-                        { color: weeklyNet >= 0 ? C.income : C.expense },
-                      ]}
-                    >
-                      ৳
-                    </Text>
-                    <Text
-                      style={[
-                        text.amountLg,
-                        styles.netAmount,
-                        { color: weeklyNet >= 0 ? C.income : C.expense },
-                      ]}
-                    >
-                      {fmt(weeklyNet)}
-                    </Text>
-                  </View>
-                  <View style={styles.inOutRow}>
-                    <Text style={[text.caption, styles.cardCaption, { color: C.income }]}>
-                      In +৳{fmt(weeklyIncome)}
-                    </Text>
-                    <Text style={[text.caption, styles.cardCaption, { color: C.expense }]}>
-                      Expense −৳{fmt(weeklyExpense)}
-                    </Text>
-                  </View>
-                </View>
+                <NetSummaryCard
+                  label="Net this week"
+                  income={weeklyIncome}
+                  expense={weeklyExpense}
+                />
 
                 <CategoryBreakdown
                   data={weeklyCategoryBreakdown}
@@ -585,6 +501,8 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   navChevron: { padding: 4 },
+  // Tappable month/year label; row so the chevron-down sits beside the text.
+  monthNameBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
   // Much smaller than CategoryPicker's 34pt chip: this is a secondary way back,
   // and the h3 above it should stay the anchor of the block. captionMd rather
   // than caption because medium weight is what still reads as a button at 12pt.
@@ -597,33 +515,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  netCard: {
-    borderRadius: radius.card,
-    padding: spacing.base,
-    paddingBottom: spacing.lg,
-    gap: spacing.md,
-    marginBottom: spacing.base,
-  },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  netAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
-  // The scale jumps 40 (amountLg) straight to 18 (amountMd), so the headline
-  // overrides amountLg's metrics instead of reaching for another token —
-  // fontFamily.medium and tabular-nums still come from it, only size, leading
-  // and tracking change, scaled together so the figure keeps its proportions.
-  // Same size as the Today and Insights net cards.
-  netAmount: { fontSize: 27, lineHeight: 31, letterSpacing: -0.54 },
-  // The card's label and figures step below their tokens too, so the whole
-  // block shrinks together instead of the headline pulling away from it.
-  cardKicker: { fontSize: 10, lineHeight: 13, letterSpacing: 0.9 },
-  cardCaption: { fontSize: 11, lineHeight: 15 },
-  // Half the amount, tracking it rather than the type scale.
-  netSign: { fontSize: 14 },
-  netCurrency: { fontSize: 14 },
-  splitBar: { flexDirection: "row", gap: 3, height: 6 },
-  inOutRow: { flexDirection: "row", gap: spacing.xl },
   weekHeader: { marginBottom: spacing.base, gap: 3, alignItems: "center" },
 });

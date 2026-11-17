@@ -23,6 +23,7 @@ import {
   View,
 } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
+import MonthYearPickerSheet from "./MonthYearPickerSheet";
 
 type TDailyData = {
   date: string;
@@ -63,12 +64,19 @@ const startMonth = 1;
 export default function TrendTab() {
   const C = useTheme();
 
-  // Spec 47: like Activity, every fetch is a `targetMonth` inside the current year —
-  // `getMonthlyTransactions` derives the year from `new Date()` and takes no year
-  // parameter. Cross-year browsing stays on Insights › Year. Forward paging stops at
-  // the current month rather than December (Activity allows December): a future month
-  // of this year is always empty, which is also how the Year chevron behaves.
+  // Spec 47 paged within the current year only. The month/year picker (tap the
+  // month name) now reaches past years too, so the fetch carries both `targetMonth`
+  // and `targetYear`. Arrows still step month within the selected year; forward
+  // paging stops at the current month when on the current year (a future month is
+  // always empty), and at December for a past year.
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Latest month that can hold data in the selected year.
+  const maxMonth = selectedYear === currentYear ? currentMonth : 12;
+  const isCurrentMonth =
+    selectedMonth === currentMonth && selectedYear === currentYear;
 
   // Spec 47: closed by default, keyed by category id. This used to hold the inverse
   // (`collapsed`, open-by-default), which rendered every category's whole transaction
@@ -80,26 +88,31 @@ export default function TrendTab() {
   // category filter on a month change (spec 13).
   useEffect(() => {
     setExpanded({});
-  }, [selectedMonth]);
+  }, [selectedMonth, selectedYear]);
 
   const handleMonthChange = (direction: keyof typeof monthChangeDirection) => {
     if (direction === monthChangeDirection.prev && selectedMonth > startMonth) {
       setSelectedMonth(selectedMonth - 1);
     }
-    if (
-      direction === monthChangeDirection.next &&
-      selectedMonth < currentMonth
-    ) {
+    if (direction === monthChangeDirection.next && selectedMonth < maxMonth) {
       setSelectedMonth(selectedMonth + 1);
     }
   };
 
-  const goToCurrentMonth = () => setSelectedMonth(currentMonth);
+  const goToCurrentMonth = () => {
+    setSelectedMonth(currentMonth);
+    setSelectedYear(currentYear);
+  };
+
+  const handlePick = (month: number, year: number) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
 
   // date-fns rather than a third copy of the MONTHS array (MonthlyTransaction.tsx and
   // HistoryPage.tsx already each carry one).
   const monthLabel = format(
-    new Date(currentYear, selectedMonth - 1, 1),
+    new Date(selectedYear, selectedMonth - 1, 1),
     "MMMM",
   );
 
@@ -114,10 +127,11 @@ export default function TrendTab() {
   const { data, isPending } = useFetchData<TMonthlyData>(
     [
       "monthly-transaction",
-      `monthly-transaction-${selectedMonth}`,
+      `monthly-transaction-${selectedYear}-${selectedMonth}`,
+      String(selectedYear),
       String(selectedMonth),
     ],
-    `/transactions/monthly-transaction?targetMonth=${selectedMonth}`,
+    `/transactions/monthly-transaction?targetMonth=${selectedMonth}&targetYear=${selectedYear}`,
   );
 
   const hasCached = !!data?.data;
@@ -211,20 +225,30 @@ export default function TrendTab() {
             color={selectedMonth === startMonth ? C.textMuted : C.text}
           />
         </TouchableOpacity>
-        <Text style={[text.h3, { color: C.text }]}>
-          {monthLabel} <Text style={{ color: C.textMuted }}>{currentYear}</Text>
-        </Text>
+        <TouchableOpacity
+          onPress={() => setPickerOpen(true)}
+          activeOpacity={0.7}
+          style={styles.monthNameBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Select month and year"
+        >
+          <Text style={[text.h3, { color: C.text }]}>
+            {monthLabel}{" "}
+            <Text style={{ color: C.textMuted }}>{selectedYear}</Text>
+          </Text>
+          <Ionicons name="chevron-down" size={14} color={C.textMuted} />
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.navChevron}
           onPress={() => handleMonthChange(monthChangeDirection.next)}
-          disabled={selectedMonth >= currentMonth}
+          disabled={selectedMonth >= maxMonth}
           accessibilityRole="button"
           accessibilityLabel="Next month"
         >
           <Ionicons
             name="chevron-forward"
             size={18}
-            color={selectedMonth >= currentMonth ? C.textMuted : C.text}
+            color={selectedMonth >= maxMonth ? C.textMuted : C.text}
           />
         </TouchableOpacity>
       </View>
@@ -233,7 +257,7 @@ export default function TrendTab() {
           else, here is the way back". Same treatment as Activity's pill (spec 31) —
           accent border + accentDim fill + accentText, 22pt with hitSlop covering the
           sub-44pt target — so the one accent affordance looks the same on both screens. */}
-      {selectedMonth !== currentMonth ? (
+      {!isCurrentMonth && (
         <TouchableOpacity
           onPress={goToCurrentMonth}
           activeOpacity={0.8}
@@ -253,13 +277,23 @@ export default function TrendTab() {
             This month
           </Text>
         </TouchableOpacity>
-      ) : null}
+      )}
     </View>
   );
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       {monthNav}
+
+      <MonthYearPickerSheet
+        visible={pickerOpen}
+        onDismiss={() => setPickerOpen(false)}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        currentMonth={currentMonth}
+        currentYear={currentYear}
+        onSelect={handlePick}
+      />
 
       {isPending && !hasCached ? (
         <TransactionCardSkeleton />
@@ -347,7 +381,10 @@ export default function TrendTab() {
                         return (
                           <View
                             key={t._id}
-                            style={[styles.txRow, { borderTopColor: C.divider }]}
+                            style={[
+                              styles.txRow,
+                              { borderTopColor: C.divider },
+                            ]}
                           >
                             <Text
                               style={[
@@ -489,6 +526,8 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   navChevron: { padding: 4 },
+  // The tappable month/year label — a row so the chevron-down sits beside it.
+  monthNameBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
   // Much smaller than CategoryPicker's 34pt chip: this is a secondary way back, and the
   // h3 above it should stay the anchor of the block. captionMd rather than caption
   // because medium weight is what still reads as a button at 12pt.

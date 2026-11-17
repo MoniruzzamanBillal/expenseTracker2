@@ -68,8 +68,7 @@ export default function HomePage() {
       description: item?.payload?.description,
       amount: item?.payload?.amount,
       type: item?.payload?.type,
-      // The chosen transaction date (spec 48) if the queued payload carried one,
-      // else the enqueue timestamp as a fallback for display.
+
       occurredAt: item?.payload?.occurredAt ?? item?.createdAt,
       createdAt: item?.createdAt,
     }),
@@ -81,11 +80,6 @@ export default function HomePage() {
 
   const categoryBreakdown = dailyTransaction?.data?.categoryBreakdown ?? [];
 
-  // console.log("categoryBreakdown = ", categoryBreakdown);
-
-  // Spec 37: a failed read only blocks the screen when there is genuinely nothing to show —
-  // React Query keeps the last good `data` through a failed refetch, and the persisted cache
-  // restores it after a restart.
   const hasCached = !!dailyTransaction?.data;
   const hasQueued = pendingAsTransactions.length > 0;
   const showErrorCard = isError && !hasCached && !hasQueued;
@@ -144,10 +138,6 @@ export default function HomePage() {
             />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            {/* Both lines sit one step under their tokens, local to this header
-                so the other screen titles keep text.h2/text.kicker. lineHeight
-                and letterSpacing are scaled with the size — the tokens set both,
-                so overriding fontSize alone would leave the original leading. */}
             <Text
               style={[
                 text.kicker,
@@ -200,16 +190,10 @@ export default function HomePage() {
               message={(error as any)?.message ?? "Network Error"}
               onRetry={refetch}
             />
-            {/* Also rendered here, not just in the loaded branch below: being
-                offline is exactly when the queue has something in it *and*
-                when daily-transaction fails, so Sync now has to stay reachable
-                on the error screen too. It self-hides on an empty queue, so
-                only one of the two ever shows anything. */}
+
             <PendingSyncBanner />
           </>
         ) : isPending && !hasCached ? (
-          // isPending, not isLoading: while the persisted cache is still being restored the
-          // query is pending but not yet fetching, and isLoading would let an empty Today flash.
           <TransactionCardSkeleton />
         ) : (
           <>
@@ -227,7 +211,7 @@ export default function HomePage() {
               entryCount={entryCount}
             />
 
-            {categoryBreakdown.length > 0 && (
+            {categoryBreakdown?.length > 0 && (
               <CategoryBreakdown
                 data={categoryBreakdown}
                 selected={null}
